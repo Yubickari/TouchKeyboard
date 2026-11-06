@@ -6,9 +6,10 @@ A touch-first, embedded software keyboard for small industrial touch screens.
 The input logic is a pure .NET Standard 2.0 backend; Avalonia is the first
 frontend, and WPF is planned.
 
-> **Status: P1 walking skeleton.** The solution, package pipeline and CI exist,
-> but the keyboard UI and input engine are not implemented yet. Do not use this
-> package in production.
+> **Status: P2 core implemented.** The .NET Standard core now has the ten input
+> profiles, immutable layouts, the session state machine and validation, with
+> 78 tests per target. The Avalonia panel/controller are still P1 placeholders.
+> Do not use this package in production yet.
 
 ## Why
 
@@ -38,6 +39,21 @@ Two keyboard modes:
 
 Closing the panel discards edits; only **Confirm**/Enter commits. The field
 label and unit are shown above the keys.
+
+## What works now
+
+- `InputProfile`: text, password, ASCII token, signed/positive integer,
+  signed/positive decimal, date with `/` or `.`, and IPv4.
+- Immutable `KeyboardLayout` data: the `PhoneHybrid` full keyboard, the general
+  `Numpad`/`Phone` numeric surfaces, and profile-restricted numeric keypads that
+  omit sign, decimal point, separator or ABC when they are not valid.
+- `KeyboardSession`: insert, backspace, clear, caret movement, per-digit
+  step-up/down, sign toggle, sticky shift, mode switch, commit/cancel, max
+  length and numeric range checks.
+- 78 core tests per target (net8.0 and net10.0).
+
+Not implemented yet: the Avalonia panel/controller/editor surface (P3), WPF,
+NuGet publication (P5), and Chinese input.
 
 ## Repository layout
 

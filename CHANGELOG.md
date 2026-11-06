@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TouchKeyboard.Avalonia` projects, demo app, core test project.
 - Package metadata, central package versions, CI workflow and release preflight.
 - Accepted decision record.
+- P2 core: ten built-in `InputProfile` instances (text, password, ASCII token,
+  signed/positive integer, signed/positive decimal, date `/`, date `.`, IPv4),
+  immutable `KeyboardLayout` data (PhoneHybrid, general Numpad/Phone,
+  profile-restricted numeric keypads), `KeyboardSession` (insert, backspace,
+  clear, caret, per-digit step, sign, shift, mode switch, commit/cancel,
+  max-length and range checks), culture-neutral validation errors and an input
+  profile registry.
+- 78 core tests per target framework, including a key-set matrix that proves
+  irrelevant numeric keys are absent rather than disabled.
 
 ## [0.1.0-preview.1] - 2026-11-06
 

@@ -137,3 +137,24 @@ concepts:
       symbol: IEditorSurface
       type: interface
     note: "Frontend-agnostic seam that lets a host inject its own editor surface (default: TouchKeyboardEditor) while the core session remains the source of truth."
+  - id: keyboard.key_label
+    terms: [ 按键标签, 键帽文案, 键标签 ]
+    kind: entity
+    canonical:
+      symbol: KeyLabel
+      type: struct
+    note: A key cap label that is either literal text or a localization resource key resolved by the frontend.
+  - id: keyboard.key_style
+    terms: [ 按键样式, 键样式, 按键风格 ]
+    kind: enum
+    canonical:
+      symbol: KeyStyle
+      type: enum
+    note: "Visual role of a key: default, action, primary, danger or an empty spacer."
+  - id: keyboard.profile_registry
+    terms: [ 档位注册表, 输入配置注册表, 输入档位注册表 ]
+    kind: entity
+    canonical:
+      symbol: InputProfileRegistry
+      type: class
+    note: Case-insensitive registry that resolves built-in and custom InputProfile instances by their stable Id.
