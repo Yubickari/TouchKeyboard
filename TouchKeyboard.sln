@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchKeyboard.Core.Tests", "tests\TouchKeyboard.Core.Tests\TouchKeyboard.Core.Tests.csproj", "{CDDEC0D5-B8D8-4A2B-8FDA-9593E7D31ECB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchKeyboard.Avalonia.Tests", "tests\TouchKeyboard.Avalonia.Tests\TouchKeyboard.Avalonia.Tests.csproj", "{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,18 @@ Global
 		{CDDEC0D5-B8D8-4A2B-8FDA-9593E7D31ECB}.Release|x64.Build.0 = Release|Any CPU
 		{CDDEC0D5-B8D8-4A2B-8FDA-9593E7D31ECB}.Release|x86.ActiveCfg = Release|Any CPU
 		{CDDEC0D5-B8D8-4A2B-8FDA-9593E7D31ECB}.Release|x86.Build.0 = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|x64.Build.0 = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Debug|x86.Build.0 = Debug|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|x64.ActiveCfg = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|x64.Build.0 = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,5 +98,6 @@ Global
 		{ACE55BB9-EF61-4E59-8DCD-2F1D638E675F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{029EB069-F505-4201-802A-1A9EEC637813} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{CDDEC0D5-B8D8-4A2B-8FDA-9593E7D31ECB} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{2A3B1866-981D-463D-B2BD-F6AF41ADADC6} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

@@ -6,10 +6,11 @@ A touch-first, embedded software keyboard for small industrial touch screens.
 The input logic is a pure .NET Standard 2.0 backend; Avalonia is the first
 frontend, and WPF is planned.
 
-> **Status: P2 core implemented.** The .NET Standard core now has the ten input
-> profiles, immutable layouts, the session state machine and validation, with
-> 78 tests per target. The Avalonia panel/controller are still P1 placeholders.
-> Do not use this package in production yet.
+> **Status: P3 Avalonia frontend implemented.** The core has the ten input
+> profiles, immutable layouts, session and validation; Avalonia now has the
+> overlay host, controller, custom editor surface, touch keys, built-in
+> adapters, theme and zh-CN/en-US localizer. P4 hardening and P5 publication
+> remain. Do not use this package in production yet.
 
 ## Why
 
@@ -40,6 +41,12 @@ Two keyboard modes:
 Closing the panel discards edits; only **Confirm**/Enter commits. The field
 label and unit are shown above the keys.
 
+![Full keyboard](docs/images/keyboard-full.png)
+
+![Profile-restricted numeric keypad](docs/images/keyboard-numeric.png)
+
+*Headless Skia renders from the 1024×700 test harness.*
+
 ## What works now
 
 - `InputProfile`: text, password, ASCII token, signed/positive integer,
@@ -50,10 +57,16 @@ label and unit are shown above the keys.
 - `KeyboardSession`: insert, backspace, clear, caret movement, per-digit
   step-up/down, sign toggle, sticky shift, mode switch, commit/cancel, max
   length and numeric range checks.
-- 78 core tests per target (net8.0 and net10.0).
+- Avalonia: `TouchKeyboardHost` overlay with scrim, title/unit/error row,
+  auto-attaching controller, custom-drawn `TouchKeyboardEditor`, pointer-captured
+  `TouchKey` with long-press repeat, `KeyboardLayoutView`, `IEditorSurface`
+  injection, adapters for `TextBox`, `NumericUpDown` and `CalendarDatePicker`,
+  a custom adapter registry, light/dark themes and zh-CN/en-US localizer.
+- 78 core tests + 10 Avalonia headless tests per target (176 executions).
 
-Not implemented yet: the Avalonia panel/controller/editor surface (P3), WPF,
-NuGet publication (P5), and Chinese input.
+Not implemented yet: WPF, NuGet publication (P5), Chinese input, and the P4
+hardening pass (real-device DPI/OSK verification, accessibility, packaging
+polish).
 
 ## Repository layout
 
@@ -62,7 +75,9 @@ src/TouchKeyboard.Core/        pure backend
 src/TouchKeyboard.Avalonia/    Avalonia frontend
 samples/TouchKeyboard.Demo/    demo application
 tests/TouchKeyboard.Core.Tests/
+tests/TouchKeyboard.Avalonia.Tests/
 docs/design/decisions.md       accepted decisions
+docs/images/                   rendered previews
 build/                         preflight and smoke scripts
 ```
 
@@ -74,6 +89,7 @@ Requires the .NET 8 and .NET 10 SDKs.
 dotnet restore TouchKeyboard.sln
 dotnet build TouchKeyboard.sln -c Release
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
 dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o artifacts
 dotnet pack src/TouchKeyboard.Avalonia/TouchKeyboard.Avalonia.csproj -c Release -o artifacts
 ```

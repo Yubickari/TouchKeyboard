@@ -25,6 +25,7 @@ fi
 
 echo "preflight: tests"
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
 
 echo "preflight: pack"
 rm -rf artifacts

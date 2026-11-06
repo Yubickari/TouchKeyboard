@@ -11,6 +11,15 @@ namespace TouchKeyboard.Avalonia;
 public static class TouchKeyboardInput
 {
     /// <summary>
+    /// Input profile id, for example <c>positive-decimal</c> or <c>date-dot</c>.
+    /// Unknown ids fall back to the control-type default in the controller.
+    /// </summary>
+    public static readonly AttachedProperty<string?> ProfileProperty =
+        AvaloniaProperty.RegisterAttached<Control, string?>(
+            "Profile",
+            typeof(TouchKeyboardInput));
+
+    /// <summary>
     /// Field description shown in the keyboard title row.
     /// </summary>
     public static readonly AttachedProperty<string?> LabelProperty =
@@ -35,6 +44,13 @@ public static class TouchKeyboardInput
             "Enabled",
             typeof(TouchKeyboardInput),
             defaultValue: true);
+
+    /// <summary>Gets the input profile id.</summary>
+    public static string? GetProfile(Control control) => control.GetValue(ProfileProperty);
+
+    /// <summary>Sets the input profile id.</summary>
+    public static void SetProfile(Control control, string? value) =>
+        control.SetValue(ProfileProperty, value);
 
     /// <summary>Gets the field description.</summary>
     public static string? GetLabel(Control control) => control.GetValue(LabelProperty);

@@ -5,9 +5,9 @@
 面向小尺寸工控触摸屏的内置软键盘。输入逻辑是纯 .NET Standard 2.0 后端，
 Avalonia 是第一个前端，未来计划加入 WPF。
 
-> **状态：P2 核心已实现。** .NET Standard 核心已包含十个输入档位、不可变布局、
-> 会话状态机与校验，每个目标框架 78 个测试。Avalonia 面板/控制器仍是 P1 占位。
-> 请勿在生产环境使用当前包。
+> **状态：P3 Avalonia 前端已实现。** 核心包含十个输入档位、不可变布局、会话与
+> 校验；Avalonia 已有浮层宿主、控制器、自绘编辑面、触摸按键、内置适配器、
+> 主题和 zh-CN/en-US 本地化。P4 硬化与 P5 发布仍待完成。请勿在生产环境使用当前包。
 
 ## 目标
 
@@ -33,6 +33,12 @@ Avalonia 是第一个前端，未来计划加入 WPF。
 
 关闭面板 = 放弃修改；只有“确定”/Enter 才提交。标题行显示字段描述和单位。
 
+![全键盘](docs/images/keyboard-full.png)
+
+![档位专用数字键盘](docs/images/keyboard-numeric.png)
+
+*1024×700 测试环境的 Headless Skia 渲染。*
+
 ## 当前已完成
 
 - `InputProfile`：文本、密码、ASCII 标识、有符号/正整数、有符号/正小数、
@@ -41,9 +47,14 @@ Avalonia 是第一个前端，未来计划加入 WPF。
   数字面、按档位生成的特殊数字键盘（无关键直接省略）。
 - `KeyboardSession`：插入、退格、清空、光标、按光标数字增减、正负号切换、
   粘性 Shift、模式切换、提交/取消、最大长度、数值范围校验。
-- 每个目标框架 78 个核心测试（net8.0 与 net10.0）。
+- Avalonia：带遮罩的 `TouchKeyboardHost`、自动挂载的控制器、自绘
+  `TouchKeyboardEditor`、指针捕获 + 长按重复的 `TouchKey`、`KeyboardLayoutView`、
+  `IEditorSurface` 注入、TextBox/NumericUpDown/CalendarDatePicker 适配器、
+  自定义适配器注册表、明暗主题、zh-CN/en-US 本地化。
+- 每个目标框架 78 个核心测试 + 10 个 Avalonia Headless 测试（共 176 次执行）。
 
-尚未实现：Avalonia 面板/控制器/编辑面（P3）、WPF、NuGet 发布（P5）、中文输入。
+尚未实现：WPF、NuGet 发布（P5）、中文输入，以及 P4 硬化（真机 DPI/OSK 验证、
+无障碍、发布细节）。
 
 ## 构建
 
@@ -53,6 +64,7 @@ Avalonia 是第一个前端，未来计划加入 WPF。
 dotnet restore TouchKeyboard.sln
 dotnet build TouchKeyboard.sln -c Release
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
 dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o artifacts
 dotnet pack src/TouchKeyboard.Avalonia/TouchKeyboard.Avalonia.csproj -c Release -o artifacts
 ```

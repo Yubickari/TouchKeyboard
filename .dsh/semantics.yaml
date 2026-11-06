@@ -158,3 +158,45 @@ concepts:
       symbol: InputProfileRegistry
       type: class
     note: Case-insensitive registry that resolves built-in and custom InputProfile instances by their stable Id.
+  - id: keyboard.layout_view
+    terms: [ 键位视图, 布局渲染, 布局视图 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardLayoutView
+      type: control
+    note: Avalonia control that renders an immutable KeyboardLayout as rows of TouchKey controls, scaling each row to the available width.
+  - id: keyboard.touch_key
+    terms: [ 触摸按键, 键帽控件, 按键控件 ]
+    kind: entity
+    canonical:
+      symbol: TouchKey
+      type: control
+    note: Border-based touch key that never takes focus, captures the pointer and supports long-press repeat.
+  - id: keyboard.controller
+    terms: [ 键盘控制器, 命中控制器, 输入控制器 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardController
+      type: class
+    note: Window-level pointer controller that resolves a target control, opens the host and restores focus on close.
+  - id: keyboard.options
+    terms: [ 键盘选项, 宿主配置, 键盘配置 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardOptions
+      type: class
+    note: Host configuration for theme, key height, layout defaults, physical input, localizer and editor surface injection.
+  - id: keyboard.theme
+    terms: [ 键盘主题, 配色主题, 主题配置 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardTheme
+      type: class
+    note: Brushes and metrics for the panel, editor and key roles; light and dark presets ship in the Avalonia frontend.
+  - id: keyboard.localizer
+    terms: [ 键盘本地化, 文案解析, 本地化器 ]
+    kind: reference
+    canonical:
+      symbol: ITouchKeyboardLocalizer
+      type: interface
+    note: Resolves named key labels and formats core validation errors; built-in zh-CN and en-US implementations ship with the Avalonia frontend.

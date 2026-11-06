@@ -2,36 +2,79 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tk="using:TouchKeyboard.Avalonia"
         x:Class="TouchKeyboard.Demo.MainWindow"
-        Title="TouchKeyboard Demo — P1 skeleton"
+        Title="TouchKeyboard Demo — P3"
         Width="1024"
         Height="700"
         WindowStartupLocation="CenterScreen">
   <Grid RowDefinitions="Auto,*">
     <Border Padding="16" Background="#1F2937">
-      <TextBlock Text="TouchKeyboard — P1 walking skeleton"
+      <TextBlock Text="TouchKeyboard — P3 frontend"
                  Foreground="White"
                  FontSize="20" />
     </Border>
 
     <ScrollViewer Grid.Row="1">
-      <StackPanel Margin="24" Spacing="16">
+      <StackPanel Margin="24" Spacing="14">
         <TextBlock TextWrapping="Wrap"
-                   Text="The keyboard UI is not implemented yet. These fields exercise the Avalonia package surface and attached metadata." />
+                   Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard." />
 
-        <TextBox tk:TouchKeyboardInput.Label="名称"
+        <TextBox tk:TouchKeyboardInput.Profile="text"
+                 tk:TouchKeyboardInput.Label="名称"
                  PlaceholderText="名称" />
 
-        <NumericUpDown tk:TouchKeyboardInput.Label="温度"
+        <TextBox tk:TouchKeyboardInput.Profile="password"
+                 tk:TouchKeyboardInput.Label="密码"
+                 PasswordChar="*" />
+
+        <TextBox tk:TouchKeyboardInput.Profile="ascii-token"
+                 tk:TouchKeyboardInput.Label="设备标识"
+                 PlaceholderText="ABC-01/line:1" />
+
+        <NumericUpDown tk:TouchKeyboardInput.Profile="positive-decimal"
+                       tk:TouchKeyboardInput.Label="温度"
                        tk:TouchKeyboardInput.Unit="℃"
-                       Value="25" />
+                       Value="25"
+                       Minimum="0"
+                       Maximum="100" />
 
-        <CalendarDatePicker tk:TouchKeyboardInput.Label="开始日期" />
+        <NumericUpDown tk:TouchKeyboardInput.Profile="decimal"
+                       tk:TouchKeyboardInput.Label="偏移"
+                       tk:TouchKeyboardInput.Unit="mm"
+                       Value="-2.5"
+                       Minimum="-100"
+                       Maximum="100" />
 
-        <CheckBox Content="禁用此字段的键盘（约定占位）" />
+        <NumericUpDown tk:TouchKeyboardInput.Profile="positive-integer"
+                       tk:TouchKeyboardInput.Label="数量"
+                       Minimum="0"
+                       Maximum="9999"
+                       Value="12" />
+
+        <CalendarDatePicker tk:TouchKeyboardInput.Profile="date-slash"
+                            tk:TouchKeyboardInput.Label="开始日期" />
+
+        <CalendarDatePicker tk:TouchKeyboardInput.Profile="date-dot"
+                            tk:TouchKeyboardInput.Label="结束日期" />
+
+        <TextBox tk:TouchKeyboardInput.Profile="ip-address"
+                 tk:TouchKeyboardInput.Label="设备地址"
+                 PlaceholderText="192.168.1.10" />
+
+        <TextBox tk:TouchKeyboardInput.Profile="text"
+                 tk:TouchKeyboardInput.Label="只读字段"
+                 Text="只读，不弹键盘"
+                 IsReadOnly="True" />
+
+        <TextBox tk:TouchKeyboardInput.Profile="text"
+                 tk:TouchKeyboardInput.Label="已禁用键盘"
+                 tk:TouchKeyboardInput.Enabled="False"
+                 Text="该字段的软键盘被禁用" />
+
+        <CheckBox Content="禁用此字段的键盘（约定占位）" IsChecked="True" IsEnabled="False" />
       </StackPanel>
     </ScrollViewer>
 
-    <!-- Overlay host: placed last, invisible in P1. -->
+    <!-- Overlay host: placed last; AutoAttach wires the controller. -->
     <tk:TouchKeyboardHost x:Name="KeyboardHost" Grid.RowSpan="2" />
   </Grid>
 </Window>

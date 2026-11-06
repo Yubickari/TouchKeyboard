@@ -35,8 +35,11 @@ jobs:
       - name: Build
         run: dotnet build TouchKeyboard.sln -c Release --no-restore
 
-      - name: Test
+      - name: Test core
         run: dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+
+      - name: Test Avalonia frontend
+        run: dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
 
       - name: Hygiene
         if: matrix.os == 'ubuntu-24.04'
