@@ -1,0 +1,59 @@
+using Avalonia;
+using Avalonia.Controls;
+
+namespace TouchKeyboard.Avalonia;
+
+/// <summary>
+/// UI metadata attached to an input control. P1 exposes the label, unit and the
+/// per-control enable switch; the input profile attached property arrives with
+/// the core model in P2.
+/// </summary>
+public static class TouchKeyboardInput
+{
+    /// <summary>
+    /// Field description shown in the keyboard title row.
+    /// </summary>
+    public static readonly AttachedProperty<string?> LabelProperty =
+        AvaloniaProperty.RegisterAttached<Control, string?>(
+            "Label",
+            typeof(TouchKeyboardInput));
+
+    /// <summary>
+    /// Unit shown next to the field description, for example "℃".
+    /// </summary>
+    public static readonly AttachedProperty<string?> UnitProperty =
+        AvaloniaProperty.RegisterAttached<Control, string?>(
+            "Unit",
+            typeof(TouchKeyboardInput));
+
+    /// <summary>
+    /// Per-control switch. When false, the controller must not open the keyboard
+    /// for this control or its descendants.
+    /// </summary>
+    public static readonly AttachedProperty<bool> EnabledProperty =
+        AvaloniaProperty.RegisterAttached<Control, bool>(
+            "Enabled",
+            typeof(TouchKeyboardInput),
+            defaultValue: true);
+
+    /// <summary>Gets the field description.</summary>
+    public static string? GetLabel(Control control) => control.GetValue(LabelProperty);
+
+    /// <summary>Sets the field description.</summary>
+    public static void SetLabel(Control control, string? value) =>
+        control.SetValue(LabelProperty, value);
+
+    /// <summary>Gets the unit.</summary>
+    public static string? GetUnit(Control control) => control.GetValue(UnitProperty);
+
+    /// <summary>Sets the unit.</summary>
+    public static void SetUnit(Control control, string? value) =>
+        control.SetValue(UnitProperty, value);
+
+    /// <summary>Gets whether the keyboard is enabled for the control.</summary>
+    public static bool GetEnabled(Control control) => control.GetValue(EnabledProperty);
+
+    /// <summary>Sets whether the keyboard is enabled for the control.</summary>
+    public static void SetEnabled(Control control, bool value) =>
+        control.SetValue(EnabledProperty, value);
+}

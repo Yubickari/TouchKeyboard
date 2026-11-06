@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <AssemblyName>TouchKeyboard.Avalonia</AssemblyName>
+    <RootNamespace>TouchKeyboard.Avalonia</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>TouchKeyboard.Avalonia</PackageId>
+    <Description>Avalonia frontend for TouchKeyboard: overlay host, keys, editor surface and control adapters for small industrial touch screens.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TouchKeyboard.Core\TouchKeyboard.Core.csproj" />
+  </ItemGroup>
+</Project>

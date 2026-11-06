@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <!-- Avalonia's build telemetry task writes to the user profile. Library builds
+         do not need it, and sandboxed/CI builds must stay inside the workspace.
+         Avalonia itself remains fully functional; only the stats task is skipped. -->
+    <UsedAvaloniaProducts></UsedAvaloniaProducts>
+  </PropertyGroup>
+</Project>

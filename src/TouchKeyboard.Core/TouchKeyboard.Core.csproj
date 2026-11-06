@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TouchKeyboard.Core</AssemblyName>
+    <RootNamespace>TouchKeyboard.Core</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>TouchKeyboard.Core</PackageId>
+    <Description>Pure .NET Standard 2.0 core for the TouchKeyboard embedded keyboard: modes, profiles, layouts, sessions and validation.</Description>
+  </PropertyGroup>
+</Project>

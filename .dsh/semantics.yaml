@@ -1,0 +1,139 @@
+version: 1
+meta:
+  project: TouchKeyboard
+  updated: 2026-11-06
+exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**" ]
+concepts:
+  - id: touchkeyboard.product
+    terms: [ 软键盘, 触摸键盘, 虚拟键盘, 内置键盘 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboard
+      type: library
+    note: A touch-first embedded software keyboard for small screens and industrial panels, split into a pure backend core and per-UI frontends.
+  - id: keyboard.mode
+    terms: [ 键盘模式, 输入模式, 键盘形态 ]
+    kind: enum
+    canonical:
+      symbol: KeyboardMode
+      type: enum
+    note: "The two top-level surfaces: FullKeyboard (standard US ANSI, no F/numpad/system keys) and NumericKeypad (general or profile-restricted)."
+  - id: keyboard.profile
+    terms: [ 输入档位, 输入场景, 输入配置, 输入配置档 ]
+    kind: entity
+    canonical:
+      symbol: InputProfile
+      type: class
+    note: A named input contract that selects validation, default mode, numeric keypad key set and commit normalization for one field.
+  - id: keyboard.session
+    terms: [ 键盘会话, 编辑会话, 输入会话 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardSession
+      type: class
+    note: Owns the edit buffer, caret, mode, shift state and commit/cancel lifecycle for one field; closing discards and confirming commits.
+  - id: keyboard.state
+    terms: [ 键盘状态, 会话状态, 键盘快照 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardState
+      type: class
+    note: An immutable snapshot of text, caret, mode, shift and validation error that a frontend renders.
+  - id: keyboard.layout
+    terms: [ 键盘布局, 按键布局, 键位表 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardLayout
+      type: class
+    note: An immutable grid of key rows and keys described in unit widths, rendered by a frontend without UI types in the core.
+  - id: keyboard.key
+    terms: [ 按键定义, 键定义, 按键描述 ]
+    kind: entity
+    canonical:
+      symbol: KeyDefinition
+      type: class
+    note: One key's stable id, primary and shifted labels, command, unit width, column/row span, style and repeatability.
+  - id: keyboard.command
+    terms: [ 按键命令, 键命令, 按键动作 ]
+    kind: entity
+    canonical:
+      symbol: KeyCommand
+      type: struct
+    note: A UI-agnostic action (insert text, backspace, clear, move caret, step digit, toggle sign, switch mode, submit, close) dispatched by a key.
+  - id: keyboard.host
+    terms: [ 键盘宿主, 键盘浮层, 键盘面板 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardHost
+      type: control
+    note: The Avalonia overlay control that renders one session, the field label/unit, the editor surface and the active keyboard layout.
+  - id: keyboard.editor_adapter
+    terms: [ 编辑适配器, 控件适配器, 编辑器目标 ]
+    kind: reference
+    canonical:
+      symbol: IEditorAdapter
+      type: interface
+    note: The frontend bridge that reads a target control's text and metadata and commits the validated text back without exposing UI types to the core.
+  - id: keyboard.numeric_options
+    terms: [ 数字小键盘配置, 小键盘键位, 数字键盘选项 ]
+    kind: entity
+    canonical:
+      symbol: NumericKeypadOptions
+      type: class
+    note: "Which extra keys a numeric profile exposes: sign toggle, decimal point, date separator, step up/down, caret keys and layout switch."
+  - id: keyboard.validation_error
+    terms: [ 输入校验错误, 校验结果, 校验错误码 ]
+    kind: entity
+    canonical:
+      symbol: InputValidationError
+      type: class
+    note: A culture-neutral error code and arguments returned by profile validation so each frontend can localize the message.
+  - id: keyboard.row
+    terms: [ 键盘行, 按键行, 键位行 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardRow
+      type: class
+    note: One horizontal row of KeyDefinition entries; each row scales independently to the available panel width.
+  - id: keyboard.command_kind
+    terms: [ 按键命令类型, 键命令类型, 命令种类 ]
+    kind: enum
+    canonical:
+      symbol: KeyCommandKind
+      type: enum
+    note: The closed set of UI-agnostic session actions a key can dispatch.
+  - id: keyboard.editor_surface
+    terms: [ 编辑显示面, 自绘编辑框, 值显示面 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardEditor
+      type: control
+    note: The Avalonia single-line editor surface that draws text, caret, password mask and horizontal scroll without being a TextBox.
+  - id: keyboard.validation_code
+    terms: [ 校验代码, 输入错误代码, 错误码枚举 ]
+    kind: enum
+    canonical:
+      symbol: InputValidationErrorCode
+      type: enum
+    note: Culture-neutral codes describing why an input profile rejected a value or commit; paired with InputValidationError.
+  - id: keyboard.full_layout
+    terms: [ 全键盘布局类型, 全键盘形态, 全键盘布局 ]
+    kind: enum
+    canonical:
+      symbol: FullKeyboardLayoutKind
+      type: enum
+    note: "Selects the full-keyboard geometry: PhoneHybrid (modern phone ergonomics with ANSI key coverage) or AnsiStrict (future strict physical ANSI with Tab/Caps)."
+  - id: keyboard.numeric_layout
+    terms: [ 数字键盘布局类型, 数字键盘形态, 通用数字布局 ]
+    kind: enum
+    canonical:
+      symbol: NumericKeypadLayoutKind
+      type: enum
+    note: "Selects the general numeric keypad surface: Numpad (6x4 digit block) or Phone (phone-style 123 symbol page)."
+  - id: keyboard.editor_surface_abstraction
+    terms: [ 编辑面接口, 编辑面抽象, 可注入编辑面 ]
+    kind: reference
+    canonical:
+      symbol: IEditorSurface
+      type: interface
+    note: "Frontend-agnostic seam that lets a host inject its own editor surface (default: TouchKeyboardEditor) while the core session remains the source of truth."

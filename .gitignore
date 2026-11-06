@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.nupkg
+*.snupkg
+*.user
+*.suo
+
+# Local NuGet restore (NuGet.Config keeps packages in-repo for sandboxed builds)
+.nuget/
+
+# Scratch space for smoke tests and package inspection
+.tmp/
+
+# IDE / OS
+.vs/
+.idea/
+.vscode/
+.DS_Store
+
+# Local design drafts; the public decision record is docs/design/decisions.md
+docs/design/2026-11-06-touch-keyboard-plan.md
+20261106-*.md

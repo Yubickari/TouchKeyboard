@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tk="using:TouchKeyboard.Avalonia"
+        x:Class="TouchKeyboard.Demo.MainWindow"
+        Title="TouchKeyboard Demo — P1 skeleton"
+        Width="1024"
+        Height="700"
+        WindowStartupLocation="CenterScreen">
+  <Grid RowDefinitions="Auto,*">
+    <Border Padding="16" Background="#1F2937">
+      <TextBlock Text="TouchKeyboard — P1 walking skeleton"
+                 Foreground="White"
+                 FontSize="20" />
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="24" Spacing="16">
+        <TextBlock TextWrapping="Wrap"
+                   Text="The keyboard UI is not implemented yet. These fields exercise the Avalonia package surface and attached metadata." />
+
+        <TextBox tk:TouchKeyboardInput.Label="名称"
+                 PlaceholderText="名称" />
+
+        <NumericUpDown tk:TouchKeyboardInput.Label="温度"
+                       tk:TouchKeyboardInput.Unit="℃"
+                       Value="25" />
+
+        <CalendarDatePicker tk:TouchKeyboardInput.Label="开始日期" />
+
+        <CheckBox Content="禁用此字段的键盘（约定占位）" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Overlay host: placed last, invisible in P1. -->
+    <tk:TouchKeyboardHost x:Name="KeyboardHost" Grid.RowSpan="2" />
+  </Grid>
+</Window>
