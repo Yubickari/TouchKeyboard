@@ -105,6 +105,7 @@ Demo 顶部可以切换全键盘样式（AnsiStyle / PhoneHybrid）与界面主�
 - [发布流程](docs/release.md)：版本、Trusted Publishing 与发布步骤。
 - [WPF 移植说明](docs/wpf-porting.md)：第二个前端需要实现什么。
 - [架构决策记录](docs/adr/) 与 [已确认决策](docs/design/decisions.md)。
+- [中文输入与语言包（计划草案，未决策）](docs/design/2026-11-08-chinese-input-and-language-packs.md)：路线对比、体积影响与按语言拆包的可行性分析。
 - [真机验收清单](docs/testing/device-checklist.md)：P4 真机测试项。
 
 当前布局的详细设计稿在公开文档定稿前只保留在本地；结论与几何已汇总到上述文档。

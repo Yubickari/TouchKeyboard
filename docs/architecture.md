@@ -174,7 +174,9 @@ pins a preset. See [avalonia.md](avalonia.md) for integration details.
 ## Known limitations
 
 - v1 has no IME or Chinese input; profiles are ASCII/digit oriented. The IME slot
-  is reserved as a spacer and `KeyGlyph.Ime` is reserved.
+  is reserved as a spacer and `KeyGlyph.Ime` is reserved. A draft, undecided plan
+  for an optional managed Chinese input and language-pack design lives in
+  [design/2026-11-08-chinese-input-and-language-packs.md](design/2026-11-08-chinese-input-and-language-packs.md).
 - The editor is single-line: no selection, clipboard, undo or multi-line layout.
 - Editing happens in the session buffer; the target control is written only on
   confirm. Closing the panel always discards.

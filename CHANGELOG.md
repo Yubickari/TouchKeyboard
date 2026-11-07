@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `build/preflight.sh` now checks the packaged icon and XML docs and refuses a tag
   release from a dirty working tree.
 - Local development notes moved to the ignored `docs/local/` folder.
+- Draft development plan for optional Chinese input and per-language IME NuGet
+  packages (routes, size and package analysis; no decisions taken).
 - 101 core tests and 23 Avalonia headless tests per target framework (248
   executions), including the layout matrix, Numpad slot spans, symbol-page
   switching, dark-theme resolution, press feedback, icon rendering and

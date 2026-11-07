@@ -58,6 +58,10 @@ change until `0.1.0`.
 
 ## Candidate features (not committed)
 
+- **Chinese input and language packs (undecided):** draft plan at
+  [design/2026-11-08-chinese-input-and-language-packs.md](design/2026-11-08-chinese-input-and-language-packs.md)
+  covering the three routes, size estimates and per-language NuGet packages. No
+  route, dictionary or schedule has been chosen.
 - **Profiles:** `time` (separator `:`), `range` (two numbers), `currency` (suffix
   handling belongs to the host), IPv6 (multi-group), custom masks.
 - **Numpad:** fill the unused right-row-2 slot for scenario keys, enable `Sequence`
@@ -71,7 +75,9 @@ change until `0.1.0`.
 
 ## Non-goals for v1
 
-- Chinese/IME input, candidate windows, key injection into other processes.
+- Chinese/IME input, candidate windows, key injection into other processes (v1
+  baseline; a draft plan for an optional managed route is under review, with no
+  decision yet).
 - System-level keyboard hooks or a global OSK replacement.
 - F1–F12, NumLock keypad block, Ctrl/Alt/Win/Menu/PrintScreen keys.
 - Multi-line editing, selection, clipboard and undo/redo.

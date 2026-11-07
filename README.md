@@ -147,6 +147,7 @@ Restore uses the standard NuGet package cache. In sandboxed environments, set
 - [Release](docs/release.md) — versioning, Trusted Publishing, release runbook.
 - [WPF porting notes](docs/wpf-porting.md) — what a second frontend needs.
 - [Decision records](docs/adr/) and [accepted decisions](docs/design/decisions.md).
+- [Chinese input and language packs (plan, undecided)](docs/design/2026-11-08-chinese-input-and-language-packs.md) — routes, size impact and per-language NuGet package analysis.
 - [Device checklist](docs/testing/device-checklist.md) — real-device acceptance for P4.
 
 The detailed design plan for the current layout is kept locally until the public
