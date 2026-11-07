@@ -16,6 +16,7 @@ public sealed class KeyboardState
         bool isShiftActive,
         KeyboardLayout layout,
         FullKeyboardLayoutKind fullKeyboardLayout,
+        FullKeyboardPage page,
         NumericKeypadLayoutKind numericKeypadLayout,
         InputValidationError? error,
         bool isDirty,
@@ -27,6 +28,7 @@ public sealed class KeyboardState
         IsShiftActive = isShiftActive;
         Layout = layout;
         FullKeyboardLayout = fullKeyboardLayout;
+        Page = page;
         NumericKeypadLayout = numericKeypadLayout;
         Error = error;
         IsDirty = isDirty;
@@ -50,6 +52,9 @@ public sealed class KeyboardState
 
     /// <summary>The selected full-keyboard geometry.</summary>
     public FullKeyboardLayoutKind FullKeyboardLayout { get; }
+
+    /// <summary>The active full-keyboard page; the numeric keypad always reports Main.</summary>
+    public FullKeyboardPage Page { get; }
 
     /// <summary>The selected general numeric surface.</summary>
     public NumericKeypadLayoutKind NumericKeypadLayout { get; }

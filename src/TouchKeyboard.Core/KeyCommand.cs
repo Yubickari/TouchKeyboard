@@ -43,6 +43,12 @@ public enum KeyCommandKind
     /// <summary>Switch to the general numeric keypad, when the profile allows it.</summary>
     SwitchToNumericKeypad,
 
+    /// <summary>Open the full-keyboard symbol page, when the geometry has one.</summary>
+    SwitchToSymbolPage,
+
+    /// <summary>Return from the symbol page to the full-keyboard main page.</summary>
+    SwitchToMainPage,
+
     /// <summary>Validate and submit; the host performs the write-back.</summary>
     Submit,
 
@@ -112,6 +118,12 @@ public readonly struct KeyCommand : IEquatable<KeyCommand>
 
     /// <summary>Switch to the general numeric keypad.</summary>
     public static KeyCommand SwitchToNumericKeypad => new KeyCommand(KeyCommandKind.SwitchToNumericKeypad);
+
+    /// <summary>Open the full-keyboard symbol page.</summary>
+    public static KeyCommand SwitchToSymbolPage => new KeyCommand(KeyCommandKind.SwitchToSymbolPage);
+
+    /// <summary>Return to the full-keyboard main page.</summary>
+    public static KeyCommand SwitchToMainPage => new KeyCommand(KeyCommandKind.SwitchToMainPage);
 
     /// <summary>Validate and submit.</summary>
     public static KeyCommand Submit => new KeyCommand(KeyCommandKind.Submit);

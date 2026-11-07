@@ -1,13 +1,16 @@
 using System;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using TouchKeyboard.Core;
+using AvaloniaPath = Avalonia.Controls.Shapes.Path;
 
 namespace TouchKeyboard.Avalonia;
 
@@ -24,9 +27,11 @@ public sealed class TouchKeyboardHost : UserControl
     private readonly TextBlock _labelText;
     private readonly TextBlock _unitText;
     private readonly TextBlock _errorText;
-    private readonly Button _layoutButton;
-    private readonly Button _revealButton;
-    private readonly Button _closeButton;
+    private readonly TouchButton _revealButton;
+    private readonly TouchButton _closeButton;
+    private readonly TextBlock _closeGlyph;
+    private readonly AvaloniaPath _revealIcon;
+    private readonly Viewbox _revealIconHost;
     private readonly Border _editorBorder;
     private readonly ContentControl _editorHost;
     private readonly Border _keyboardArea;
@@ -37,6 +42,8 @@ public sealed class TouchKeyboardHost : UserControl
     private IEditorAdapter? _adapter;
     private IEditorSurface? _editorSurface;
     private ITouchKeyboardLocalizer _localizer = TouchKeyboardLocalizer.Default;
+    private TouchKeyboardTheme _theme = TouchKeyboardTheme.Light;
+    private TopLevel? _attachedTopLevel;
 
     /// <summary>Creates the host with its default layout.</summary>
     public TouchKeyboardHost()
@@ -86,38 +93,21 @@ public sealed class TouchKeyboardHost : UserControl
             IsVisible = false
         };
 
-        _layoutButton = new Button
+        _closeGlyph = new TextBlock
         {
-            Content = "布局",
-            Focusable = false,
-            IsVisible = false,
-            Height = 36,
-            MinWidth = 64,
-            Padding = new Thickness(10, 0),
-            FontSize = 14,
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Background = TouchKeyboardTheme.Light.ActionKeyBackground,
-            Foreground = TouchKeyboardTheme.Light.Text
+            Text = "×",
+            FontSize = 26,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
         };
-        _layoutButton.Click += OnLayoutClick;
-
-        _closeButton = new Button
+        _closeButton = new TouchButton
         {
-            Content = "×",
-            Focusable = false,
             Width = 48,
             Height = 48,
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(0),
-            FontSize = 26,
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Background = TouchKeyboardTheme.Light.DangerKeyBackground,
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(0)
+            Radius = 8
         };
-        _closeButton.Click += OnCloseClick;
+        _closeButton.SetContent(_closeGlyph);
+        _closeButton.Activated += OnCloseClick;
 
         _editorHost = new ContentControl
         {
@@ -133,22 +123,32 @@ public sealed class TouchKeyboardHost : UserControl
             Child = _editorHost
         };
 
-        _revealButton = new Button
+        _revealIcon = new AvaloniaPath
         {
-            Content = "显示",
-            Focusable = false,
+            Stretch = Stretch.None,
+            Width = TouchKeyboardGlyphs.DesignSize,
+            Height = TouchKeyboardGlyphs.DesignSize,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round
+        };
+        _revealIconHost = new Viewbox
+        {
+            Width = 30,
+            Height = 30,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Stretch = Stretch.Uniform,
+            Child = _revealIcon
+        };
+        _revealButton = new TouchButton
+        {
             IsVisible = false,
             Height = 48,
             MinWidth = 72,
-            CornerRadius = new CornerRadius(8),
-            Padding = new Thickness(10, 0),
-            FontSize = 14,
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalContentAlignment = VerticalAlignment.Center,
-            Background = TouchKeyboardTheme.Light.ActionKeyBackground,
-            Foreground = TouchKeyboardTheme.Light.Text
+            Radius = 8
         };
-        _revealButton.Click += OnRevealClick;
+        _revealButton.SetContent(_revealIconHost);
+        _revealButton.Activated += OnRevealClick;
 
         _layoutView = new KeyboardLayoutView
         {
@@ -180,6 +180,12 @@ public sealed class TouchKeyboardHost : UserControl
     /// <summary>The current session, when open.</summary>
     public KeyboardSession? Session => _session;
 
+    /// <summary>
+    /// The theme in effect: <see cref="TouchKeyboardOptions.Theme"/> when set,
+    /// otherwise the dark or light preset of the application's theme variant.
+    /// </summary>
+    public TouchKeyboardTheme ResolvedTheme => _theme;
+
     /// <summary>Raised after the panel closes, with the target to refocus.</summary>
     public event EventHandler<TouchKeyboardClosedEventArgs>? Closed;
 
@@ -194,6 +200,7 @@ public sealed class TouchKeyboardHost : UserControl
         configure(Options);
         _localizer = ResolveLocalizer();
         _layoutView.Localizer = _localizer;
+        _theme = ResolveTheme();
         ApplyTheme();
 
         if (_session is not null)
@@ -259,13 +266,22 @@ public sealed class TouchKeyboardHost : UserControl
     {
         base.OnAttachedToVisualTree(e);
 
-        if (!AutoAttach || _controller is not null)
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is not null && !ReferenceEquals(_attachedTopLevel, topLevel))
         {
-            return;
+            _attachedTopLevel = topLevel;
+            topLevel.ActualThemeVariantChanged += OnActualThemeVariantChanged;
         }
 
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is not null)
+        // Pick up the host window's variant: a dark shell gets the dark keyboard.
+        _theme = ResolveTheme();
+        ApplyTheme();
+        if (_session is not null)
+        {
+            UpdateFromState(_session.State);
+        }
+
+        if (AutoAttach && _controller is null && topLevel is not null)
         {
             _controller = new TouchKeyboardController(topLevel, this);
         }
@@ -277,6 +293,12 @@ public sealed class TouchKeyboardHost : UserControl
         if (IsVisible)
         {
             CloseCore(cancelled: true);
+        }
+
+        if (_attachedTopLevel is not null)
+        {
+            _attachedTopLevel.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+            _attachedTopLevel = null;
         }
 
         _controller?.Dispose();
@@ -355,7 +377,7 @@ public sealed class TouchKeyboardHost : UserControl
 
         var title = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,Auto"),
+            ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto"),
             ColumnSpacing = 8
         };
 
@@ -370,11 +392,9 @@ public sealed class TouchKeyboardHost : UserControl
 
         Grid.SetColumn(labelGroup, 0);
         Grid.SetColumn(_errorText, 1);
-        Grid.SetColumn(_layoutButton, 2);
-        Grid.SetColumn(_closeButton, 3);
+        Grid.SetColumn(_closeButton, 2);
         title.Children.Add(labelGroup);
         title.Children.Add(_errorText);
-        title.Children.Add(_layoutButton);
         title.Children.Add(_closeButton);
         panelGrid.Children.Add(title);
 
@@ -410,10 +430,10 @@ public sealed class TouchKeyboardHost : UserControl
         if (_editorSurface is TouchKeyboardEditor editor)
         {
             editor.PlaceholderText = _localizer.Get("editor.placeholder");
-            editor.TextBrush = Options.Theme.Text;
-            editor.MutedBrush = Options.Theme.MutedText;
-            editor.CaretBrush = Options.Theme.Caret;
-            editor.EditorFontSize = Options.Theme.EditorFontSize;
+            editor.TextBrush = _theme.Text;
+            editor.MutedBrush = _theme.MutedText;
+            editor.CaretBrush = _theme.Caret;
+            editor.EditorFontSize = _theme.EditorFontSize;
             editor.RevealPassword = false;
         }
 
@@ -431,8 +451,8 @@ public sealed class TouchKeyboardHost : UserControl
         }
 
         _layoutView.Localizer = _localizer;
-        _layoutView.KeyboardTheme = Options.Theme;
-        _layoutView.KeyGap = Options.Theme.KeyGap;
+        _layoutView.KeyboardTheme = _theme;
+        _layoutView.KeyGap = _theme.KeyGap;
         UpdateKeyboardMetrics();
         _layoutView.Layout = state.Layout;
         _layoutView.ShiftActive = state.IsShiftActive;
@@ -451,16 +471,9 @@ public sealed class TouchKeyboardHost : UserControl
         _errorText.Text = state.Error is null ? string.Empty : _localizer.Format(state.Error);
         _errorText.IsVisible = state.Error is not null;
 
-        var generalNumeric = state.Mode == KeyboardMode.NumericKeypad && _session.Profile.AllowsFullKeyboard;
-        _layoutButton.IsVisible = generalNumeric;
-        _layoutButton.Content = _localizer.Get("layout.toggle");
-
         var isPassword = _session.Profile.Id == "password";
         _revealButton.IsVisible = isPassword && _editorSurface is TouchKeyboardEditor;
-        if (_editorSurface is TouchKeyboardEditor editor)
-        {
-            _revealButton.Content = _localizer.Get(editor.RevealPassword ? "editor.hide" : "editor.show");
-        }
+        UpdateRevealIcon();
     }
 
     private void OnKeyActivated(object? sender, KeyActivatedEventArgs e)
@@ -542,7 +555,7 @@ public sealed class TouchKeyboardHost : UserControl
 
     private void ApplyTheme()
     {
-        var theme = Options.Theme;
+        var theme = _theme;
 
         _scrim.Background = theme.Scrim;
         _panel.Background = theme.PanelBackground;
@@ -560,10 +573,16 @@ public sealed class TouchKeyboardHost : UserControl
         _editorBorder.BorderBrush = theme.EditorBorder;
 
         _closeButton.Background = theme.DangerKeyBackground;
-        _layoutButton.Background = theme.ActionKeyBackground;
-        _layoutButton.Foreground = theme.Text;
+        _closeButton.PressedOverlay = theme.PressedOverlay;
+        _closeButton.PressedScale = theme.PressedScale;
+        _closeGlyph.Foreground = theme.DangerKeyForeground;
+        _closeGlyph.Text = _localizer.Get("close");
+        AutomationProperties.SetName(_closeButton, _localizer.Get("close.name"));
+
         _revealButton.Background = theme.ActionKeyBackground;
-        _revealButton.Foreground = theme.Text;
+        _revealButton.PressedOverlay = theme.PressedOverlay;
+        _revealButton.PressedScale = theme.PressedScale;
+        UpdateRevealIcon();
 
         _layoutView.KeyboardTheme = theme;
         _layoutView.KeyGap = theme.KeyGap;
@@ -583,7 +602,7 @@ public sealed class TouchKeyboardHost : UserControl
     {
         var keyHeight = ResolveKeyHeight();
         _layoutView.KeyHeight = keyHeight;
-        _keyboardArea.Height = keyHeight * 5 + Options.Theme.KeyGap * 4;
+        _keyboardArea.Height = keyHeight * 5 + _theme.KeyGap * 4;
     }
 
     private double ResolveKeyHeight()
@@ -607,6 +626,51 @@ public sealed class TouchKeyboardHost : UserControl
         return 72;
     }
 
+    private TouchKeyboardTheme ResolveTheme()
+    {
+        if (Options.Theme is { } explicitTheme)
+        {
+            return explicitTheme;
+        }
+
+        var variant = _attachedTopLevel?.ActualThemeVariant ?? Application.Current?.ActualThemeVariant;
+        return variant == ThemeVariant.Dark ? TouchKeyboardTheme.Dark : TouchKeyboardTheme.Light;
+    }
+
+    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        if (Options.Theme is not null)
+        {
+            return;
+        }
+
+        var resolved = ResolveTheme();
+        if (ReferenceEquals(resolved, _theme))
+        {
+            return;
+        }
+
+        _theme = resolved;
+        ApplyTheme();
+        if (_session is not null)
+        {
+            UpdateFromState(_session.State);
+        }
+    }
+
+    private void UpdateRevealIcon()
+    {
+        var revealed = _editorSurface is TouchKeyboardEditor { RevealPassword: true };
+        var glyph = revealed ? KeyGlyph.HidePassword : KeyGlyph.ShowPassword;
+
+        // Both states share one design canvas, so only the slash appears or
+        // disappears; the eye itself never moves.
+        _revealIconHost.IsVisible = TouchKeyboardGlyphs.Apply(_revealIcon, glyph, _theme.Text);
+        AutomationProperties.SetName(
+            _revealButton,
+            _localizer.Get(revealed ? "editor.hide" : "editor.show"));
+    }
+
     private ITouchKeyboardLocalizer ResolveLocalizer()
         => Options.Localizer
            ?? (string.IsNullOrWhiteSpace(Options.Culture)
@@ -619,22 +683,9 @@ public sealed class TouchKeyboardHost : UserControl
         Close();
     }
 
-    private void OnCloseClick(object? sender, RoutedEventArgs e) => Close();
+    private void OnCloseClick(object? sender, EventArgs e) => Close();
 
-    private void OnLayoutClick(object? sender, RoutedEventArgs e)
-    {
-        if (_session is null)
-        {
-            return;
-        }
-
-        var next = _session.State.NumericKeypadLayout == NumericKeypadLayoutKind.Numpad
-            ? NumericKeypadLayoutKind.Phone
-            : NumericKeypadLayoutKind.Numpad;
-        _session.SetNumericKeypadLayout(next);
-    }
-
-    private void OnRevealClick(object? sender, RoutedEventArgs e)
+    private void OnRevealClick(object? sender, EventArgs e)
     {
         if (_editorSurface is not TouchKeyboardEditor editor)
         {
@@ -642,7 +693,7 @@ public sealed class TouchKeyboardHost : UserControl
         }
 
         editor.RevealPassword = !editor.RevealPassword;
-        _revealButton.Content = _localizer.Get(editor.RevealPassword ? "editor.hide" : "editor.show");
+        UpdateRevealIcon();
     }
 }
 

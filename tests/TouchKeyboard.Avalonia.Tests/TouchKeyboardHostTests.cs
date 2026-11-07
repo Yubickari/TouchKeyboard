@@ -1,15 +1,20 @@
 using System;
 using System.Linq;
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using TouchKeyboard.Core;
 using Xunit;
+using AvaloniaPath = Avalonia.Controls.Shapes.Path;
 
 namespace TouchKeyboard.Avalonia.Tests;
 
@@ -35,7 +40,10 @@ public sealed class TouchKeyboardHostTests
         }
     }
 
-    private static Fixture CreateFixture(Control field)
+    private static Fixture CreateFixture(
+        Control field,
+        Action<TouchKeyboardOptions>? configure = null,
+        ThemeVariant? variant = null)
     {
         var host = new TouchKeyboardHost { AutoAttach = false };
         host.Configure(options =>
@@ -44,6 +52,7 @@ public sealed class TouchKeyboardHostTests
             options.MaxPanelWidth = 1000;
             options.NumericPanelMaxWidth = 600;
             options.HandlePhysicalKeyboard = true;
+            configure?.Invoke(options);
         });
 
         field.Margin = new Thickness(20);
@@ -61,6 +70,11 @@ public sealed class TouchKeyboardHostTests
             Content = grid
         };
 
+        if (variant is not null)
+        {
+            window.RequestedThemeVariant = variant;
+        }
+
         var controller = new TouchKeyboardController(window, host);
         window.Show();
         Dispatcher.UIThread.RunJobs();
@@ -69,6 +83,12 @@ public sealed class TouchKeyboardHostTests
 
     private static void Click(Window window, Control control)
     {
+        Press(window, control);
+        Release(window, control);
+    }
+
+    private static void Press(Window window, Control control)
+    {
         Dispatcher.UIThread.RunJobs();
         var point = control.TranslatePoint(
             new Point(control.Bounds.Width / 2, control.Bounds.Height / 2),
@@ -76,7 +96,18 @@ public sealed class TouchKeyboardHostTests
 
         Assert.NotNull(point);
         window.MouseDown(point!.Value, MouseButton.Left, RawInputModifiers.None);
-        window.MouseUp(point.Value, MouseButton.Left, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void Release(Window window, Control control)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var point = control.TranslatePoint(
+            new Point(control.Bounds.Width / 2, control.Bounds.Height / 2),
+            window);
+
+        Assert.NotNull(point);
+        window.MouseUp(point!.Value, MouseButton.Left, RawInputModifiers.None);
         Dispatcher.UIThread.RunJobs();
     }
 
@@ -298,5 +329,346 @@ public sealed class TouchKeyboardHostTests
 
         host.Close();
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Symbol_page_opens_from_phone_hybrid_and_returns_to_main()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.FullKeyboardLayout = FullKeyboardLayoutKind.PhoneHybrid);
+
+        Click(fixture.Window, textBox);
+        Assert.Equal("full-phone-hybrid", fixture.Host.Session!.State.Layout.Id);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToSymbolPage);
+        Assert.Equal(FullKeyboardPage.Symbols, fixture.Host.Session!.State.Page);
+        Assert.Equal("full-symbol-page", fixture.Host.Session!.State.Layout.Id);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command == KeyCommand.Insert("!"));
+        Assert.Equal("!", fixture.Host.Session!.State.Text);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToMainPage);
+        Assert.Equal(FullKeyboardPage.Main, fixture.Host.Session!.State.Page);
+        Assert.Equal("full-phone-hybrid", fixture.Host.Session!.State.Layout.Id);
+    }
+
+    [AvaloniaFact]
+    public void Numpad_renders_grid_spans_for_zero_and_confirm()
+    {
+        var numeric = new NumericUpDown
+        {
+            Value = 12,
+            Minimum = 0,
+            Maximum = 9999
+        };
+        TouchKeyboardInput.SetProfile(numeric, "positive-integer");
+        using var fixture = CreateFixture(numeric);
+
+        Click(fixture.Window, numeric);
+
+        var keys = fixture.Host.GetVisualDescendants().OfType<TouchKey>().ToList();
+        var zero = keys.Single(key => key.Definition.Command == KeyCommand.Insert("0"));
+        Assert.Equal(3, Grid.GetRow(zero));
+        Assert.Equal(2, Grid.GetColumn(zero));
+        Assert.Equal(2, Grid.GetColumnSpan(zero));
+
+        var confirm = keys.Single(key => key.Definition.Command.Kind == KeyCommandKind.Submit);
+        Assert.Equal(2, Grid.GetRow(confirm));
+        Assert.Equal(4, Grid.GetColumn(confirm));
+        Assert.Equal(2, Grid.GetRowSpan(confirm));
+
+        // The empty left row-2 slot renders nothing at all.
+        Assert.DoesNotContain(
+            keys,
+            key => Grid.GetRow(key) == 2 && Grid.GetColumn(key) == 0);
+    }
+
+    [AvaloniaFact]
+    public void Icon_keys_render_vectors_and_expose_localized_accessible_names()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox, options => options.Localizer = TouchKeyboardLocalizer.ZhCn);
+
+        Click(fixture.Window, textBox);
+
+        var backspace = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Glyph == KeyGlyph.Backspace);
+        var backspacePath = backspace.GetVisualDescendants().OfType<AvaloniaPath>().Single();
+        Assert.True(backspacePath.IsVisible);
+        Assert.NotNull(backspacePath.Data);
+        Assert.Equal("退格", AutomationProperties.GetName(backspace));
+
+        var peer = ControlAutomationPeer.CreatePeerForElement(backspace);
+        Assert.NotNull(peer);
+        Assert.True(peer!.IsControlElement());
+        Assert.Equal(AutomationControlType.Button, peer.GetAutomationControlType());
+        Assert.Equal("退格", peer.GetName());
+
+        var letter = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Id == "key.char.0071");
+        Assert.Equal("q", AutomationProperties.GetName(letter));
+        Assert.DoesNotContain(
+            letter.GetVisualDescendants().OfType<Viewbox>(),
+            box => box.IsVisible);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.ToggleShift);
+
+        var shift = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .First(key => key.Definition.Glyph == KeyGlyph.Shift);
+        var shiftPath = shift.GetVisualDescendants().OfType<AvaloniaPath>().Single();
+        Assert.NotNull(shiftPath.Fill);
+        Assert.Null(shiftPath.Stroke);
+    }
+
+    [AvaloniaFact]
+    public void Phone_hybrid_renders_z_directly_under_s()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.FullKeyboardLayout = FullKeyboardLayoutKind.PhoneHybrid);
+
+        Click(fixture.Window, textBox);
+
+        var keys = fixture.Host.GetVisualDescendants().OfType<TouchKey>().ToList();
+        var sKey = keys.Single(key => key.Definition.Id == "key.char.0073");
+        var zKey = keys.Single(key => key.Definition.Id == "key.char.007a");
+
+        var sOrigin = sKey.TranslatePoint(new Point(0, 0), fixture.Window);
+        var zOrigin = zKey.TranslatePoint(new Point(0, 0), fixture.Window);
+
+        Assert.NotNull(sOrigin);
+        Assert.NotNull(zOrigin);
+        Assert.Equal(sOrigin!.Value.X, zOrigin!.Value.X, 1);
+    }
+
+    [AvaloniaFact]
+    public void The_editor_caret_follows_trailing_spaces()
+    {
+        var session = new KeyboardSession(new KeyboardSessionOptions
+        {
+            Text = "a",
+            Profile = InputProfiles.Text
+        });
+        var editor = new TouchKeyboardEditor { EditorFontSize = 28 };
+        editor.Attach(session);
+
+        try
+        {
+            var afterLetter = editor.CaretOffset;
+
+            session.Execute(KeyCommand.Insert(" "));
+            var afterSpace = editor.CaretOffset;
+            Assert.True(afterSpace > afterLetter + 4, "the caret should advance by a space");
+
+            session.Execute(KeyCommand.Insert(" "));
+            Assert.True(editor.CaretOffset > afterSpace + 4, "the caret should advance for each space");
+
+            session.Execute(KeyCommand.Insert("b"));
+            Assert.True(editor.CaretOffset > afterSpace + 4);
+        }
+        finally
+        {
+            editor.Detach();
+        }
+    }
+
+    [AvaloniaFact]
+    public void The_key_area_keeps_its_five_row_height_across_layouts()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox);
+
+        Click(fixture.Window, textBox);
+        var layoutView = fixture.Host.GetVisualDescendants().OfType<KeyboardLayoutView>().Single();
+        var area = Assert.IsType<Border>(layoutView.Parent);
+        var areaHeight = area.Bounds.Height;
+
+        fixture.Host.Session!.Execute(KeyCommand.SwitchToNumericKeypad);
+        Dispatcher.UIThread.RunJobs();
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+
+        Assert.Equal(areaHeight, area.Bounds.Height);
+        Assert.True(layoutView.Bounds.Height < areaHeight);
+        Assert.NotNull(fixture.Window.CaptureRenderedFrame());
+    }
+
+    [AvaloniaFact]
+    public void Host_renders_the_symbol_page_and_the_numpad_frames()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.FullKeyboardLayout = FullKeyboardLayoutKind.PhoneHybrid);
+
+        Click(fixture.Window, textBox);
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToSymbolPage);
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Assert.NotNull(fixture.Window.CaptureRenderedFrame());
+
+        // The symbol page no longer carries a numeric switch; return to the main
+        // page first, then open the Numpad.
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToMainPage);
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToNumericKeypad);
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Assert.NotNull(fixture.Window.CaptureRenderedFrame());
+    }
+
+    [AvaloniaFact]
+    public void Host_follows_the_dark_theme_variant()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox, variant: ThemeVariant.Dark);
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(TouchKeyboardTheme.Dark, fixture.Host.ResolvedTheme);
+
+        var confirm = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Style == KeyStyle.Primary);
+        Assert.Same(TouchKeyboardTheme.Dark.PrimaryKeyBackground, confirm.Background);
+
+        var close = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .First(key => key.Definition.Glyph == KeyGlyph.Backspace);
+        Assert.Same(TouchKeyboardTheme.Dark.ActionKeyBackground, close.Background);
+    }
+
+    [AvaloniaFact]
+    public void Changing_the_window_variant_reapplies_the_theme()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox);
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Same(TouchKeyboardTheme.Light, fixture.Host.ResolvedTheme);
+
+        fixture.Window.RequestedThemeVariant = ThemeVariant.Dark;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(TouchKeyboardTheme.Dark, fixture.Host.ResolvedTheme);
+        var confirm = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Style == KeyStyle.Primary);
+        Assert.Same(TouchKeyboardTheme.Dark.PrimaryKeyBackground, confirm.Background);
+    }
+
+    [AvaloniaFact]
+    public void An_explicit_theme_overrides_the_window_variant()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.Theme = TouchKeyboardTheme.Light,
+            ThemeVariant.Dark);
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(TouchKeyboardTheme.Light, fixture.Host.ResolvedTheme);
+    }
+
+    [AvaloniaFact]
+    public void Pressing_a_key_scales_it_and_shows_the_pressed_overlay()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox);
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        var key = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .First(candidate => candidate.Definition.Command == KeyCommand.Insert("q"));
+
+        Press(fixture.Window, key);
+        var pressed = Assert.IsType<ScaleTransform>(key.RenderTransform);
+        Assert.True(pressed.ScaleX < 1);
+        Assert.True(pressed.ScaleY < 1);
+        Assert.Contains(
+            key.GetVisualDescendants().OfType<Border>(),
+            border => border.IsVisible && border.Background is not null);
+
+        Release(fixture.Window, key);
+        var released = Assert.IsType<ScaleTransform>(key.RenderTransform);
+        Assert.Equal(1, released.ScaleX);
+        Assert.Equal("q", fixture.Host.Session!.State.Text);
+        Assert.DoesNotContain(
+            key.GetVisualDescendants().OfType<Border>(),
+            border => border.IsVisible && border.Background is not null);
+    }
+
+    [AvaloniaFact]
+    public void Compact_icons_render_smaller_than_full_size_icons()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox);
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        var keys = fixture.Host.GetVisualDescendants().OfType<TouchKey>().ToList();
+        var backspaceBox = keys.Single(key => key.Definition.Glyph == KeyGlyph.Backspace)
+            .GetVisualDescendants().OfType<Viewbox>().Single();
+        var shiftBox = keys.First(key => key.Definition.Glyph == KeyGlyph.Shift)
+            .GetVisualDescendants().OfType<Viewbox>().Single();
+
+        Assert.True(shiftBox.Width < backspaceBox.Width);
+    }
+
+    [AvaloniaFact]
+    public void Space_and_password_visibility_use_vector_icons()
+    {
+        var password = new TextBox { PasswordChar = '*' };
+        TouchKeyboardInput.SetProfile(password, "password");
+        using var fixture = CreateFixture(
+            password,
+            options => options.Localizer = TouchKeyboardLocalizer.EnUs);
+
+        Click(fixture.Window, password);
+        Dispatcher.UIThread.RunJobs();
+
+        var space = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Glyph == KeyGlyph.Space);
+        Assert.NotNull(space.GetVisualDescendants().OfType<AvaloniaPath>().Single(path => path.IsVisible).Data);
+
+        var reveal = fixture.Host.GetVisualDescendants()
+            .OfType<Control>()
+            .FirstOrDefault(control => AutomationProperties.GetName(control) == "Show password");
+        Assert.NotNull(reveal);
+        var revealIcon = reveal!.GetVisualDescendants().OfType<AvaloniaPath>().Single(path => path.IsVisible);
+        var showPasswordGeometry = revealIcon.Data;
+        Assert.NotNull(showPasswordGeometry);
+
+        Click(fixture.Window, reveal);
+        Assert.Equal("Hide password", AutomationProperties.GetName(reveal));
+        Assert.Same(revealIcon, reveal.GetVisualDescendants().OfType<AvaloniaPath>().Single(path => path.IsVisible));
+        Assert.NotSame(showPasswordGeometry, revealIcon.Data);
     }
 }

@@ -2,19 +2,44 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tk="using:TouchKeyboard.Avalonia"
         x:Class="TouchKeyboard.Demo.MainWindow"
-        Title="TouchKeyboard Demo — P3"
+        Title="TouchKeyboard Demo"
         Width="1024"
         Height="700"
         WindowStartupLocation="CenterScreen">
   <Grid RowDefinitions="Auto,*">
     <Border Padding="16" Background="#1F2937">
-      <TextBlock Text="TouchKeyboard — P3 frontend"
+      <TextBlock Text="TouchKeyboard — Avalonia frontend"
                  Foreground="White"
                  FontSize="20" />
     </Border>
 
     <ScrollViewer Grid.Row="1">
       <StackPanel Margin="24" Spacing="14">
+        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
+          <TextBlock Text="全键盘样式" VerticalAlignment="Center" />
+          <ComboBox x:Name="LayoutSelector"
+                    Grid.Column="1"
+                    Width="220"
+                    SelectedIndex="0"
+                    SelectionChanged="OnLayoutChanged">
+            <ComboBoxItem Content="AnsiStyle（严格 ANSI）" Tag="AnsiStyle" />
+            <ComboBoxItem Content="PhoneHybrid（手机式）" Tag="PhoneHybrid" />
+          </ComboBox>
+          <TextBlock Grid.Column="2"
+                     Margin="20,0,0,0"
+                     Text="界面主题"
+                     VerticalAlignment="Center" />
+          <ComboBox x:Name="ThemeSelector"
+                    Grid.Column="3"
+                    Width="150"
+                    SelectedIndex="0"
+                    SelectionChanged="OnThemeChanged">
+            <ComboBoxItem Content="跟随系统" Tag="Default" />
+            <ComboBoxItem Content="浅色" Tag="Light" />
+            <ComboBoxItem Content="深色" Tag="Dark" />
+          </ComboBox>
+        </Grid>
+
         <TextBlock TextWrapping="Wrap"
                    Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard." />
 

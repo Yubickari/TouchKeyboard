@@ -6,23 +6,46 @@ namespace TouchKeyboard.Core;
 
 /// <summary>
 /// Builds the immutable layouts used by the core. Layouts describe key order,
-/// labels and unit widths only; rendering belongs to the frontend.
+/// labels, unit widths and grid cells only; rendering belongs to the frontend.
 /// </summary>
 public static class KeyboardLayouts
 {
     private static readonly KeyboardLayout FullPhoneHybrid = BuildFullPhoneHybrid();
-    private static readonly KeyboardLayout GeneralNumpad = BuildGeneralNumpad();
-    private static readonly KeyboardLayout GeneralPhone = BuildGeneralPhone();
+    private static readonly KeyboardLayout FullAnsiStyle = BuildFullAnsiStyle();
+    private static readonly KeyboardLayout SymbolPage = BuildSymbolPage();
+    private static readonly KeyboardLayout GeneralNumpad = BuildNumpad("numeric-general-numpad", NumpadSlots.General);
+    private static readonly KeyboardLayout GeneralSequence = BuildGeneralSequence();
 
-    /// <summary>Returns the full keyboard for the requested geometry.</summary>
-    public static KeyboardLayout Full(FullKeyboardLayoutKind layout)
+    /// <summary>Returns the full keyboard for the requested geometry and page.</summary>
+    /// <remarks>
+    /// Only <see cref="FullKeyboardLayoutKind.PhoneHybrid"/> has a separate symbol
+    /// page in v1. <see cref="FullKeyboardLayoutKind.AnsiStyle"/> keeps every ANSI
+    /// symbol on its main page and Shift layer, so it always returns the main page.
+    /// </remarks>
+    public static KeyboardLayout Full(
+        FullKeyboardLayoutKind layout,
+        FullKeyboardPage page = FullKeyboardPage.Main)
     {
         switch (layout)
         {
             case FullKeyboardLayoutKind.PhoneHybrid:
-                return FullPhoneHybrid;
-            case FullKeyboardLayoutKind.AnsiStrict:
-                throw new NotSupportedException("The AnsiStrict layout is reserved for a future release.");
+                return page == FullKeyboardPage.Symbols ? SymbolPage : FullPhoneHybrid;
+            case FullKeyboardLayoutKind.AnsiStyle:
+                return FullAnsiStyle;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(layout));
+        }
+    }
+
+    /// <summary>Whether the geometry has a separate symbol page in v1.</summary>
+    public static bool HasSymbolPage(FullKeyboardLayoutKind layout)
+    {
+        switch (layout)
+        {
+            case FullKeyboardLayoutKind.PhoneHybrid:
+                return true;
+            case FullKeyboardLayoutKind.AnsiStyle:
+                return false;
             default:
                 throw new ArgumentOutOfRangeException(nameof(layout));
         }
@@ -35,17 +58,17 @@ public static class KeyboardLayouts
         {
             case NumericKeypadLayoutKind.Numpad:
                 return GeneralNumpad;
-            case NumericKeypadLayoutKind.Phone:
-                return GeneralPhone;
+            case NumericKeypadLayoutKind.Sequence:
+                return GeneralSequence;
             default:
                 throw new ArgumentOutOfRangeException(nameof(layout));
         }
     }
 
     /// <summary>
-    /// Builds the restricted numeric keypad for a numeric profile. Keys that the
-    /// profile does not accept are replaced by empty spacers rather than disabled
-    /// buttons.
+    /// Builds the restricted numeric Numpad for a numeric profile. Keys the
+    /// profile does not accept are not generated; the neighbouring key grows into
+    /// the empty slot instead.
     /// </summary>
     public static KeyboardLayout ProfileNumeric(InputProfile profile)
     {
@@ -59,10 +82,13 @@ public static class KeyboardLayouts
             throw new ArgumentException("The profile is not a restricted numeric profile.", nameof(profile));
         }
 
-        return BuildProfileNumeric(profile);
+        return BuildNumpad("numeric-profile-" + profile.Id, NumpadSlots.From(profile.NumericKeypad));
     }
 
-    private static KeyboardLayout BuildFullPhoneHybrid()
+    /// <summary>Builds the 5×4 Numpad for an explicit slot mapping.</summary>
+    public static KeyboardLayout Numpad(string id, NumpadSlots slots) => BuildNumpad(id, slots);
+
+    private static KeyboardLayout BuildFullAnsiStyle()
     {
         var rows = new List<KeyboardRow>
         {
@@ -80,9 +106,10 @@ public static class KeyboardLayouts
                 CharKey('0', ')'),
                 CharKey('-', '_'),
                 CharKey('=', '+'),
-                NamedKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, 2.0, KeyStyle.Action, repeatable: true)),
+                GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, 2.0, KeyStyle.Action, repeatable: true)),
 
             Row(
+                KeyDefinition.Spacer("spacer.tab", 1.5),
                 CharKey('q', 'Q'),
                 CharKey('w', 'W'),
                 CharKey('e', 'E'),
@@ -95,9 +122,10 @@ public static class KeyboardLayouts
                 CharKey('p', 'P'),
                 CharKey('[', '{'),
                 CharKey(']', '}'),
-                CharKey('\\', '|')),
+                CharKey('\\', '|', widthUnits: 1.5)),
 
             Row(
+                KeyDefinition.Spacer("spacer.caps", 1.75),
                 CharKey('a', 'A'),
                 CharKey('s', 'S'),
                 CharKey('d', 'D'),
@@ -109,10 +137,10 @@ public static class KeyboardLayouts
                 CharKey('l', 'L'),
                 CharKey(';', ':'),
                 CharKey('\'', '"'),
-                NamedKey("key.enter", Labels.Enter, KeyCommand.Submit, 2.0, KeyStyle.Action)),
+                GlyphKey("key.enter", Labels.Enter, KeyCommand.Submit, KeyGlyph.Enter, 2.25, KeyStyle.Action)),
 
             Row(
-                NamedKey("key.shift.left", Labels.Shift, KeyCommand.ToggleShift, 2.0, KeyStyle.Action),
+                GlyphKey("key.shift.left", Labels.Shift, KeyCommand.ToggleShift, KeyGlyph.Shift, 2.25, KeyStyle.Action),
                 CharKey('z', 'Z'),
                 CharKey('x', 'X'),
                 CharKey('c', 'C'),
@@ -123,60 +151,157 @@ public static class KeyboardLayouts
                 CharKey(',', '<'),
                 CharKey('.', '>'),
                 CharKey('/', '?'),
-                NamedKey("key.shift.right", Labels.Shift, KeyCommand.ToggleShift, 2.0, KeyStyle.Action)),
+                GlyphKey("key.shift.right", Labels.Shift, KeyCommand.ToggleShift, KeyGlyph.Shift, 2.75, KeyStyle.Action)),
 
             Row(
                 NamedKey("key.numeric", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, 1.5, KeyStyle.Action),
-                NamedKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, 1.25, KeyStyle.Action, repeatable: true),
-                NamedKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, 1.25, KeyStyle.Action, repeatable: true),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 7.0, KeyStyle.Action),
-                NamedKey("key.clear", Labels.Clear, KeyCommand.Clear, 1.5, KeyStyle.Action),
+                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, 1.25, KeyStyle.Action, repeatable: true),
+                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, 1.25, KeyStyle.Action, repeatable: true),
+                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 5.5, KeyStyle.Action, glyph: KeyGlyph.Space),
+                KeyDefinition.Spacer("spacer.ime", 1.5),
+                GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, 1.5, KeyStyle.Action),
                 NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.5, KeyStyle.Primary))
+        };
+
+        return new KeyboardLayout("full-ansi-style", KeyboardMode.FullKeyboard, rows);
+    }
+
+    private static KeyboardLayout BuildFullPhoneHybrid()
+    {
+        var rows = new List<KeyboardRow>
+        {
+            // The letter width is one unit, fixed by this first row.
+            Row(
+                CharKey('q', 'Q'),
+                CharKey('w', 'W'),
+                CharKey('e', 'E'),
+                CharKey('r', 'R'),
+                CharKey('t', 'T'),
+                CharKey('y', 'Y'),
+                CharKey('u', 'U'),
+                CharKey('i', 'I'),
+                CharKey('o', 'O'),
+                CharKey('p', 'P')),
+
+            // Half a key of inset on both sides puts A half a key right of Q.
+            Row(
+                KeyDefinition.Spacer("spacer.inset.left", 0.5),
+                CharKey('a', 'A'),
+                CharKey('s', 'S'),
+                CharKey('d', 'D'),
+                CharKey('f', 'F'),
+                CharKey('g', 'G'),
+                CharKey('h', 'H'),
+                CharKey('j', 'J'),
+                CharKey('k', 'K'),
+                CharKey('l', 'L'),
+                KeyDefinition.Spacer("spacer.inset.right", 0.5)),
+
+            Row(
+                GlyphKey("key.shift.left", Labels.Shift, KeyCommand.ToggleShift, KeyGlyph.Shift, 1.5, KeyStyle.Action),
+                CharKey('z', 'Z'),
+                CharKey('x', 'X'),
+                CharKey('c', 'C'),
+                CharKey('v', 'V'),
+                CharKey('b', 'B'),
+                CharKey('n', 'N'),
+                CharKey('m', 'M'),
+                GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, 1.5, KeyStyle.Action, repeatable: true)),
+
+            // Caret keys flank the space bar; the space key fills the remaining width.
+            Row(
+                NamedKey("key.symbols", Labels.Symbols, KeyCommand.SwitchToSymbolPage, style: KeyStyle.Action),
+                NamedKey("key.numbers", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, style: KeyStyle.Action),
+                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
+                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 2.5, KeyStyle.Action, glyph: KeyGlyph.Space),
+                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true),
+                KeyDefinition.Spacer("spacer.ime", 1.0),
+                GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, style: KeyStyle.Action),
+                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 1.5, KeyStyle.Primary))
         };
 
         return new KeyboardLayout("full-phone-hybrid", KeyboardMode.FullKeyboard, rows);
     }
 
-    private static KeyboardLayout BuildGeneralNumpad()
+    private static KeyboardLayout BuildSymbolPage()
     {
+        // Tilde moved to the end; the rest of the symbols shift forward one position.
         var rows = new List<KeyboardRow>
         {
+            Row(CharKey('!'), CharKey('@'), CharKey('#'), CharKey('$'), CharKey('%'), CharKey('^')),
+            Row(CharKey('&'), CharKey('*'), CharKey('('), CharKey(')'), CharKey('_'), CharKey('-')),
+            Row(CharKey('+'), CharKey('='), CharKey('['), CharKey(']'), CharKey('{'), CharKey('}')),
+            Row(CharKey('\\'), CharKey('|'), CharKey(';'), CharKey(':'), CharKey('\''), CharKey('~')),
             Row(
-                NamedKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, style: KeyStyle.Action, repeatable: true),
-                CharKey('7'),
-                CharKey('8'),
-                CharKey('9'),
-                NamedKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, style: KeyStyle.Action, repeatable: true),
-                NamedKey("key.clear", Labels.Clear, KeyCommand.Clear, style: KeyStyle.Action)),
-
-            Row(
-                NamedKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, style: KeyStyle.Action, repeatable: true),
-                CharKey('4'),
-                CharKey('5'),
-                CharKey('6'),
-                CharKey('.'),
-                CharKey('-')),
-
-            Row(
-                NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToFullKeyboard, style: KeyStyle.Action),
-                CharKey('1'),
-                CharKey('2'),
-                CharKey('3'),
-                CharKey('/'),
-                CharKey(':')),
-
-            Row(
-                CharKey(','),
-                CharKey('0'),
-                CharKey('@'),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), style: KeyStyle.Action),
-                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.0, KeyStyle.Primary))
+                NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToMainPage, style: KeyStyle.Action),
+                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
+                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), style: KeyStyle.Action, glyph: KeyGlyph.Space),
+                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true),
+                GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, style: KeyStyle.Action, repeatable: true),
+                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, style: KeyStyle.Primary))
         };
 
-        return new KeyboardLayout("numeric-general-numpad", KeyboardMode.NumericKeypad, rows);
+        return new KeyboardLayout("full-symbol-page", KeyboardMode.FullKeyboard, rows);
     }
 
-    private static KeyboardLayout BuildGeneralPhone()
+    private static KeyboardLayout BuildNumpad(string id, NumpadSlots slots)
+    {
+        if (slots is null)
+        {
+            throw new ArgumentNullException(nameof(slots));
+        }
+
+        var confirmRowSpan = slots.RightRow2 == NumpadSlotKey.None ? 2 : 1;
+        var zeroColumnSpan = slots.Separator.HasValue ? 1 : 2;
+        var cells = new List<KeyboardGridCell>(20);
+
+        // Row 0: step/plus, 7 8 9, backspace.
+        cells.Add(Cell(0, 0, StepKey(slots.ShowStepKeys, up: true)));
+        cells.Add(Cell(0, 1, CharKey('7')));
+        cells.Add(Cell(0, 2, CharKey('8')));
+        cells.Add(Cell(0, 3, CharKey('9')));
+        cells.Add(Cell(0, 4, GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, style: KeyStyle.Action, repeatable: true)));
+
+        // Row 1: step/minus, 4 5 6, clear.
+        cells.Add(Cell(1, 0, StepKey(slots.ShowStepKeys, up: false)));
+        cells.Add(Cell(1, 1, CharKey('4')));
+        cells.Add(Cell(1, 2, CharKey('5')));
+        cells.Add(Cell(1, 3, CharKey('6')));
+        cells.Add(Cell(1, 4, GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, style: KeyStyle.Action)));
+
+        // Row 2: left scenario slot, 1 2 3, right scenario slot.
+        if (SlotKey(slots.LeftRow2) is { } left)
+        {
+            cells.Add(Cell(2, 0, left));
+        }
+
+        cells.Add(Cell(2, 1, CharKey('1')));
+        cells.Add(Cell(2, 2, CharKey('2')));
+        cells.Add(Cell(2, 3, CharKey('3')));
+
+        if (SlotKey(slots.RightRow2) is { } right)
+        {
+            cells.Add(Cell(2, 4, right));
+        }
+
+        // Row 3: caret left, caret right, 0 (widened when the decimal slot is empty),
+        // the scenario separator, and Confirm (stretched over an empty right row-2 slot).
+        cells.Add(Cell(3, 0, GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true)));
+        cells.Add(Cell(3, 1, GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true)));
+        cells.Add(Cell(3, 2, CharKey('0', columnSpan: zeroColumnSpan)));
+        if (slots.Separator is { } separator)
+        {
+            cells.Add(Cell(3, 3, SeparatorKey(separator)));
+        }
+
+        cells.Add(confirmRowSpan == 2
+            ? Cell(2, 4, ConfirmKey(2))
+            : Cell(3, 4, ConfirmKey(1)));
+
+        return new KeyboardLayout(id, KeyboardMode.NumericKeypad, new KeyboardGridLayout(5, 4, cells));
+    }
+
+    private static KeyboardLayout BuildGeneralSequence()
     {
         var rows = new List<KeyboardRow>
         {
@@ -186,84 +311,57 @@ public static class KeyboardLayouts
             Row(CharKey('@'), CharKey('"'), CharKey('.'), CharKey(','), CharKey('?'), CharKey('!')),
             Row(
                 NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToFullKeyboard, style: KeyStyle.Action),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 2.0, KeyStyle.Action),
-                NamedKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, style: KeyStyle.Action, repeatable: true),
+                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 2.0, KeyStyle.Action, glyph: KeyGlyph.Space),
+                GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, style: KeyStyle.Action, repeatable: true),
                 NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.0, KeyStyle.Primary))
         };
 
-        return new KeyboardLayout("numeric-general-phone", KeyboardMode.NumericKeypad, rows);
+        return new KeyboardLayout("numeric-general-sequence", KeyboardMode.NumericKeypad, rows);
     }
 
-    private static KeyboardLayout BuildProfileNumeric(InputProfile profile)
+    private static KeyDefinition StepKey(bool showStepKeys, bool up)
     {
-        var options = profile.NumericKeypad;
-        var separator = options.ShowDecimalPoint ? (char?)'.' : options.Separator;
-        var id = "numeric-profile-" + profile.Id;
-
-        var row0 = new List<KeyDefinition>
+        if (!showStepKeys)
         {
-            options.ShowCaretKeys
-                ? NamedKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, style: KeyStyle.Action, repeatable: true)
-                : KeyDefinition.Spacer("spacer.r0.c0"),
-            CharKey('7'),
-            CharKey('8'),
-            CharKey('9'),
-            NamedKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, style: KeyStyle.Action, repeatable: true)
-        };
-
-        var row1 = new List<KeyDefinition>
-        {
-            options.ShowCaretKeys
-                ? NamedKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, style: KeyStyle.Action, repeatable: true)
-                : KeyDefinition.Spacer("spacer.r1.c0"),
-            CharKey('4'),
-            CharKey('5'),
-            CharKey('6'),
-            NamedKey("key.clear", Labels.Clear, KeyCommand.Clear, style: KeyStyle.Action)
-        };
-
-        var row2 = new List<KeyDefinition>
-        {
-            options.ShowStepKeys
-                ? NamedKey("key.step.up", Labels.StepUp, KeyCommand.StepDigitUp, style: KeyStyle.Action, repeatable: true)
-                : KeyDefinition.Spacer("spacer.r2.c0"),
-            CharKey('1'),
-            CharKey('2'),
-            CharKey('3'),
-            options.ShowSign
-                ? NamedKey("key.sign", Labels.Sign, KeyCommand.ToggleSign, style: KeyStyle.Action)
-                : KeyDefinition.Spacer("spacer.r2.c4")
-        };
-
-        var row3 = new List<KeyDefinition>
-        {
-            options.ShowStepKeys
-                ? NamedKey("key.step.down", Labels.StepDown, KeyCommand.StepDigitDown, style: KeyStyle.Action, repeatable: true)
-                : KeyDefinition.Spacer("spacer.r3.c0")
-        };
-
-        if (separator.HasValue)
-        {
-            row3.Add(CharKey('0'));
-            row3.Add(CharKey(separator.Value));
-        }
-        else
-        {
-            row3.Add(CharKey('0', widthUnits: 2.0));
+            return up ? CharKey('+', style: KeyStyle.Action) : CharKey('-', style: KeyStyle.Action);
         }
 
-        row3.Add(NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.0, KeyStyle.Primary));
-
-        var rows = new List<KeyboardRow>
-        {
-            new KeyboardRow(row0),
-            new KeyboardRow(row1),
-            new KeyboardRow(row2),
-            new KeyboardRow(row3)
-        };
-
-        return new KeyboardLayout(id, KeyboardMode.NumericKeypad, rows);
+        return up
+            ? GlyphKey("key.step.up", Labels.StepUp, KeyCommand.StepDigitUp, KeyGlyph.ArrowUp, style: KeyStyle.Action, repeatable: true)
+            : GlyphKey("key.step.down", Labels.StepDown, KeyCommand.StepDigitDown, KeyGlyph.ArrowDown, style: KeyStyle.Action, repeatable: true);
     }
+
+    private static KeyDefinition? SlotKey(NumpadSlotKey slot)
+    {
+        switch (slot)
+        {
+            case NumpadSlotKey.None:
+                return null;
+            case NumpadSlotKey.FullKeyboard:
+                return NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToFullKeyboard, style: KeyStyle.Action);
+            case NumpadSlotKey.Sign:
+                return NamedKey("key.sign", Labels.Sign, KeyCommand.ToggleSign, style: KeyStyle.Action, glyph: KeyGlyph.PlusMinus);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(slot));
+        }
+    }
+
+    private static KeyDefinition SeparatorKey(char separator)
+        => new KeyDefinition(
+            "key.numpad.separator",
+            KeyLabel.Literal(separator.ToString()),
+            KeyCommand.Insert(separator.ToString()));
+
+    private static KeyDefinition ConfirmKey(int rowSpan)
+        => new KeyDefinition(
+            "key.confirm",
+            KeyLabel.Resource(Labels.Confirm),
+            KeyCommand.Submit,
+            style: KeyStyle.Primary,
+            rowSpan: rowSpan);
+
+    private static KeyboardGridCell Cell(int row, int column, KeyDefinition key)
+        => new KeyboardGridCell(row, column, key);
 
     private static KeyboardRow Row(params KeyDefinition[] keys) => new KeyboardRow(keys);
 
@@ -272,7 +370,9 @@ public static class KeyboardLayouts
         char? shifted = null,
         double widthUnits = 1.0,
         KeyStyle style = KeyStyle.Default,
-        bool repeatable = false)
+        bool repeatable = false,
+        int columnSpan = 1,
+        int rowSpan = 1)
     {
         var shiftedLabel = shifted.HasValue ? KeyLabel.Literal(shifted.Value.ToString()) : (KeyLabel?)null;
         var shiftedCommand = shifted.HasValue ? KeyCommand.Insert(shifted.Value.ToString()) : (KeyCommand?)null;
@@ -285,7 +385,9 @@ public static class KeyboardLayouts
             style,
             repeatable,
             shiftedLabel,
-            shiftedCommand);
+            shiftedCommand,
+            columnSpan,
+            rowSpan);
     }
 
     private static KeyDefinition NamedKey(
@@ -294,8 +396,32 @@ public static class KeyboardLayouts
         KeyCommand command,
         double widthUnits = 1.0,
         KeyStyle style = KeyStyle.Action,
-        bool repeatable = false)
-        => new KeyDefinition(id, KeyLabel.Resource(resourceKey), command, widthUnits, style, repeatable);
+        bool repeatable = false,
+        KeyGlyph? glyph = null,
+        int columnSpan = 1,
+        int rowSpan = 1)
+        => new KeyDefinition(
+            id,
+            KeyLabel.Resource(resourceKey),
+            command,
+            widthUnits,
+            style,
+            repeatable,
+            glyph: glyph,
+            columnSpan: columnSpan,
+            rowSpan: rowSpan);
+
+    private static KeyDefinition GlyphKey(
+        string id,
+        string resourceKey,
+        KeyCommand command,
+        KeyGlyph glyph,
+        double widthUnits = 1.0,
+        KeyStyle style = KeyStyle.Action,
+        bool repeatable = false,
+        int columnSpan = 1,
+        int rowSpan = 1)
+        => NamedKey(id, resourceKey, command, widthUnits, style, repeatable, glyph, columnSpan, rowSpan);
 
     private static string CharKeyId(char c)
         => "key.char." + ((int)c).ToString("x4", CultureInfo.InvariantCulture);
@@ -310,6 +436,7 @@ public static class KeyboardLayouts
         public const string Enter = "key.enter";
         public const string Numbers = "key.numbers";
         public const string Letters = "key.letters";
+        public const string Symbols = "key.symbols";
         public const string CaretLeft = "key.caret.left";
         public const string CaretRight = "key.caret.right";
         public const string StepUp = "key.step.up";

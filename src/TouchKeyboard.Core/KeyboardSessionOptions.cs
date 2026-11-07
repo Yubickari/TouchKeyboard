@@ -30,9 +30,9 @@ public sealed class KeyboardSessionOptions
     /// <summary>Optional maximum for numeric profiles.</summary>
     public decimal? Maximum { get; set; }
 
-    /// <summary>Full-keyboard geometry; AnsiStrict is reserved for a future release.</summary>
-    public FullKeyboardLayoutKind FullKeyboardLayout { get; set; } = FullKeyboardLayoutKind.PhoneHybrid;
+    /// <summary>Full-keyboard geometry; AnsiStyle is the default.</summary>
+    public FullKeyboardLayoutKind FullKeyboardLayout { get; set; } = FullKeyboardLayoutKind.AnsiStyle;
 
-    /// <summary>General numeric keypad surface.</summary>
+    /// <summary>General numeric keypad surface; Numpad is the enabled one.</summary>
     public NumericKeypadLayoutKind NumericKeypadLayout { get; set; } = NumericKeypadLayoutKind.Numpad;
 }

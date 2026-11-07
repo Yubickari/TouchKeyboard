@@ -11,7 +11,9 @@ public sealed class KeyboardSessionTests
         int maxLength = 0,
         decimal? minimum = null,
         decimal? maximum = null,
-        bool allowsNegative = true)
+        bool allowsNegative = true,
+        FullKeyboardLayoutKind fullKeyboardLayout = FullKeyboardLayoutKind.AnsiStyle,
+        NumericKeypadLayoutKind numericLayout = NumericKeypadLayoutKind.Numpad)
         => new KeyboardSession(new KeyboardSessionOptions
         {
             Text = text,
@@ -19,7 +21,9 @@ public sealed class KeyboardSessionTests
             MaxLength = maxLength,
             Minimum = minimum,
             Maximum = maximum,
-            AllowsNegativeSign = allowsNegative
+            AllowsNegativeSign = allowsNegative,
+            FullKeyboardLayout = fullKeyboardLayout,
+            NumericKeypadLayout = numericLayout
         });
 
     private static string Commit(KeyboardSession session)
@@ -34,13 +38,19 @@ public sealed class KeyboardSessionTests
     {
         var text = NewSession(InputProfiles.Text, "abc");
         Assert.Equal(KeyboardMode.FullKeyboard, text.State.Mode);
-        Assert.Equal("full-phone-hybrid", text.State.Layout.Id);
+        Assert.Equal("full-ansi-style", text.State.Layout.Id);
+        Assert.Equal(FullKeyboardPage.Main, text.State.Page);
         Assert.Equal(3, text.State.CaretIndex);
         Assert.False(text.State.IsDirty);
+
+        var phone = NewSession(InputProfiles.Text, "abc", fullKeyboardLayout: FullKeyboardLayoutKind.PhoneHybrid);
+        Assert.Equal("full-phone-hybrid", phone.State.Layout.Id);
 
         var number = NewSession(InputProfiles.PositiveInteger, "12");
         Assert.Equal(KeyboardMode.NumericKeypad, number.State.Mode);
         Assert.Equal("numeric-profile-positive-integer", number.State.Layout.Id);
+        Assert.True(number.State.Layout.IsGrid);
+        Assert.Equal(FullKeyboardPage.Main, number.State.Page);
         Assert.Equal(2, number.State.CaretIndex);
     }
 
@@ -102,15 +112,17 @@ public sealed class KeyboardSessionTests
         session.Execute(KeyCommand.SwitchToNumericKeypad);
         Assert.Equal(KeyboardMode.NumericKeypad, session.State.Mode);
         Assert.Equal("numeric-general-numpad", session.State.Layout.Id);
+        Assert.True(session.State.Layout.IsGrid);
         Assert.Equal("12", session.State.Text);
         Assert.Equal(1, session.State.CaretIndex);
 
-        session.SetNumericKeypadLayout(NumericKeypadLayoutKind.Phone);
-        Assert.Equal("numeric-general-phone", session.State.Layout.Id);
+        session.SetNumericKeypadLayout(NumericKeypadLayoutKind.Sequence);
+        Assert.Equal("numeric-general-sequence", session.State.Layout.Id);
+        Assert.False(session.State.Layout.IsGrid);
 
         session.Execute(KeyCommand.SwitchToFullKeyboard);
         Assert.Equal(KeyboardMode.FullKeyboard, session.State.Mode);
-        Assert.Equal("full-phone-hybrid", session.State.Layout.Id);
+        Assert.Equal("full-ansi-style", session.State.Layout.Id);
         Assert.Equal("12", session.State.Text);
     }
 
@@ -139,8 +151,84 @@ public sealed class KeyboardSessionTests
         Assert.Equal(KeyboardMode.NumericKeypad, session.State.Mode);
         Assert.Equal("numeric-profile-positive-integer", session.State.Layout.Id);
 
-        session.SetNumericKeypadLayout(NumericKeypadLayoutKind.Phone);
+        session.SetNumericKeypadLayout(NumericKeypadLayoutKind.Sequence);
         Assert.Equal("numeric-profile-positive-integer", session.State.Layout.Id);
+    }
+
+    [Fact]
+    public void Symbol_page_switches_only_for_the_phone_hybrid_geometry()
+    {
+        var phone = NewSession(InputProfiles.Text, fullKeyboardLayout: FullKeyboardLayoutKind.PhoneHybrid);
+
+        phone.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.Equal(KeyboardMode.FullKeyboard, phone.State.Mode);
+        Assert.Equal(FullKeyboardPage.Symbols, phone.State.Page);
+        Assert.Equal("full-symbol-page", phone.State.Layout.Id);
+
+        phone.Execute(KeyCommand.SwitchToMainPage);
+        Assert.Equal(FullKeyboardPage.Main, phone.State.Page);
+        Assert.Equal("full-phone-hybrid", phone.State.Layout.Id);
+
+        var ansi = NewSession(InputProfiles.Text);
+        ansi.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.Equal(FullKeyboardPage.Main, ansi.State.Page);
+        Assert.Equal("full-ansi-style", ansi.State.Layout.Id);
+
+        ansi.Execute(KeyCommand.SwitchToMainPage);
+        Assert.Equal(FullKeyboardPage.Main, ansi.State.Page);
+    }
+
+    [Fact]
+    public void Switching_pages_resets_shift()
+    {
+        var session = NewSession(InputProfiles.Text, fullKeyboardLayout: FullKeyboardLayoutKind.PhoneHybrid);
+        session.Execute(KeyCommand.ToggleShift);
+        Assert.True(session.State.IsShiftActive);
+
+        session.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.False(session.State.IsShiftActive);
+    }
+
+    [Fact]
+    public void Numeric_switch_always_returns_to_the_main_page()
+    {
+        var session = NewSession(InputProfiles.Text, fullKeyboardLayout: FullKeyboardLayoutKind.PhoneHybrid);
+        session.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.Equal(FullKeyboardPage.Symbols, session.State.Page);
+
+        session.Execute(KeyCommand.SwitchToNumericKeypad);
+        Assert.Equal(KeyboardMode.NumericKeypad, session.State.Mode);
+        Assert.Equal(FullKeyboardPage.Main, session.State.Page);
+        Assert.Equal("numeric-general-numpad", session.State.Layout.Id);
+
+        session.Execute(KeyCommand.SwitchToFullKeyboard);
+        Assert.Equal(FullKeyboardPage.Main, session.State.Page);
+        Assert.Equal("full-phone-hybrid", session.State.Layout.Id);
+    }
+
+    [Fact]
+    public void The_numpad_never_enters_the_symbol_page()
+    {
+        var restricted = NewSession(InputProfiles.PositiveInteger);
+        restricted.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.Equal(FullKeyboardPage.Main, restricted.State.Page);
+        Assert.Equal("numeric-profile-positive-integer", restricted.State.Layout.Id);
+
+        var general = NewSession(InputProfiles.Text);
+        general.Execute(KeyCommand.SwitchToNumericKeypad);
+        general.Execute(KeyCommand.SwitchToSymbolPage);
+        Assert.Equal(FullKeyboardPage.Main, general.State.Page);
+        Assert.Equal("numeric-general-numpad", general.State.Layout.Id);
+    }
+
+    [Fact]
+    public void Ansi_style_session_builds_the_strict_layout()
+    {
+        var session = NewSession(InputProfiles.Text, fullKeyboardLayout: FullKeyboardLayoutKind.AnsiStyle);
+
+        Assert.Equal("full-ansi-style", session.State.Layout.Id);
+        Assert.Equal(5, session.State.Layout.Rows.Count);
+        Assert.False(session.State.Layout.IsGrid);
     }
 
     [Fact]
@@ -281,28 +369,19 @@ public sealed class KeyboardSessionTests
     }
 
     [Fact]
-    public void State_changed_fires_for_edits_and_commit()
+    public void State_changed_fires_for_edits_commit_and_page_switches()
     {
-        var session = NewSession(InputProfiles.Text);
+        var session = NewSession(InputProfiles.Text, fullKeyboardLayout: FullKeyboardLayoutKind.PhoneHybrid);
         var changes = 0;
         session.StateChanged += (_, _) => changes++;
 
         session.Execute(KeyCommand.Insert("a"));
         session.TryCommit(out _, out _);
+        var beforePage = changes;
+        session.Execute(KeyCommand.SwitchToSymbolPage);
 
         Assert.True(changes >= 2);
-    }
-
-    [Fact]
-    public void Ansi_strict_session_is_rejected_until_the_layout_is_implemented()
-    {
-        var options = new KeyboardSessionOptions
-        {
-            Profile = InputProfiles.Text,
-            FullKeyboardLayout = FullKeyboardLayoutKind.AnsiStrict
-        };
-
-        Assert.Throws<NotSupportedException>(() => new KeyboardSession(options));
+        Assert.Equal(beforePage + 1, changes);
     }
 
     private static KeyboardSession SessionWithText(InputProfile profile, string text)

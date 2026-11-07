@@ -1,0 +1,189 @@
+# Layout reference
+
+Every surface is immutable data built by `KeyboardLayouts.Full`,
+`KeyboardLayouts.GeneralNumeric` and `KeyboardLayouts.ProfileNumeric`. The core
+describes keys, unit widths, grid cells and semantic glyphs; the Avalonia frontend
+draws them and never introduces UI types into the core. Rows share one unit grid:
+gaps are half-margins inside the unit columns, so a key at the same unit offset
+starts at the same x on every row of a surface.
+
+![Strict ANSI full keyboard](images/keyboard-full.png)
+
+*AnsiStyle, the default full keyboard (1024×700 headless render).*
+
+## Full keyboard geometry
+
+`FullKeyboardLayoutKind` selects one of two geometries. `AnsiStyle` is the default;
+`PhoneHybrid` is the retained alternative.
+
+### AnsiStyle
+
+Five rows, every row exactly **15 units**. Tab, Caps and the IME slot are
+commandless `KeyStyle.Spacer` cells: they keep the geometry aligned, never take a
+press and never enter the accessibility tree.
+
+| Row | Keys and widths | Total |
+|---|---|---|
+| 0 | `` ` ``1 + `1..0`10 + `-`1 + `=`1 + `⌫`2 | 15 |
+| 1 | **Tab spacer 1.5** + `Q..P`10 + `[`1 + `]`1 + `\`1.5 | 15 |
+| 2 | **Caps spacer 1.75** + `A..L`9 + `;`1 + `'`1 + `Enter`2.25 | 15 |
+| 3 | `Shift`2.25 + `Z..M`7 + `,` `.` `/`3 + `Shift`2.75 | 15 |
+| 4 | `123`1.5 + `←`1.25 + `→`1.25 + `Space`5.5 + **IME spacer 1.5** + `Clear`1.5 + `Confirm`2.5 | 15 |
+
+AnsiStyle keeps the complete US ANSI symbol set on its main page and Shift layer,
+so it has no separate symbol page in v1.
+
+### PhoneHybrid
+
+Four phone-style letter rows with no number row; digits and symbols are reached
+from the bottom row. A 10-unit bottom row is the design width.
+
+| Row | Keys and widths | Total |
+|---|---|---|
+| 0 | `Q W E R T Y U I O P` | 10 |
+| 1 | **inset 0.5** + `A S D F G H J K L` + **inset 0.5** | 10 |
+| 2 | `Shift`1.5 + `Z X C V B N M`7 + `⌫`1.5 | 10 |
+| 3 | `符号`1 + `123`1 + `←`1 + `Space`2.5 + `→`1 + **IME spacer 1** + `Clear`1 + `Confirm`1.5 | 10 |
+
+The first letter row fixes the key width at one unit. The home row is inset by half
+a unit on both sides, so `A` sits half a key right of `Q`; the Z row starts after
+the 1.5-unit Shift, so `Z` lines up with `S`. Caret keys flank the space bar, which
+fills the remaining width; the symbol entry sits left of the numeric entry. The symbol page belongs to the full keyboard; the numeric keypad
+never opens it.
+
+![Phone-style full keyboard](images/keyboard-phone-hybrid.png)
+
+*PhoneHybrid main page.*
+
+### Symbol page
+
+The symbol page is a full-keyboard page (`FullKeyboardPage.Symbols`), six columns
+by five rows of one-unit keys. It carries 24 common symbols plus a function row;
+`ABC` returns to the main page. The numeric keypad is reached from the main page,
+not from here.
+
+```text
+! @ # $ %
+& * ( ) _ -
++ = [ ] { }
+\ | ; : ' ~
+ABC ← Space → ⌫ Confirm
+```
+
+Tilde moved to the end of the symbol run and the other symbols shift forward one
+position. The function row no longer carries Clear or a numeric switch: the caret
+keys flank the space bar and Backspace sits immediately left of Confirm.
+
+![Symbol page](images/keyboard-symbols.png)
+
+*PhoneHybrid symbol page.*
+
+## Numeric keypad
+
+`NumericKeypadLayoutKind` selects the numeric surface. `Numpad` is the default and
+the only enabled surface; `Sequence` is retained but not enabled for any built-in
+profile.
+
+### Numpad
+
+The Numpad is a real 5×4 cell grid where every key is one unit:
+
+```text
+[L0 ▲/+]        [7] [8] [9] [R0 ⌫]
+[L1 ▼/−]        [4] [5] [6] [R1 Clear]
+[L2 ABC/±/empty] [1] [2] [3] [R2 scenario/empty]
+[L3 ←]          [→] [0] [. , / : / empty] [Confirm]
+```
+
+- `L0`/`L1` step the digit left of the caret when the scenario enables step keys,
+  and insert `+`/`−` as characters when it does not.
+- `L2` is the ABC key for the general surface, `±` for signed scenarios, and
+  empty otherwise.
+- `R2` is reserved for scenario keys; no built-in scenario fills it in v1.
+- The bottom separator slot takes `.`, a date/IP separator or `:`, or stays empty.
+
+Empty slots are not disabled buttons. They change the geometry:
+
+| Situation | Result |
+|---|---|
+| Bottom separator slot empty | `0` spans two columns (`ColumnSpan = 2`) |
+| Right row-2 slot empty | `Confirm` spans two rows (`RowSpan = 2`) |
+| Right row-2 slot filled | `Confirm` occupies the bottom-right cell only |
+| Left row-2 slot empty | Only the left column changes; Confirm keeps its height |
+
+`NumpadSlots` maps the scenario to those slots. `NumpadSlots.From(options)` derives
+them from an `InputProfile.NumericKeypad`, and `NumpadSlots.General` is the surface
+reached from the full keyboard.
+
+| Scenario | L0/L1 | L2 | R2 | Bottom slot | Zero | Confirm |
+|---|---|---|---|---|---|---|
+| General numeric (from the full keyboard) | `+` `−` | `ABC` | empty | `.` | 1 column | 2 rows |
+| Positive integer | `▲` `▼` | empty | empty | empty | 2 columns | 2 rows |
+| Signed integer | `▲` `▼` | `±` | empty | empty | 2 columns | 2 rows |
+| Positive decimal | `▲` `▼` | empty | empty | `.` | 1 column | 2 rows |
+| Signed decimal | `▲` `▼` | `±` | empty | `.` | 1 column | 2 rows |
+| Date | `▲` `▼` | empty | empty | `/` or `.` | 1 column | 2 rows |
+| IPv4 | `▲` `▼` | empty | empty | `.` | 1 column | 2 rows |
+
+![General Numpad](images/keyboard-numpad-general.png)
+
+*General Numpad: `+`/`−` characters, `ABC`, decimal point and a two-row Confirm.*
+
+![Profile Numpad](images/keyboard-numeric.png)
+
+*Positive-integer Numpad: step icons, empty decimal slot so `0` spans two columns,
+and a two-row Confirm.*
+
+![Decimal Numpad](images/keyboard-numeric-decimal.png)
+
+*Positive-decimal Numpad: the decimal point fills the bottom slot, so `0` keeps one
+column while Confirm still spans two rows.*
+
+![Signed decimal Numpad](images/keyboard-numeric-signed.png)
+
+*Signed-decimal Numpad: the sign slot renders a vector ± sized with the digit keys.*
+
+### Sequence
+
+The retained phone-style 5×6 numeric page (renamed from `Phone`). It can be built
+with `KeyboardLayouts.GeneralNumeric(NumericKeypadLayoutKind.Sequence)` and is
+reserved for a future sequence-entry scenario. No built-in profile produces it.
+
+## Theming and touch feedback
+
+`TouchKeyboardOptions.Theme` is null by default. The overlay then resolves
+`TouchKeyboardTheme.Light` or `.Dark` from the host window's actual theme variant
+and re-applies itself when that variant changes, so switching the shell to dark
+also switches the keyboard. Set an explicit preset to pin a theme. Close and
+confirm keep their contrast in both presets through `DangerKeyForeground` and
+`PrimaryKeyForeground`.
+
+![Dark full keyboard](images/keyboard-full-dark.png)
+
+*The same AnsiStyle surface on the dark preset.*
+
+![Dark Numpad](images/keyboard-numeric-dark.png)
+
+*Dark Numpad; the empty slots still merge into `0` and Confirm.*
+
+Keys and header chrome have no hover state (they are not buttons), so a mouse
+hover changes nothing on a touch panel. A press paints a themed overlay and scales
+the cap down slightly, which stays visible in both themes.
+
+## Key glyphs
+
+`KeyGlyph` names the semantic icons that frontends draw themselves: backspace
+(with the X shifted left inside the tag), clear (an eraser), enter, shift (outline
+and filled), caret arrows (a filled triangle plus a caret bar), step arrows (a
+triangle paired with a `+`/`−` sign), sign toggle (±), space, password show/hide,
+keyboard, symbol, numeric and a reserved IME slot. Compact keys use a smaller icon factor. Icon keys
+keep a localized label; it is the accessible name and the text fallback when a
+frontend cannot draw the glyph.
+
+All glyphs are drawn on one 24×24 design canvas. Features keep their relative
+position across glyphs: the space bar's bottom line shares the eraser's baseline
+(y = 21.5), so the space and clear keys line up, and the password eye sits on the
+same canvas as the slashed eye so only the slash changes when visibility toggles.
+Three candidate looks for the caret and step icons are rendered in
+[icon-variants.png](images/icon-variants.png); the caret-bar set (option A) is the
+one in use.

@@ -25,20 +25,24 @@ concepts:
       symbol: InputProfile
       type: class
     note: A named input contract that selects validation, default mode, numeric keypad key set and commit normalization for one field.
+    accepted:
+      - symbol: InputProfiles
+        path: src/TouchKeyboard.Core/InputProfiles.cs
+        reason: Public static factory class shipped in v0.1.0-preview.1; the plural name distinguishes the catalogue of built-in InputProfile instances from the InputProfile type itself.
   - id: keyboard.session
     terms: [ 键盘会话, 编辑会话, 输入会话 ]
     kind: entity
     canonical:
       symbol: KeyboardSession
       type: class
-    note: Owns the edit buffer, caret, mode, shift state and commit/cancel lifecycle for one field; closing discards and confirming commits.
+    note: Owns the edit buffer, caret, mode, full-keyboard page, shift state and commit/cancel lifecycle for one field; closing discards and confirming commits.
   - id: keyboard.state
     terms: [ 键盘状态, 会话状态, 键盘快照 ]
     kind: entity
     canonical:
       symbol: KeyboardState
       type: class
-    note: An immutable snapshot of text, caret, mode, shift and validation error that a frontend renders.
+    note: An immutable snapshot of text, caret, mode, full-keyboard page, shift and validation error that a frontend renders.
   - id: keyboard.layout
     terms: [ 键盘布局, 按键布局, 键位表 ]
     kind: entity
@@ -46,6 +50,10 @@ concepts:
       symbol: KeyboardLayout
       type: class
     note: An immutable keyboard surface described as rows or a grid with column/row spans, rendered by a frontend without UI types in the core.
+    accepted:
+      - symbol: KeyboardLayouts
+        path: src/TouchKeyboard.Core/KeyboardLayouts.cs
+        reason: Public static factory class shipped in v0.1.0-preview.1; the plural name marks the builder catalogue that returns KeyboardLayout instances.
   - id: keyboard.key
     terms: [ 按键定义, 键定义, 按键描述 ]
     kind: entity
@@ -59,14 +67,14 @@ concepts:
     canonical:
       symbol: KeyCommand
       type: struct
-    note: A UI-agnostic action (insert text, backspace, clear, move caret, step digit, toggle sign, switch mode, submit, close) dispatched by a key.
+    note: A UI-agnostic action (insert text, backspace, clear, move caret, step digit, toggle sign, switch mode, switch full-keyboard page, submit, close) dispatched by a key.
   - id: keyboard.host
     terms: [ 键盘宿主, 键盘浮层, 键盘面板 ]
     kind: entity
     canonical:
       symbol: TouchKeyboardHost
       type: control
-    note: The Avalonia overlay control that renders one session, the field label/unit, the editor surface and the active keyboard layout.
+    note: The Avalonia overlay control that renders one session, the field label/unit, the editor surface and the active keyboard layout; it follows the host window's theme variant unless a theme is pinned.
   - id: keyboard.editor_adapter
     terms: [ 编辑适配器, 控件适配器, 编辑器目标 ]
     kind: reference
@@ -80,7 +88,7 @@ concepts:
     canonical:
       symbol: NumericKeypadOptions
       type: class
-    note: "Which extra keys a numeric profile exposes: sign toggle, decimal point, date separator, step up/down, caret keys and layout switch."
+    note: Which extra keys a numeric profile exposes; NumpadSlots derives the Numpad slots from its step, sign, decimal-point, separator and full-keyboard-switch flags.
   - id: keyboard.validation_error
     terms: [ 输入校验错误, 校验结果, 校验错误码 ]
     kind: entity
@@ -164,14 +172,14 @@ concepts:
     canonical:
       symbol: KeyboardLayoutView
       type: control
-    note: Avalonia control that renders an immutable KeyboardLayout as rows of TouchKey controls, scaling each row to the available width.
+    note: Avalonia control that renders an immutable KeyboardLayout as rows or as a cell grid of TouchKey controls, scaling rows to the available width and applying column/row spans.
   - id: keyboard.touch_key
     terms: [ 触摸按键, 键帽控件, 按键控件 ]
     kind: entity
     canonical:
       symbol: TouchKey
       type: control
-    note: Border-based touch key that never takes focus, captures the pointer and supports long-press repeat.
+    note: Border-based touch key that never takes focus, captures the pointer, supports long-press repeat, draws KeyGlyph vectors and exposes a localized accessible name.
   - id: keyboard.controller
     terms: [ 键盘控制器, 命中控制器, 输入控制器 ]
     kind: entity
@@ -192,7 +200,7 @@ concepts:
     canonical:
       symbol: TouchKeyboardTheme
       type: class
-    note: Brushes and metrics for the panel, editor and key roles; light and dark presets ship in the Avalonia frontend.
+    note: Brushes and metrics for the panel, editor, key roles, press feedback and label offset; light and dark presets ship in the Avalonia frontend.
   - id: keyboard.localizer
     terms: [ 键盘本地化, 文案解析, 本地化器 ]
     kind: reference
@@ -234,7 +242,7 @@ concepts:
     canonical:
       symbol: KeyGlyph
       type: enum
-    note: A typed semantic icon for function keys (backspace, clear, enter, shift, arrows and similar) that each frontend renders with its own vector assets.
+    note: A typed semantic icon for function keys (backspace, clear, enter, shift, caret and step arrows, sign toggle, space, password visibility and similar) that each frontend renders with its own vector assets.
   - id: keyboard.symbol_page
     terms: [ 符号页, 常用符号页, 符号键盘页 ]
     kind: entity
@@ -256,3 +264,31 @@ concepts:
       symbol: FullKeyboardPage
       type: enum
     note: "Which full-keyboard page is active: Main or Symbols; the symbol page is owned by the full keyboard, not by the numeric Numpad."
+  - id: keyboard.grid_layout
+    terms: [ 网格布局, 格子布局, 跨行跨列布局 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardGridLayout
+      type: class
+    note: A fixed columns x rows cell surface where every cell carries a KeyDefinition with ColumnSpan/RowSpan, used by the Numpad so 0 can grow into the empty decimal slot and confirm can grow into an empty right-row2 slot.
+  - id: keyboard.grid_cell
+    terms: [ 网格单元, 格子, 单元格 ]
+    kind: entity
+    canonical:
+      symbol: KeyboardGridCell
+      type: class
+    note: "One positioned cell of a KeyboardGridLayout: a zero-based row and column plus the KeyDefinition that occupies that origin."
+  - id: keyboard.numpad_slot_key
+    terms: [ 数字盘槽位键, 槽位语义键 ]
+    kind: enum
+    canonical:
+      symbol: NumpadSlotKey
+      type: enum
+    note: "Which semantic key fills a Numpad row-2 side slot: None, the full-keyboard switch (ABC) or the sign toggle."
+  - id: keyboard.touch_button
+    terms: [ 触摸按钮, 标题栏按钮, 浮层按钮 ]
+    kind: entity
+    canonical:
+      symbol: TouchButton
+      type: control
+    note: "Touch-first chrome button for the overlay header (close and password reveal): no focus, no hover state, a themed press overlay, a small press scale and an accessible name."

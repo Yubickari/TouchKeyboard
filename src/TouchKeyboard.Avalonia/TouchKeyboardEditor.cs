@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using TouchKeyboard.Core;
 
@@ -43,6 +44,12 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
 
     /// <summary>The caret position in the real text.</summary>
     public int CaretIndex { get; private set; }
+
+    /// <summary>
+    /// Horizontal offset of the caret in the drawn text, in logical pixels. Trailing
+    /// spaces are measured, so the caret visibly follows them.
+    /// </summary>
+    public double CaretOffset => MeasureCaretX(GetDisplayText());
 
     /// <summary>Whether the text is masked.</summary>
     public bool IsPassword { get; private set; }
@@ -132,7 +139,7 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
                 : Format(display, TextBrush);
 
             var viewportWidth = Math.Max(1, Bounds.Width - EditorPadding.Left - EditorPadding.Right);
-            var textWidth = text.Width;
+            var textWidth = MeasureTextWidth(display);
             var caretX = MeasureCaretX(display);
 
             if (caretX + EditorPadding.Left - _scrollOffset > Bounds.Width - EditorPadding.Right)
@@ -193,7 +200,28 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
         }
 
         var count = Math.Min(CaretIndex, display.Length);
-        return Format(display.Substring(0, count), TextBrush).Width;
+        return MeasureTextWidth(display.Substring(0, count));
+    }
+
+    /// <summary>
+    /// Measures text including trailing whitespace. Skia drops trailing spaces from
+    /// plain text widths, which would freeze the caret after a typed space.
+    /// </summary>
+    private double MeasureTextWidth(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        var layout = new TextLayout(
+            text,
+            new Typeface(EditorFontFamily, FontStyle.Normal, FontWeight.Normal, FontStretch.Normal),
+            EditorFontSize,
+            TextBrush,
+            TextAlignment.Left,
+            TextWrapping.NoWrap);
+        return layout.WidthIncludingTrailingWhitespace;
     }
 
     private FormattedText Format(string text, IBrush brush)

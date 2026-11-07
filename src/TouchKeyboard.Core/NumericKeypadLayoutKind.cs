@@ -7,14 +7,14 @@ namespace TouchKeyboard.Core;
 public enum NumericKeypadLayoutKind
 {
     /// <summary>
-    /// A 6x4 numeric block with common symbols, space and a full-keyboard switch.
-    /// This is the default.
+    /// The active 5×4 slot-based Numpad: a left function column, a 3×4 digit
+    /// block, a right action column and a 1-unit Confirm. This is the default.
     /// </summary>
     Numpad = 0,
 
     /// <summary>
-    /// A phone-style 123 page: digits plus common English punctuation, with a
-    /// full-keyboard switch, space, backspace and confirm.
+    /// The retained phone-style 5×6 numeric surface, renamed from Phone and kept
+    /// for a future sequence-entry scenario. No built-in profile enables it.
     /// </summary>
-    Phone = 1
+    Sequence = 1
 }

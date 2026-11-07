@@ -6,8 +6,8 @@ namespace TouchKeyboard.Core;
 public enum KeyboardMode
 {
     /// <summary>
-    /// Standard US ANSI key order with a number row, rendered with the modern
-    /// phone keyboard interaction model.
+    /// The full keyboard: the strict 15-unit ANSI geometry or the four-row
+    /// phone-style letters keyboard, both without F, numpad or system keys.
     /// </summary>
     FullKeyboard = 0,
 

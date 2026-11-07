@@ -16,15 +16,31 @@ public sealed class KeyboardModeTests
     public void Full_keyboard_layout_kinds_are_distinct()
     {
         Assert.Equal(0, (int)FullKeyboardLayoutKind.PhoneHybrid);
-        Assert.Equal(1, (int)FullKeyboardLayoutKind.AnsiStrict);
-        Assert.NotEqual(FullKeyboardLayoutKind.PhoneHybrid, FullKeyboardLayoutKind.AnsiStrict);
+        Assert.Equal(1, (int)FullKeyboardLayoutKind.AnsiStyle);
+        Assert.NotEqual(FullKeyboardLayoutKind.PhoneHybrid, FullKeyboardLayoutKind.AnsiStyle);
     }
 
     [Fact]
     public void Numeric_keypad_layout_kinds_are_distinct()
     {
         Assert.Equal(0, (int)NumericKeypadLayoutKind.Numpad);
-        Assert.Equal(1, (int)NumericKeypadLayoutKind.Phone);
-        Assert.NotEqual(NumericKeypadLayoutKind.Numpad, NumericKeypadLayoutKind.Phone);
+        Assert.Equal(1, (int)NumericKeypadLayoutKind.Sequence);
+        Assert.NotEqual(NumericKeypadLayoutKind.Numpad, NumericKeypadLayoutKind.Sequence);
+    }
+
+    [Fact]
+    public void Options_default_to_the_ansi_style_full_keyboard_and_the_numpad()
+    {
+        var options = new KeyboardSessionOptions();
+
+        Assert.Equal(FullKeyboardLayoutKind.AnsiStyle, options.FullKeyboardLayout);
+        Assert.Equal(NumericKeypadLayoutKind.Numpad, options.NumericKeypadLayout);
+    }
+
+    [Fact]
+    public void Full_keyboard_pages_are_stable()
+    {
+        Assert.Equal(0, (int)FullKeyboardPage.Main);
+        Assert.Equal(1, (int)FullKeyboardPage.Symbols);
     }
 }

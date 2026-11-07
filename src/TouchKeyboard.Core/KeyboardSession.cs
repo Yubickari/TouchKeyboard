@@ -4,9 +4,9 @@ using System.Globalization;
 namespace TouchKeyboard.Core;
 
 /// <summary>
-/// Owns the edit buffer, caret, mode, shift state and commit/cancel lifecycle for
-/// one field. Closing always discards; only <see cref="TryCommit"/> produces a
-/// value for the host to write back.
+/// Owns the edit buffer, caret, mode, full-keyboard page, shift state and
+/// commit/cancel lifecycle for one field. Closing always discards; only
+/// <see cref="TryCommit"/> produces a value for the host to write back.
 /// </summary>
 public sealed class KeyboardSession
 {
@@ -21,6 +21,7 @@ public sealed class KeyboardSession
     private string _text;
     private int _caret;
     private KeyboardMode _mode;
+    private FullKeyboardPage _page;
     private bool _shift;
     private InputValidationError? _error;
     private bool _cancelled;
@@ -63,6 +64,7 @@ public sealed class KeyboardSession
         _initialText = _text;
         _caret = _text.Length;
         _mode = Profile.DefaultMode;
+        _page = FullKeyboardPage.Main;
         _shift = false;
         _error = null;
         _cancelled = false;
@@ -137,6 +139,12 @@ public sealed class KeyboardSession
                 return;
             case KeyCommandKind.SwitchToNumericKeypad:
                 SwitchToNumericKeypad();
+                return;
+            case KeyCommandKind.SwitchToSymbolPage:
+                SwitchToSymbolPage();
+                return;
+            case KeyCommandKind.SwitchToMainPage:
+                SwitchToMainPage();
                 return;
             default:
                 return;
@@ -398,6 +406,7 @@ public sealed class KeyboardSession
         }
 
         _mode = KeyboardMode.FullKeyboard;
+        _page = FullKeyboardPage.Main;
         _shift = false;
         _error = null;
         _layout = BuildLayout();
@@ -412,6 +421,37 @@ public sealed class KeyboardSession
         }
 
         _mode = KeyboardMode.NumericKeypad;
+        _page = FullKeyboardPage.Main;
+        _shift = false;
+        _error = null;
+        _layout = BuildLayout();
+        Publish();
+    }
+
+    private void SwitchToSymbolPage()
+    {
+        if (_mode != KeyboardMode.FullKeyboard
+            || _page == FullKeyboardPage.Symbols
+            || !KeyboardLayouts.HasSymbolPage(_fullKeyboardLayout))
+        {
+            return;
+        }
+
+        _page = FullKeyboardPage.Symbols;
+        _shift = false;
+        _error = null;
+        _layout = BuildLayout();
+        Publish();
+    }
+
+    private void SwitchToMainPage()
+    {
+        if (_mode != KeyboardMode.FullKeyboard || _page == FullKeyboardPage.Main)
+        {
+            return;
+        }
+
+        _page = FullKeyboardPage.Main;
         _shift = false;
         _error = null;
         _layout = BuildLayout();
@@ -422,7 +462,7 @@ public sealed class KeyboardSession
     {
         if (_mode == KeyboardMode.FullKeyboard)
         {
-            return KeyboardLayouts.Full(_fullKeyboardLayout);
+            return KeyboardLayouts.Full(_fullKeyboardLayout, _page);
         }
 
         return Profile.AllowsFullKeyboard
@@ -450,6 +490,7 @@ public sealed class KeyboardSession
             _shift,
             _layout,
             _fullKeyboardLayout,
+            _page,
             _numericKeypadLayout,
             _error,
             !string.Equals(_text, _initialText, StringComparison.Ordinal),

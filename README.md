@@ -6,11 +6,13 @@ A touch-first, embedded software keyboard for small industrial touch screens.
 The input logic is a pure .NET Standard 2.0 backend; Avalonia is the first
 frontend, and WPF is planned.
 
-> **Status: P3 Avalonia frontend implemented.** The core has the ten input
-> profiles, immutable layouts, session and validation; Avalonia now has the
-> overlay host, controller, custom editor surface, touch keys, built-in
-> adapters, theme and zh-CN/en-US localizer. P4 hardening and P5 publication
-> remain. Do not use this package in production yet.
+> **Status: layout redesign and visual refinements implemented (2026-11-07).**
+> The core has the ten input profiles, the strict ANSI and phone-hybrid full
+> keyboards, the 5×4 Numpad cell grid, immutable layouts, session and validation;
+> Avalonia has the overlay host, controller, custom editor surface, vector key
+> glyphs, automatic light/dark theming, touch press feedback, built-in adapters,
+> theme and zh-CN/en-US localizer. P5 publication and the rest of the hardening
+> pass remain. Do not use this package in production yet.
 
 ## Why
 
@@ -32,41 +34,59 @@ frontend, and WPF is planned.
 
 Two keyboard modes:
 
-1. **Full keyboard** — a modern-phone interaction model with the standard US
-   ANSI key order and number row. No F keys, numpad or system keys.
-2. **Numeric keypad** — a general numeric surface (switchable between a 6×4
-   numpad and a phone-style 123 page) and profile-restricted numeric surfaces
-   for integer, decimal, date and IP fields.
+1. **Full keyboard** — the strict 15-unit `AnsiStyle` ANSI geometry by default
+   (five rows, commandless Tab/Caps/IME spacer cells); the four-row
+   `PhoneHybrid` letters keyboard with its own symbol page is a retained
+   alternative. No F keys, numpad or system keys.
+2. **Numeric keypad** — a 5×4 `Numpad` shared by the general surface and the
+   profile-restricted ones. Empty slots merge into their neighbour (`0` widens
+   over an empty decimal slot, Confirm stretches over an empty right-row2 slot)
+   instead of rendering dead keys.
 
 Closing the panel discards edits; only **Confirm**/Enter commits. The field
 label and unit are shown above the keys.
 
-![Full keyboard](docs/images/keyboard-full.png)
+![Strict ANSI full keyboard](docs/images/keyboard-full.png)
 
 ![Profile-restricted numeric keypad](docs/images/keyboard-numeric.png)
 
-*Headless Skia renders from the 1024×700 test harness.*
+![Dark theme](docs/images/keyboard-full-dark.png)
+
+*Headless Skia renders from the 1024×700 harness. The overlay follows the window's
+theme variant, so a dark shell gets the dark preset automatically; see
+[docs/layouts.md](docs/layouts.md) for every geometry, the symbol page, the Numpad
+slot table and the theme metrics.*
 
 ## What works now
 
 - `InputProfile`: text, password, ASCII token, signed/positive integer,
   signed/positive decimal, date with `/` or `.`, and IPv4.
-- Immutable `KeyboardLayout` data: the `PhoneHybrid` full keyboard, the general
-  `Numpad`/`Phone` numeric surfaces, and profile-restricted numeric keypads that
-  omit sign, decimal point, separator or ABC when they are not valid.
+- Immutable `KeyboardLayout` data: the strict `AnsiStyle` and four-row
+  `PhoneHybrid` full keyboards, the PhoneHybrid symbol page, the 5×4 `Numpad`
+  as a real cell grid with spans, profile-restricted numeric keypads that omit
+  sign, decimal point, separator or ABC when they are not valid, and the
+  retained `Sequence` page.
+- `KeyGlyph` semantic icons: backspace, clear, enter, shift (outline/filled),
+  caret-bar arrows, step arrows with `+`/`−` signs, space and password
+  visibility are typed icons that each frontend draws as a vector, with the
+  localized label kept as the accessible name.
+- `NumpadSlots` scenario mapping: step keys vs `+`/`−` characters, `ABC` vs `±`
+  in the left row-2 slot, and the bottom decimal/date/IP separator.
 - `KeyboardSession`: insert, backspace, clear, caret movement, per-digit
-  step-up/down, sign toggle, sticky shift, mode switch, commit/cancel, max
-  length and numeric range checks.
-- Avalonia: `TouchKeyboardHost` overlay with scrim, title/unit/error row,
-  auto-attaching controller, custom-drawn `TouchKeyboardEditor`, pointer-captured
-  `TouchKey` with long-press repeat, `KeyboardLayoutView`, `IEditorSurface`
-  injection, adapters for `TextBox`, `NumericUpDown` and `CalendarDatePicker`,
-  a custom adapter registry, light/dark themes and zh-CN/en-US localizer.
-- 78 core tests + 10 Avalonia headless tests per target (176 executions).
+  step-up/down, sign toggle, sticky shift, mode switch, full-keyboard page
+  switch, commit/cancel, max length and numeric range checks.
+- Avalonia: `TouchKeyboardHost` overlay with scrim, title/unit/error row and a
+  fixed five-row key area, auto-attaching controller, custom-drawn
+  `TouchKeyboardEditor`, pointer-captured `TouchKey` with long-press repeat and
+  vector icons, `KeyboardLayoutView`, `IEditorSurface` injection, adapters for
+  `TextBox`, `NumericUpDown` and `CalendarDatePicker`, a custom adapter
+  registry, light/dark themes that follow the window variant, zh-CN/en-US
+  localizer and touch-first chrome with no hover states.
+- 101 core tests + 23 Avalonia headless tests per target (248 executions).
 
-Not implemented yet: WPF, NuGet publication (P5), Chinese input, and the P4
-hardening pass (real-device DPI/OSK verification, accessibility, packaging
-polish).
+Not implemented yet: WPF, NuGet publication (P5), Chinese input, and the
+remaining hardening pass (real-device DPI/OSK verification, accessibility,
+packaging polish).
 
 ## Repository layout
 
@@ -77,6 +97,7 @@ samples/TouchKeyboard.Demo/    demo application
 tests/TouchKeyboard.Core.Tests/
 tests/TouchKeyboard.Avalonia.Tests/
 docs/design/decisions.md       accepted decisions
+docs/layouts.md                layout reference
 docs/images/                   rendered previews
 build/                         preflight and smoke scripts
 ```
@@ -100,11 +121,9 @@ Run the demo:
 dotnet run --project samples/TouchKeyboard.Demo
 ```
 
-The demo can be started with:
-
-```bash
-dotnet run --project samples/TouchKeyboard.Demo
-```
+The demo has selectors for the full-keyboard geometry (AnsiStyle / PhoneHybrid)
+and the app theme variant (system / light / dark), so both presets and both
+geometries can be inspected side by side.
 
 Restore uses the standard NuGet package cache. In sandboxed environments, set
 `NUGET_PACKAGES` to a writable directory before restoring.
@@ -112,7 +131,8 @@ Restore uses the standard NuGet package cache. In sandboxed environments, set
 ## Design
 
 See [docs/design/decisions.md](docs/design/decisions.md) for the accepted
-decisions. The detailed design plan is kept locally until the public docs are
+decisions and [docs/layouts.md](docs/layouts.md) for the geometry of every
+surface. The detailed design plan is kept locally until the public docs are
 rewritten.
 
 ## License

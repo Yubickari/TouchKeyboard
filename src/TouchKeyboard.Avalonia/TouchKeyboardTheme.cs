@@ -22,12 +22,14 @@ public sealed class TouchKeyboardTheme
         PrimaryKeyBackground = Brush("#FF3B82F6"),
         PrimaryKeyForeground = Brush("#FFFFFFFF"),
         DangerKeyBackground = Brush("#FFDC2626"),
+        DangerKeyForeground = Brush("#FFFFFFFF"),
         Text = Brush("#FFF9FAFB"),
         MutedText = Brush("#FF9CA3AF"),
         ErrorText = Brush("#FFF87171"),
         EditorBackground = Brush("#FF111827"),
         EditorBorder = Brush("#33FFFFFF"),
-        Caret = Brush("#FF60A5FA")
+        Caret = Brush("#FF60A5FA"),
+        PressedOverlay = Brush("#33FFFFFF")
     };
 
     /// <summary>Scrim behind the panel.</summary>
@@ -53,6 +55,9 @@ public sealed class TouchKeyboardTheme
 
     /// <summary>Close key background.</summary>
     public IBrush DangerKeyBackground { get; init; } = Brush("#FFDC2626");
+
+    /// <summary>Close key foreground; white reads on the red in both themes.</summary>
+    public IBrush DangerKeyForeground { get; init; } = Brush("#FFFFFFFF");
 
     /// <summary>Primary text.</summary>
     public IBrush Text { get; init; } = Brush("#FF1F2937");
@@ -102,8 +107,21 @@ public sealed class TouchKeyboardTheme
     /// <summary>Unit font size.</summary>
     public double UnitFontSize { get; init; } = 14;
 
-    /// <summary>Opacity of a pressed key.</summary>
-    public double PressedOpacity { get; init; } = 0.65;
+    /// <summary>
+    /// Brush painted over a key or chrome button while it is pressed. A dark
+    /// overlay on the light theme and a light overlay on the dark theme keeps the
+    /// press visible without touching the label colour.
+    /// </summary>
+    public IBrush PressedOverlay { get; init; } = Brush("#2E000000");
+
+    /// <summary>Scale applied to a key while it is pressed.</summary>
+    public double PressedScale { get; init; } = 0.96;
+
+    /// <summary>
+    /// Downward optical offset of key labels in pixels at <see cref="KeyFontSize"/>.
+    /// Digits and capitals otherwise sit slightly above the visual centre.
+    /// </summary>
+    public double KeyLabelOffset { get; init; } = 2;
 
     private static SolidColorBrush Brush(string hex) => new SolidColorBrush(Color.Parse(hex));
 }

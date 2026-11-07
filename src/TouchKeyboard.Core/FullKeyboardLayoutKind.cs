@@ -6,14 +6,15 @@ namespace TouchKeyboard.Core;
 public enum FullKeyboardLayoutKind
 {
     /// <summary>
-    /// Modern phone keyboard interaction with the standard US ANSI key order and
-    /// number row. This is the default.
+    /// Four-row phone-style QWERTY: letters only on the main page, with symbol and
+    /// numeric entry points and no number row. A retained alternative to
+    /// <see cref="AnsiStyle"/>.
     /// </summary>
     PhoneHybrid = 0,
 
     /// <summary>
-    /// Strict physical ANSI geometry, including the Tab/Caps positions. Reserved
-    /// for a future release; not implemented in v0.1.
+    /// Strict 15-unit ANSI geometry: five rows with Tab/Caps/IME reserved spaces,
+    /// exact Enter/Shift/backslash widths and a bottom function row. The default.
     /// </summary>
-    AnsiStrict = 1
+    AnsiStyle = 1
 }

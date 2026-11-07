@@ -19,7 +19,8 @@ public sealed class KeyDefinition
         KeyLabel? shiftedLabel = null,
         KeyCommand? shiftedCommand = null,
         int columnSpan = 1,
-        int rowSpan = 1)
+        int rowSpan = 1,
+        KeyGlyph? glyph = null)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -51,6 +52,7 @@ public sealed class KeyDefinition
         ShiftedCommand = shiftedCommand;
         ColumnSpan = columnSpan;
         RowSpan = rowSpan;
+        Glyph = glyph;
     }
 
     /// <summary>Stable key id, for example <c>key.a</c> or <c>key.backspace</c>.</summary>
@@ -82,6 +84,12 @@ public sealed class KeyDefinition
 
     /// <summary>Whether holding the key repeats its command (Backspace, arrows).</summary>
     public bool Repeatable { get; }
+
+    /// <summary>
+    /// Optional semantic icon. The frontend draws it; the label stays the
+    /// accessible name and the text fallback.
+    /// </summary>
+    public KeyGlyph? Glyph { get; }
 
     /// <summary>Creates an empty cell that keeps a grid aligned.</summary>
     public static KeyDefinition Spacer(string id, double widthUnits = 1.0)

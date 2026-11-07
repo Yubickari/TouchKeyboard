@@ -4,8 +4,10 @@ using System.Collections.Generic;
 namespace TouchKeyboard.Core;
 
 /// <summary>
-/// Which extra keys a numeric profile exposes. The key-set builder uses these
-/// flags to include only the keys the field actually accepts.
+/// Which extra keys a numeric profile exposes. <see cref="NumpadSlots"/> derives
+/// the Numpad slot mapping from the step, sign, decimal-point, separator and
+/// full-keyboard-switch flags; the remaining flags are retained for source
+/// compatibility with the legacy key-set description.
 /// </summary>
 public sealed class NumericKeypadOptions
 {
@@ -66,6 +68,7 @@ public sealed class NumericKeypadOptions
 
     /// <summary>The general numeric keypad: digits plus common symbols.</summary>
     public static NumericKeypadOptions General { get; } = new NumericKeypadOptions(
+        showDecimalPoint: true,
         showCaretKeys: true,
         showFullKeyboardSwitch: true,
         showSpace: true,

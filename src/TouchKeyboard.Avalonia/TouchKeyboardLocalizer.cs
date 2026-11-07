@@ -40,17 +40,18 @@ public sealed class TouchKeyboardLocalizer : ITouchKeyboardLocalizer
         ["key.enter"] = "回车",
         ["key.numbers"] = "123",
         ["key.letters"] = "ABC",
-        ["key.caret.left"] = "←",
-        ["key.caret.right"] = "→",
-        ["key.step.up"] = "▲",
-        ["key.step.down"] = "▼",
+        ["key.symbols"] = "符号",
+        ["key.caret.left"] = "左移光标",
+        ["key.caret.right"] = "右移光标",
+        ["key.step.up"] = "数字加一",
+        ["key.step.down"] = "数字减一",
         ["key.sign"] = "±",
         ["title.edit"] = "编辑",
         ["editor.placeholder"] = "请输入",
-        ["editor.show"] = "显示",
-        ["editor.hide"] = "隐藏",
-        ["layout.toggle"] = "布局",
-        ["close"] = "×"
+        ["editor.show"] = "显示密码",
+        ["editor.hide"] = "隐藏密码",
+        ["close"] = "×",
+        ["close.name"] = "关闭"
     });
 
     /// <summary>English strings.</summary>
@@ -64,17 +65,18 @@ public sealed class TouchKeyboardLocalizer : ITouchKeyboardLocalizer
         ["key.enter"] = "Enter",
         ["key.numbers"] = "123",
         ["key.letters"] = "ABC",
-        ["key.caret.left"] = "←",
-        ["key.caret.right"] = "→",
-        ["key.step.up"] = "▲",
-        ["key.step.down"] = "▼",
+        ["key.symbols"] = "Symbols",
+        ["key.caret.left"] = "Move caret left",
+        ["key.caret.right"] = "Move caret right",
+        ["key.step.up"] = "Increase digit",
+        ["key.step.down"] = "Decrease digit",
         ["key.sign"] = "±",
         ["title.edit"] = "Edit",
         ["editor.placeholder"] = "Enter a value",
-        ["editor.show"] = "Show",
-        ["editor.hide"] = "Hide",
-        ["layout.toggle"] = "Layout",
-        ["close"] = "×"
+        ["editor.show"] = "Show password",
+        ["editor.hide"] = "Hide password",
+        ["close"] = "×",
+        ["close.name"] = "Close"
     });
 
     /// <summary>Picks zh-CN or en-US from the current UI culture.</summary>

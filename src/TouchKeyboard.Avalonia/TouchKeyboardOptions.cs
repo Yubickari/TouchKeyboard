@@ -11,13 +11,16 @@ public sealed class TouchKeyboardOptions
     /// <summary>Global switch; when false the controller does not open the panel.</summary>
     public bool Enabled { get; set; } = true;
 
-    /// <summary>Visual theme.</summary>
-    public TouchKeyboardTheme Theme { get; set; } = TouchKeyboardTheme.Light;
+    /// <summary>
+    /// Explicit visual theme. The default (null) follows the application's actual
+    /// theme variant, so a dark shell automatically gets the dark keyboard.
+    /// </summary>
+    public TouchKeyboardTheme? Theme { get; set; }
 
-    /// <summary>Full-keyboard geometry.</summary>
-    public FullKeyboardLayoutKind FullKeyboardLayout { get; set; } = FullKeyboardLayoutKind.PhoneHybrid;
+    /// <summary>Full-keyboard geometry; AnsiStyle is the default.</summary>
+    public FullKeyboardLayoutKind FullKeyboardLayout { get; set; } = FullKeyboardLayoutKind.AnsiStyle;
 
-    /// <summary>Default general numeric surface.</summary>
+    /// <summary>General numeric surface; Numpad is enabled, Sequence is retained for custom scenarios.</summary>
     public NumericKeypadLayoutKind NumericKeypadLayout { get; set; } = NumericKeypadLayoutKind.Numpad;
 
     /// <summary>Maximum panel width in logical pixels.</summary>
