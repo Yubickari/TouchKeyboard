@@ -95,6 +95,8 @@ public sealed class TouchKeyboardHost : UserControl
             MinWidth = 64,
             Padding = new Thickness(10, 0),
             FontSize = 14,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
             Background = TouchKeyboardTheme.Light.ActionKeyBackground,
             Foreground = TouchKeyboardTheme.Light.Text
         };
@@ -106,6 +108,7 @@ public sealed class TouchKeyboardHost : UserControl
             Focusable = false,
             Width = 48,
             Height = 48,
+            CornerRadius = new CornerRadius(8),
             Padding = new Thickness(0),
             FontSize = 26,
             HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -137,8 +140,11 @@ public sealed class TouchKeyboardHost : UserControl
             IsVisible = false,
             Height = 48,
             MinWidth = 72,
+            CornerRadius = new CornerRadius(8),
             Padding = new Thickness(10, 0),
             FontSize = 14,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
             Background = TouchKeyboardTheme.Light.ActionKeyBackground,
             Foreground = TouchKeyboardTheme.Light.Text
         };

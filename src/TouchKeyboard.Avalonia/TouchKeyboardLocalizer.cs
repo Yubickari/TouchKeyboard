@@ -36,7 +36,7 @@ public sealed class TouchKeyboardLocalizer : ITouchKeyboardLocalizer
         ["key.clear"] = "清空",
         ["key.space"] = "空格",
         ["key.confirm"] = "确定",
-        ["key.shift"] = "大写",
+        ["key.shift"] = "Shift",
         ["key.enter"] = "回车",
         ["key.numbers"] = "123",
         ["key.letters"] = "ABC",
