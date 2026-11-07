@@ -1,7 +1,7 @@
 version: 1
 meta:
   project: TouchKeyboard
-  updated: 2026-11-06
+  updated: 2026-11-07
 exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**" ]
 concepts:
   - id: touchkeyboard.product
@@ -45,14 +45,14 @@ concepts:
     canonical:
       symbol: KeyboardLayout
       type: class
-    note: An immutable grid of key rows and keys described in unit widths, rendered by a frontend without UI types in the core.
+    note: An immutable keyboard surface described as rows or a grid with column/row spans, rendered by a frontend without UI types in the core.
   - id: keyboard.key
     terms: [ 按键定义, 键定义, 按键描述 ]
     kind: entity
     canonical:
       symbol: KeyDefinition
       type: class
-    note: One key's stable id, primary and shifted labels, command, unit width, column/row span, style and repeatability.
+    note: One key's stable id, primary and shifted labels, optional KeyGlyph icon, command, unit width, column/row span, style and repeatability.
   - id: keyboard.command
     terms: [ 按键命令, 键命令, 按键动作 ]
     kind: entity
@@ -122,14 +122,14 @@ concepts:
     canonical:
       symbol: FullKeyboardLayoutKind
       type: enum
-    note: "Selects the full-keyboard geometry: PhoneHybrid (modern phone ergonomics with ANSI key coverage) or AnsiStrict (future strict physical ANSI with Tab/Caps)."
+    note: "Selects the full-keyboard geometry: AnsiStyle (strict 15-unit ANSI) or PhoneHybrid (four-row phone-style)."
   - id: keyboard.numeric_layout
     terms: [ 数字键盘布局类型, 数字键盘形态, 通用数字布局 ]
     kind: enum
     canonical:
       symbol: NumericKeypadLayoutKind
       type: enum
-    note: "Selects the general numeric keypad surface: Numpad (6x4 digit block) or Phone (phone-style 123 symbol page)."
+    note: "Selects the numeric layout: Numpad (5x4 slot-based, active) or Sequence (retained phone-style, reserved)."
   - id: keyboard.editor_surface_abstraction
     terms: [ 编辑面接口, 编辑面抽象, 可注入编辑面 ]
     kind: reference
@@ -200,3 +200,59 @@ concepts:
       symbol: ITouchKeyboardLocalizer
       type: interface
     note: Resolves named key labels and formats core validation errors; built-in zh-CN and en-US implementations ship with the Avalonia frontend.
+  - id: keyboard.ansi_style
+    terms: [ ANSI 风格全键盘, 严格 ANSI, ANSI 布局 ]
+    kind: entity
+    canonical:
+      symbol: AnsiStyle
+      type: layout
+    note: The strict 15-unit ANSI full keyboard with Tab/Caps/IME reserved spaces, exact Enter/Shift/backslash widths and a bottom function row.
+  - id: keyboard.phone_hybrid
+    terms: [ 手机混合全键盘, 手机全键盘, 手机布局 ]
+    kind: entity
+    canonical:
+      symbol: PhoneHybrid
+      type: layout
+    note: A four-row phone-style QWERTY full keyboard with symbol and numeric entry points, no number row, and a bottom function row.
+  - id: keyboard.numpad
+    terms: [ 九宫格, 小键盘, 数字盘 ]
+    kind: entity
+    canonical:
+      symbol: Numpad
+      type: layout
+    note: The single active 5x4 numeric layout with a left function column, a 3x4 digit block, a right action column and a 1-unit confirm key at the bottom-right.
+  - id: keyboard.sequence
+    terms: [ 序列布局, 序列键盘, 原手机数字布局 ]
+    kind: entity
+    canonical:
+      symbol: Sequence
+      type: layout
+    note: The retained phone-style 5x6 numeric surface, renamed from Phone and reserved for a future sequence-entry scenario; not the default.
+  - id: keyboard.key_glyph
+    terms: [ 按键图标, 键图标, 按键图形 ]
+    kind: enum
+    canonical:
+      symbol: KeyGlyph
+      type: enum
+    note: A typed semantic icon for function keys (backspace, clear, enter, shift, arrows and similar) that each frontend renders with its own vector assets.
+  - id: keyboard.symbol_page
+    terms: [ 符号页, 常用符号页, 符号键盘页 ]
+    kind: entity
+    canonical:
+      symbol: SymbolPage
+      type: layout
+    note: A full-keyboard-owned page of common symbols reached from the symbol entry key; the numeric Numpad never opens it.
+  - id: keyboard.numpad_slots
+    terms: [ 数字盘槽位, 小键盘槽位, 数字键盘槽位 ]
+    kind: entity
+    canonical:
+      symbol: NumpadSlots
+      type: class
+    note: The scenario mapping for the Numpad's left-row2, right-row2 and bottom-decimal slots, including when 0 or confirm grow into empty cells.
+  - id: keyboard.full_keyboard_page
+    terms: [ 全键盘页面, 主键盘页, 页面状态 ]
+    kind: enum
+    canonical:
+      symbol: FullKeyboardPage
+      type: enum
+    note: "Which full-keyboard page is active: Main or Symbols; the symbol page is owned by the full keyboard, not by the numeric Numpad."
