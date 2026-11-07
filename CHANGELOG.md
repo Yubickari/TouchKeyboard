@@ -44,6 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   numeric ± slot now render vector icons.
 - Demo selectors for the full-keyboard geometry (AnsiStyle / PhoneHybrid) and the
   app theme variant (system / light / dark).
+- Documentation set: architecture, Avalonia integration, input profiles, layout
+  reference, roadmap, release runbook, WPF porting notes, three ADRs (core purity,
+  TFM matrix, no-IME) and a real-device acceptance checklist.
+- Release preparation: `assets/icon.png` plus `PackageIcon` metadata, GitHub issue
+  templates, a tag-driven release workflow with NuGet Trusted Publishing, and the
+  package smoke test wired into CI and the release workflow.
+- `build/preflight.sh` now checks the packaged icon and XML docs and refuses a tag
+  release from a dirty working tree.
+- Local development notes moved to the ignored `docs/local/` folder.
 - 101 core tests and 23 Avalonia headless tests per target framework (248
   executions), including the layout matrix, Numpad slot spans, symbol-page
   switching, dark-theme resolution, press feedback, icon rendering and

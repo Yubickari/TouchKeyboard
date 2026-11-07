@@ -38,7 +38,7 @@ patterns=(
 failed=0
 matches="$(grep -RInE \
   --binary-files=without-match \
-  --exclude='2026-11-06-touch-keyboard-plan.md' \
+  --exclude-dir=local \
   --exclude-dir=bin \
   --exclude-dir=obj \
   --exclude-dir=.tmp \
@@ -64,7 +64,7 @@ if [[ -n "${TOUCHKEYBOARD_DENYLIST:-}" ]]; then
     [[ -z "$token" ]] && continue
     token_matches="$(grep -RInF \
       --binary-files=without-match \
-      --exclude='2026-11-06-touch-keyboard-plan.md' \
+      --exclude-dir=local \
       --exclude-dir=bin \
       --exclude-dir=obj \
       --exclude-dir=.tmp \

@@ -10,6 +10,8 @@ Thanks for taking a look. This project is small; the rules are short.
 - **No private context.** No company/customer/project names, no home-directory
   paths, no real device screenshots, no secrets. The preflight script scans for a
   local denylist via `TOUCHKEYBOARD_DENYLIST`; never commit that list.
+- **Local notes stay local.** `docs/local/` is ignored; keep meeting notes, drafts
+  and customer-specific screenshots there (or outside the repository).
 - **Core stays UI-free.** `TouchKeyboard.Core` must not reference Avalonia, WPF,
   platform APIs, timers or dispatchers. `TouchKeyboard.Avalonia` owns rendering,
   focus and control adapters.
@@ -22,7 +24,9 @@ Thanks for taking a look. This project is small; the rules are short.
 dotnet restore TouchKeyboard.sln
 dotnet build TouchKeyboard.sln -c Release
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
-dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o artifacts
+dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
+bash build/preflight.sh      # tests + pack + package contents + hygiene
+bash build/smoke-pack.sh     # consume the packages from a local feed
 ```
 
 ## Style
@@ -38,3 +42,7 @@ dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o artif
 - Keep the change focused; include the test that would fail without it.
 - Update `CHANGELOG.md` under `[Unreleased]` for user-visible changes.
 - Run `build/preflight.sh` before tagging a release.
+- Read [docs/architecture.md](docs/architecture.md), [docs/profiles.md](docs/profiles.md)
+  and [docs/avalonia.md](docs/avalonia.md) before changing the model, a profile or
+  the frontend wiring.
+- Real-device changes should follow [docs/testing/device-checklist.md](docs/testing/device-checklist.md).

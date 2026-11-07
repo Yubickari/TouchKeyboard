@@ -45,6 +45,10 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         run: bash build/hygiene.sh
 
+      - name: Package smoke (local feed)
+        if: matrix.os == 'ubuntu-24.04'
+        run: bash build/smoke-pack.sh
+
       - name: Pack
         if: matrix.os == 'ubuntu-24.04'
         run: |

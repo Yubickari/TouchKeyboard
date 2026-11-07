@@ -9,6 +9,7 @@
     <PackageProjectUrl>https://github.com/Yubickari/TouchKeyboard</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageTags>avalonia;touch;keyboard;virtual-keyboard;kiosk;industrial;netstandard</PackageTags>
     <Description>Touch-first embedded keyboard for Avalonia, built for small industrial touch screens.</Description>
 
@@ -28,6 +29,10 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)README.md"
+          Pack="true"
+          PackagePath="\"
+          Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)assets/icon.png"
           Pack="true"
           PackagePath="\"
           Visible="false" />

@@ -21,6 +21,11 @@ if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
     echo "preflight: tag $GITHUB_REF_NAME does not match version $version" >&2
     exit 1
   fi
+
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "preflight: working tree is dirty; commit before tagging a release" >&2
+    exit 1
+  fi
 fi
 
 echo "preflight: tests"
@@ -58,10 +63,15 @@ require_entry() {
 }
 
 require_entry "$core_package" 'lib/netstandard2.0/TouchKeyboard.Core.dll'
+require_entry "$core_package" 'lib/netstandard2.0/TouchKeyboard.Core.xml'
 require_entry "$core_package" 'README.md'
+require_entry "$core_package" 'icon.png'
 require_entry "$avalonia_package" 'lib/net8.0/TouchKeyboard.Avalonia.dll'
+require_entry "$avalonia_package" 'lib/net8.0/TouchKeyboard.Avalonia.xml'
 require_entry "$avalonia_package" 'lib/net10.0/TouchKeyboard.Avalonia.dll'
+require_entry "$avalonia_package" 'lib/net10.0/TouchKeyboard.Avalonia.xml'
 require_entry "$avalonia_package" 'README.md'
+require_entry "$avalonia_package" 'icon.png'
 
 echo "preflight: hygiene"
 bash build/hygiene.sh

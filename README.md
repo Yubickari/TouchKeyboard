@@ -96,8 +96,17 @@ src/TouchKeyboard.Avalonia/    Avalonia frontend
 samples/TouchKeyboard.Demo/    demo application
 tests/TouchKeyboard.Core.Tests/
 tests/TouchKeyboard.Avalonia.Tests/
-docs/design/decisions.md       accepted decisions
+assets/icon.png                package icon
+docs/architecture.md           layering, model and data flow
+docs/avalonia.md               integration, options, theming, adapters
+docs/profiles.md               input profiles, validation and numeric slots
 docs/layouts.md                layout reference
+docs/roadmap.md                milestones and version plan
+docs/release.md                NuGet release runbook
+docs/wpf-porting.md            WPF frontend notes
+docs/design/decisions.md       accepted decisions
+docs/adr/                      architecture decision records
+docs/testing/device-checklist.md
 docs/images/                   rendered previews
 build/                         preflight and smoke scripts
 ```
@@ -128,12 +137,20 @@ geometries can be inspected side by side.
 Restore uses the standard NuGet package cache. In sandboxed environments, set
 `NUGET_PACKAGES` to a writable directory before restoring.
 
-## Design
+## Documentation
 
-See [docs/design/decisions.md](docs/design/decisions.md) for the accepted
-decisions and [docs/layouts.md](docs/layouts.md) for the geometry of every
-surface. The detailed design plan is kept locally until the public docs are
-rewritten.
+- [Architecture](docs/architecture.md) — projects, core model, data flow, extension seams.
+- [Avalonia integration](docs/avalonia.md) — setup, options, theming, adapters, troubleshooting.
+- [Input profiles](docs/profiles.md) — built-in profiles, validation rules, numeric slots.
+- [Layouts](docs/layouts.md) — ANSI/PhoneHybrid geometry, symbol page, Numpad grid.
+- [Roadmap](docs/roadmap.md) — current status, hardening checklist, version plan.
+- [Release](docs/release.md) — versioning, Trusted Publishing, release runbook.
+- [WPF porting notes](docs/wpf-porting.md) — what a second frontend needs.
+- [Decision records](docs/adr/) and [accepted decisions](docs/design/decisions.md).
+- [Device checklist](docs/testing/device-checklist.md) — real-device acceptance for P4.
+
+The detailed design plan for the current layout is kept locally until the public
+documentation is final; decisions and geometry are summarized in the links above.
 
 ## License
 

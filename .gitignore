@@ -20,6 +20,5 @@ TestResults/
 .vscode/
 .DS_Store
 
-# Local design drafts; the public decision record is docs/design/decisions.md
-docs/design/2026-11-06-touch-keyboard-plan.md
-20261106-*.md
+# Local development notes and drafts (never synchronized)
+docs/local/

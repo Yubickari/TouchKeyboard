@@ -95,10 +95,19 @@ Demo 顶部可以切换全键盘样式（AnsiStyle / PhoneHybrid）与界面主�
 还原使用标准的 NuGet 用户缓存。受限环境/沙箱中请在还原前把 `NUGET_PACKAGES`
 指向可写目录。
 
-## 设计
+## 文档
 
-已确认决策见 [docs/design/decisions.md](docs/design/decisions.md)，各布局的几何
-见 [docs/layouts.md](docs/layouts.md)。详细方案文档在公开文档重写前只保留在本地。
+- [架构](docs/architecture.md)：分层、核心模型、数据流与扩展点。
+- [Avalonia 接入](docs/avalonia.md)：安装、选项、主题、适配器与排错。
+- [输入档位](docs/profiles.md)：内置档位、校验规则与数字键盘槽位。
+- [布局参考](docs/layouts.md)：AnsiStyle / PhoneHybrid、符号页、Numpad 网格。
+- [路线图](docs/roadmap.md)：当前状态、硬化清单与版本计划。
+- [发布流程](docs/release.md)：版本、Trusted Publishing 与发布步骤。
+- [WPF 移植说明](docs/wpf-porting.md)：第二个前端需要实现什么。
+- [架构决策记录](docs/adr/) 与 [已确认决策](docs/design/decisions.md)。
+- [真机验收清单](docs/testing/device-checklist.md)：P4 真机测试项。
+
+当前布局的详细设计稿在公开文档定稿前只保留在本地；结论与几何已汇总到上述文档。
 
 ## 许可证
 

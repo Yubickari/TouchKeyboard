@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a layout, profile or integration improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Which field, device or scenario is not covered today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Keys, profile rules, layout geometry, theming or API you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Layouts and keys
+        - Input profiles and validation
+        - Theming and icons
+        - Host integration and adapters
+        - Documentation and samples
+        - Packaging and release
+    validations:
+      required: true

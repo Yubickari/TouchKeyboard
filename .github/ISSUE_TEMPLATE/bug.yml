@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in the keyboard is broken or looks wrong on your device.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A headless screenshot or a short screen recording helps a lot.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: The behaviour you saw and the behaviour you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the demo
+        2. Tap the temperature field
+        3. Press ...
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Keyboard surface
+      options:
+        - Full keyboard / AnsiStyle
+        - Full keyboard / PhoneHybrid
+        - Symbol page
+        - Numeric keypad / Numpad
+        - Numeric keypad / Sequence
+        - Editor surface or header
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        OS and version, touch panel size/resolution, DPI scaling, .NET SDK,
+        TouchKeyboard version, Avalonia version.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste exceptions, headless frames or links to images.
+    validations:
+      required: false
