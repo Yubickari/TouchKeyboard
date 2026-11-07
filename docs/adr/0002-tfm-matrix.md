@@ -32,8 +32,9 @@ The solution builds and tests both Avalonia target frameworks on every CI run.
   `LangVersion` is 12; newer BCL helpers need small compatibility shims.
 - Avalonia 11 projects cannot use the package directly. That is documented rather
   than maintained as a second package.
-- CI runs a three-OS matrix (Ubuntu, Windows, macOS) to keep the frontend honest on
-  each platform.
+- CI runs Ubuntu and Windows on every push. The macOS job is gated to public
+  repositories (macOS runners are unavailable for private repositories on the
+  current plan) and macOS is also verified locally before a release.
 
 ## Alternatives considered
 

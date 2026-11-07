@@ -23,6 +23,8 @@ change until `0.1.0`.
 - [x] ADRs for core purity, TFM matrix and the no-IME decision.
 - [x] Package icon, package contents checks, issue templates, release workflow.
 - [x] Package smoke (local-feed install) wired into CI and release.
+- [x] Windows/Linux CI matrix green; macOS job gated to public repositories and
+      verified locally until the repository is public.
 - [ ] Real-device verification: 8″ 1280×800 and 10″ 1024×600 Windows touch,
       Ubuntu X11/Wayland, macOS; DPI 100/125/150/200%. Use
       [testing/device-checklist.md](testing/device-checklist.md).

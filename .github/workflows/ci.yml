@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2022, macos-14]
+        os: [ubuntu-24.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -62,3 +62,31 @@ jobs:
           name: nupkg
           path: artifacts/*.nupkg
           if-no-files-found: error
+
+  macos:
+    name: macos-14
+    # macOS runners are not available for private repositories on the current
+    # plan, so this job is enabled once the repository is public. The Linux and
+    # Windows jobs always run; the maintainer also runs macOS locally.
+    if: ${{ !github.event.repository.private }}
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore TouchKeyboard.sln
+
+      - name: Build
+        run: dotnet build TouchKeyboard.sln -c Release --no-restore
+
+      - name: Test core
+        run: dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+
+      - name: Test Avalonia frontend
+        run: dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
