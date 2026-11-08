@@ -20,7 +20,7 @@
                       LogicalName="TouchKeyboard.Ime.Pinyin.Resources.pinyin-common.bin" />
     <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
     <None Include="NOTICE" Pack="true" PackagePath="\" Visible="false" />
-    <None Include="Resources\pinyin-common.bin" Pack="true" PackagePath="resources\" Visible="false" />
+    <None Include="Resources/pinyin-common.bin" Pack="true" PackagePath="resources/" Visible="false" />
     <None Include="$(MSBuildThisFileDirectory)..\..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 </Project>
