@@ -1012,6 +1012,7 @@ public sealed class TouchKeyboardHostTests
             textBox,
             options =>
             {
+                options.Localizer = TouchKeyboardLocalizer.ZhCn;
                 options.UseIme(new HostFakeImeEngine());
                 options.EditorSurfaceFactory = () => new PlainEditorSurface();
             });
@@ -1358,6 +1359,7 @@ public sealed class TouchKeyboardHostTests
             textBox,
             options =>
             {
+                options.Localizer = TouchKeyboardLocalizer.ZhCn;
                 options.Style.Scale = 0.8;
                 options.Style.FontScale = 0.9;
                 options.Style.IconScale = 1.5;
@@ -1495,7 +1497,11 @@ public sealed class TouchKeyboardHostTests
         TouchKeyboardInput.SetProfile(textBox, "text");
         using var fixture = CreateFixture(
             textBox,
-            options => options.UseIme(new HostFakeImeEngine()));
+            options =>
+            {
+                options.Localizer = TouchKeyboardLocalizer.ZhCn;
+                options.UseIme(new HostFakeImeEngine());
+            });
 
         Click(fixture.Window, textBox);
         Type(fixture.Window, fixture.Host.Session!, "x");
