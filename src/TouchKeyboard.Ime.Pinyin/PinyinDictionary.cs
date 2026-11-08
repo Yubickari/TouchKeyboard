@@ -91,8 +91,19 @@ internal sealed class PinyinDictionary
 
         using var compressed = assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidDataException($"The embedded pinyin dictionary '{resourceName}' is missing.");
-        using var deflate = new DeflateStream(compressed, CompressionMode.Decompress);
-        using var reader = new BinaryReader(deflate, Encoding.UTF8);
+
+        // Decompress into memory first. BinaryReader reads the 7-bit length prefix and
+        // short strings one small read at a time; doing that directly against
+        // DeflateStream is much slower on some platforms (notably Windows). The
+        // decompressed lexicon is only a few megabytes, so buffering is cheap.
+        using var buffer = new MemoryStream();
+        using (var deflate = new DeflateStream(compressed, CompressionMode.Decompress))
+        {
+            deflate.CopyTo(buffer);
+        }
+
+        buffer.Position = 0;
+        using var reader = new BinaryReader(buffer, Encoding.UTF8);
 
         var magic = reader.ReadBytes(Magic.Length);
         if (magic.Length != Magic.Length)
