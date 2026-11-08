@@ -29,6 +29,10 @@ bash build/preflight.sh      # tests + pack + package contents + hygiene
 bash build/smoke-pack.sh     # consume the packages from a local feed
 ```
 
+The default Avalonia version is the shipped compatibility floor (12.0.5). CI also
+runs the suite against 12.1.5; pass `-p:AvaloniaVersion=12.1.5` to build or test
+that combination locally.
+
 ## Style
 
 - Comments explain *why*. A comment that restates the next line is noise.

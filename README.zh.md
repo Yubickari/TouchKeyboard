@@ -42,7 +42,7 @@ WPF 前端在计划中，尚未发布。
 
 ## 环境要求
 
-- Avalonia 12（使用 12.1.5 验证）与 .NET 8 或 .NET 10。
+- Avalonia 12.0.5 或更高版本（已用 12.0.5 和 12.1.5 验证）与 .NET 8 或 .NET 10。
 - 仅使用 `TouchKeyboard.Core` 时，任何 `netstandard2.0` 项目都可引用。
 - 中文输入需要 CJK 字体。
 

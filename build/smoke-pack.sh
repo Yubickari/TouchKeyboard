@@ -3,6 +3,9 @@
 # projects through a local NuGet feed. This catches packaging mistakes that
 # project references hide. The three consumer shapes match the release matrix:
 # Avalonia only, Avalonia + Pinyin, Avalonia + Extended.
+#
+# The consumer uses the package's Avalonia compatibility floor (12.0.5) by
+# default. Set AVALONIA_VERSION=12.1.5 to also exercise a newer consumer.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,6 +20,7 @@ export NUGET_PACKAGES
 export NUGET_HTTP_CACHE_PATH="${NUGET_HTTP_CACHE_PATH:-$ROOT/.nuget/http-cache}"
 
 version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)"
+avalonia_version="${AVALONIA_VERSION:-12.0.5}"
 feed="$ROOT/artifacts"
 smoke_root="$ROOT/.tmp/smoke"
 
@@ -30,7 +34,7 @@ for package in touchkeyboard.core touchkeyboard.avalonia \
   rm -rf "$NUGET_PACKAGES/$package"
 done
 
-echo "smoke: pack"
+echo "smoke: pack (Avalonia $avalonia_version)"
 dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o "$feed"
 dotnet pack src/TouchKeyboard.Avalonia/TouchKeyboard.Avalonia.csproj -c Release -o "$feed"
 dotnet pack src/TouchKeyboard.Ime.Pinyin/TouchKeyboard.Ime.Pinyin.csproj -c Release -o "$feed"
@@ -104,8 +108,8 @@ cat > "$avalonia_dir/AvaloniaSmoke.csproj" <<EOF
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.5" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageReference Include="Avalonia" Version="$avalonia_version" />
+    <PackageReference Include="Avalonia.Desktop" Version="$avalonia_version" />
     <PackageReference Include="TouchKeyboard.Avalonia" Version="$version" />
   </ItemGroup>
 </Project>

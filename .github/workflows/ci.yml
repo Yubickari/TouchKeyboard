@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} (Avalonia 12.0.5)
     strategy:
       fail-fast: false
       matrix:
@@ -73,7 +73,7 @@ jobs:
           if-no-files-found: error
 
   macos:
-    name: macos-15
+    name: macos-15 (Avalonia 12.0.5)
     # macOS runners are available for public repositories; private-repo CI keeps
     # the Ubuntu and Windows jobs. macOS 14 runner images were retired in 2026.
     if: ${{ !github.event.repository.private }}
@@ -101,3 +101,30 @@ jobs:
 
       - name: Test Avalonia frontend
         run: dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
+
+  latest-avalonia:
+    name: ubuntu-24.04 (Avalonia 12.1.5)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore TouchKeyboard.sln -p:AvaloniaVersion=12.1.5
+
+      - name: Build
+        run: dotnet build TouchKeyboard.sln -c Release --no-restore -p:AvaloniaVersion=12.1.5
+
+      - name: Test core
+        run: dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release --no-restore -p:AvaloniaVersion=12.1.5
+
+      - name: Test pinyin language pack
+        run: dotnet test tests/TouchKeyboard.Ime.Pinyin.Tests/TouchKeyboard.Ime.Pinyin.Tests.csproj -c Release --no-restore -p:AvaloniaVersion=12.1.5
+
+      - name: Test Avalonia frontend
+        run: dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release --no-restore -p:AvaloniaVersion=12.1.5

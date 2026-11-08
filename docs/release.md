@@ -12,6 +12,11 @@ release tag must be `v<Version>`, for example `v0.2.0`. `build/preflight.sh`
 fails when the tag and version disagree, and (on a tag build) when the working tree
 is dirty.
 
+`TouchKeyboard.Avalonia` compiles against the Avalonia 12.0.5 compatibility floor,
+so the published dependency is `Avalonia >= 12.0.5`. CI also runs the test suite
+against 12.1.5. The release and preflight commands use the default 12.0.5 floor;
+do not override `AvaloniaVersion` when packing a release.
+
 ## One-time setup
 
 1. On nuget.org, create a Trusted Publishing policy for the package owner:
@@ -95,8 +100,9 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
 
 Data packs use only permissive/attribution licences (no share-alike or copyleft)
 and list their sources and snapshot hashes in `NOTICE`; there is no separate legal
-gate. `preflight.sh` checks all four package shapes, the `NOTICE`/README text and
-the dictionary resources, and fails the release when any entry is missing. Package
+gate. `preflight.sh` checks all four package shapes, the `NOTICE`/README text,
+the dictionary resources and the Avalonia 12.0.5 dependency floor, and fails the
+release when any entry is missing. Package
 READMEs must use absolute URLs for images and links: NuGet does not resolve URLs
 relative to the repository. The package smoke must still pass the no-engine
 behavior matrix (including expanded Space) for the Avalonia-only shape. See

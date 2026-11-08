@@ -1,8 +1,9 @@
 # Avalonia integration
 
 `TouchKeyboard.Avalonia` renders the keyboard as an in-window overlay. It targets
-Avalonia 12 on `net8.0` and `net10.0`. The core package is UI-free, so the host
-application keeps full control over its window and controls.
+Avalonia 12.0.5 or newer on `net8.0` and `net10.0`; CI tests both 12.0.5 and 12.1.5.
+The core package is UI-free, so the host application keeps full control over its
+window and controls.
 
 ```bash
 dotnet add package TouchKeyboard.Avalonia
