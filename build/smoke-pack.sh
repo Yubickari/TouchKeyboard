@@ -104,8 +104,8 @@ cat > "$avalonia_dir/AvaloniaSmoke.csproj" <<EOF
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.0.5" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
     <PackageReference Include="TouchKeyboard.Avalonia" Version="$version" />
   </ItemGroup>
 </Project>
