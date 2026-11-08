@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated all Avalonia package references from 12.0.5 to 12.1.5.
+- Updated `Microsoft.NET.Test.Sdk` from 17.12.0 to 18.11.0.
+- Updated the GitHub Actions used by CI and release to
+  `actions/checkout@v7`, `actions/setup-dotnet@v6` and
+  `actions/upload-artifact@v7`.
+
 ## [0.2.0] - 2026-11-08
 
 First public release.

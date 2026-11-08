@@ -21,9 +21,9 @@ jobs:
         os: [ubuntu-24.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -66,23 +66,22 @@ jobs:
 
       - name: Upload packages
         if: matrix.os == 'ubuntu-24.04'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nupkg
           path: artifacts/*.nupkg
           if-no-files-found: error
 
   macos:
-    name: macos-14
-    # macOS runners are not available for private repositories on the current
-    # plan, so this job is enabled once the repository is public. The Linux and
-    # Windows jobs always run; the maintainer also runs macOS locally.
+    name: macos-15
+    # macOS runners are available for public repositories; private-repo CI keeps
+    # the Ubuntu and Windows jobs. macOS 14 runner images were retired in 2026.
     if: ${{ !github.event.repository.private }}
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
