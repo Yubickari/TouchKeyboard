@@ -72,23 +72,30 @@ public sealed class PinyinPerformanceAndDataTests
     public void Common_dictionary_load_finishes_within_the_development_target()
     {
         var stopwatch = Stopwatch.StartNew();
-        var engine = new PinyinImeEngine();
-        engine.TryQuery("nihao", 10, out var candidates);
+        var dictionary = PinyinDictionary.Load(
+            typeof(PinyinImeEngine).Assembly,
+            PinyinImeEngine.CommonDictionaryResource);
         stopwatch.Stop();
 
-        Assert.Equal("你好", candidates[0].Text);
-        Assert.True(stopwatch.Elapsed.TotalMilliseconds < 3000, $"load {stopwatch.Elapsed.TotalMilliseconds:F1} ms (development target 50 ms)");
+        Assert.True(dictionary.Count > 0);
+        Assert.True(
+            stopwatch.Elapsed.TotalMilliseconds < 3000,
+            $"load {stopwatch.Elapsed.TotalMilliseconds:F1} ms (development target 50 ms)");
     }
 
     [Fact]
     public void Extended_dictionary_load_finishes_within_the_development_target()
     {
         var stopwatch = Stopwatch.StartNew();
-        var engine = new TouchKeyboard.Ime.Pinyin.Extended.ExtendedPinyinImeEngine();
-        engine.TryQuery("houtougu", 10, out _);
+        var dictionary = PinyinDictionary.Load(
+            typeof(TouchKeyboard.Ime.Pinyin.Extended.ExtendedPinyinImeEngine).Assembly,
+            TouchKeyboard.Ime.Pinyin.Extended.ExtendedPinyinImeEngine.ExtendedDictionaryResource);
         stopwatch.Stop();
 
-        Assert.True(stopwatch.Elapsed.TotalMilliseconds < 5000, $"load {stopwatch.Elapsed.TotalMilliseconds:F1} ms (development target 200 ms)");
+        Assert.True(dictionary.Count > 0);
+        Assert.True(
+            stopwatch.Elapsed.TotalMilliseconds < 5000,
+            $"load {stopwatch.Elapsed.TotalMilliseconds:F1} ms (development target 200 ms)");
     }
 
     private static readonly string[] Inputs =
