@@ -46,7 +46,7 @@ A WPF frontend is planned but not shipped.
 
 ## Requirements
 
-- Avalonia 12 (tested with 12.1.5) on .NET 8 or .NET 10.
+- Avalonia 12.0.5 or newer (tested with 12.0.5 and 12.1.5) on .NET 8 or .NET 10.
 - `TouchKeyboard.Core` alone can be consumed from any `netstandard2.0` project.
 - A CJK font is required for Chinese characters in fields and candidates.
 

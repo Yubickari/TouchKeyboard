@@ -1,6 +1,6 @@
 # TouchKeyboard.Avalonia
 
-Touch-first overlay keyboard for [Avalonia 12](https://avaloniaui.net/), built
+Touch-first overlay keyboard for [Avalonia 12.0.5+](https://avaloniaui.net/), built
 for small industrial touch screens. This package is the Avalonia frontend for
 [TouchKeyboard](https://github.com/Yubickari/TouchKeyboard); the input model
 lives in `TouchKeyboard.Core`.

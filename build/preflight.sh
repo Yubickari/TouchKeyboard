@@ -90,6 +90,22 @@ require_entry "$extended_package" 'icon.png'
 require_entry "$extended_package" 'NOTICE'
 require_entry "$extended_package" 'resources/pinyin-extended.bin'
 
+echo "preflight: Avalonia compatibility floor"
+avalonia_floor="$(sed -n 's:.*<AvaloniaVersion[^>]*>\([^<]*\)</AvaloniaVersion>.*:\1:p' Directory.Packages.props | head -n 1)"
+if [[ -z "$avalonia_floor" ]]; then
+  echo "preflight: could not read the Avalonia compatibility floor" >&2
+  exit 1
+fi
+
+nuspec=".tmp/avalonia.nuspec"
+unzip -p "$avalonia_package" 'TouchKeyboard.Avalonia.nuspec' > "$nuspec"
+avalonia_dependency="<dependency id=\"Avalonia\" version=\"$avalonia_floor\""
+if [[ "$(grep -Fc "$avalonia_dependency" "$nuspec" || true)" -lt 2 ]]; then
+  echo "preflight: TouchKeyboard.Avalonia does not depend on Avalonia $avalonia_floor" >&2
+  exit 1
+fi
+rm -f "$nuspec"
+
 echo "preflight: package licence/data checks"
 for package in "$pinyin_package" "$extended_package"; do
   unzip -p "$package" NOTICE > .tmp/notice.txt

@@ -14,7 +14,7 @@
 | .NET SDK | `dotnet --version` |
 | TouchKeyboard 版本 / commit | 例：0.2.0 / abc1234 |
 | 安装的可选包 | 无 / `TouchKeyboard.Ime.Pinyin` / `.Extended` |
-| Avalonia 版本 | 12.1.5 |
+| Avalonia 版本 | 12.0.5 / 12.1.5 |
 | 输入方式 | 电容触摸 / 电阻触摸 / 鼠标 / 触控板 |
 
 ## 1. 基本弹出与提交
