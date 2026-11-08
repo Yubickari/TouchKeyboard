@@ -241,7 +241,7 @@ public sealed class KeyboardLayoutView : UserControl
     {
         var touchKey = new TouchKey(key, _theme, _localizer, _shiftActive)
         {
-            IconSize = Math.Clamp(_keyHeight * 0.38, 18, 30)
+            IconSize = Math.Clamp(_keyHeight * 0.38 * _theme.IconScale, 12, 40)
         };
         touchKey.Activated += OnKeyActivated;
         return touchKey;

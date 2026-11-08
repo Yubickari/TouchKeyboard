@@ -1,6 +1,7 @@
 # 全键盘与 Numpad 重设计方案
 
 > **状态**：v1.0 已实施｜2026-11-07｜代码、测试与 `docs/layouts.md` 已按本文落地
+> **后续调整**：D19 在 `0.2.0` 移除了 IME 空位；无 IME 时 Space 为 7.0/3.5，有 IME 键时恢复 5.5/2.5。`0.1.0` 不发布。
 > **范围**：全键盘 AnsiStyle / PhoneHybrid、符号页、图标、5×4 Numpad、槽位映射
 > **取代**：旧方案中的 D1（全键盘形态）与 D2（数字盘 A/C 双布局）以本文为准；`decisions.md` 的 D1/D2 已按本文更新。
 
@@ -8,7 +9,7 @@
 
 ## 0. 结论
 
-你的思路整体可行，而且新的 5×4 Numpad 比当前布局更统一：
+新的 5×4 Numpad 比旧布局更统一：
 
 - 全键盘 AnsiStyle 需要**真正重做宽度**，不是把现有布局改个名字；
 - PhoneHybrid 改成 4 行手机布局，符号页由全键盘负责；
@@ -153,7 +154,7 @@ ABC 123 Space ⌫ 清空 确定
 
 规则：
 
-- `ShowStepKeys=true` 时，左顶两键是 ▲/▼；`false` 时替换为 `+`/`-`，对应你的第 4 条。
+- `ShowStepKeys=true` 时，左顶两键是 ▲/▼；`false` 时替换为 `+`/`-`，对应第 4 条。
 - 通用数字（来自全键盘）默认 `ShowStepKeys=false`，所以左上是 `+`/`-`；纯数字档默认开启步进。
 - 通用数字不再有“符号切换”；右侧 Row2 为空，确定变高。符号由全键盘的 `符号` 入口负责。
 - 纯数字场景不需要“返回全键盘”时，L2 用来放 `±` 或场景额外键；没有额外键就留空。
@@ -271,37 +272,23 @@ Ime           // 预留
 
 ---
 
-## 7. 实施顺序（建议）
+## 7. 交付内容
 
-1. **Core 命名/数据**：AnsiStyle、PhoneHybrid、NumpadSlots、SymbolPage、KeyGlyph、FullKeyboardPage。
-2. **Core 会话/布局**：页面切换、Numpad 网格 cell、Sequence 保留、测试。
-3. **Avalonia**：TouchKey 图标、Numpad 网格视图、Host 页面切换、高度适配。
-4. **测试/文档**：布局矩阵、Headless 截图、README/决策记录更新。
+- Core 命名/数据：`AnsiStyle`、`PhoneHybrid`、`NumpadSlots`、`SymbolPage`、`KeyGlyph`、`FullKeyboardPage`。
+- Core 会话/布局：页面切换、Numpad 网格 cell、`Sequence` 保留、测试。
+- Avalonia：`TouchKey` 图标、Numpad 网格视图、Host 页面切换、高度适配。
+- 测试/文档：布局矩阵、Headless 截图、README/决策记录更新。
 
-这是 P4 规模的一次布局改版，不是小修；建议分两次提交：先数据和图标，再网格/符号页，便于回滚。
+## 8. 已确认事项
 
----
+1. AnsiStyle 不单独设置符号页；Shift 已覆盖全部 ANSI 符号。
+2. PhoneHybrid 符号页的 24 个符号可按现场常用符号替换。
+3. Numpad 左中槽在无步进键场景使用 `ABC`，右中槽保留场景扩展。
+4. 空槽由相邻键合并，不生成禁用按钮或可聚焦死键。
 
-## 8. 仍需确认
+## 9. 视觉与交互细化
 
-1. AnsiStyle 是否也需要独立符号页？本文建议暂不需要（Shift 已覆盖全部 ANSI 符号）。
-   - 暂不需要。
-2. PhoneHybrid 符号页的 24 个符号集合是否合适？可以按现场常用符号替换。
-   - 合适。
-3. `确定` 在 Numpad 1 单位下用文字还是 ✓ 图标？本文暂用文字。
-   - 保持文字。
-4. 通用数字（文本字段）的 `+`/`-` 是否作为普通字符插入；本文按“ShowStepKeys=false 时替换”处理。
-   - 作为字符。
-5. `Sequence` 的未来用途是否就是序列号/特殊输入？本文暂保留、不启用。
-   - 暂保留、不启用。
-6. ←/→、▲/▼ 图表化设计方向？
-   - 与现有图标风格一致、需要区分光标左右、数字增减含义。
-
----
-
-## 9. 第二轮调整（2026-11-07）
-
-方案落地后，按评审意见做了一轮视觉与交互细化，几何与主题以 `docs/layouts.md` 为准：
+几何与主题细节以 `docs/layouts.md` 为准：
 
 1. **暗色模式**：宿主默认跟随应用的实际主题变体（`ActualThemeVariant`），暗色壳自动切到 `TouchKeyboardTheme.Dark` 并在变体变化时实时重绘；`TouchKeyboardOptions.Theme` 留空即自动，显式设置可固定主题。暗色下确定/关闭的前景色分别由 `PrimaryKeyForeground`、`DangerKeyForeground` 保证。
 2. **字符居中**：新增主题度量 `KeyLabelOffset`，按字号比例下移标签（默认 2px @ `KeyFontSize`），修正数字/大写偏上的观感。

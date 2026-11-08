@@ -18,5 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TouchKeyboard.Avalonia\TouchKeyboard.Avalonia.csproj" />
     <ProjectReference Include="..\..\src\TouchKeyboard.Core\TouchKeyboard.Core.csproj" />
+    <ProjectReference Include="..\..\src\TouchKeyboard.Ime.Pinyin\TouchKeyboard.Ime.Pinyin.csproj" />
   </ItemGroup>
 </Project>

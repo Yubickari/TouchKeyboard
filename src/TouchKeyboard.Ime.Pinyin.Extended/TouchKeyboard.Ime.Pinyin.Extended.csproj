@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TouchKeyboard.Ime.Pinyin.Extended</AssemblyName>
+    <RootNamespace>TouchKeyboard.Ime.Pinyin.Extended</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>TouchKeyboard.Ime.Pinyin.Extended</PackageId>
+    <Description>Optional extended pinyin lexicon for TouchKeyboard.Ime.Pinyin: about 100k common words and phrases, using the same managed engine.</Description>
+    <PackageTags>avalonia;touch;keyboard;ime;pinyin;chinese;netstandard</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TouchKeyboard.Core\TouchKeyboard.Core.csproj" />
+    <ProjectReference Include="..\TouchKeyboard.Ime.Pinyin\TouchKeyboard.Ime.Pinyin.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\pinyin-extended.bin"
+                      LogicalName="TouchKeyboard.Ime.Pinyin.Extended.Resources.pinyin-extended.bin" />
+    <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="NOTICE" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="Resources\pinyin-extended.bin" Pack="true" PackagePath="resources\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+</Project>

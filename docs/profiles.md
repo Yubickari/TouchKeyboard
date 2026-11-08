@@ -7,18 +7,18 @@ Profiles are immutable and safe to share; the `KeyboardSession` applies them.
 
 ## Built-in profiles
 
-| Id | Default mode | Accepts | Commit normalization | Numeric keypad |
-|---|---|---|---|---|
-| `text` | Full keyboard | Any text without control characters | Unchanged | General (＋/− characters, ABC, decimal point) |
-| `password` | Full keyboard | Printable ASCII `0x20`–`0x7E` | Unchanged | General |
-| `ascii-token` | Full keyboard | `[A-Za-z0-9/_.:-]*`, non-empty | `Trim()` | General |
-| `integer` | Numeric keypad | Signed integer | Kept as typed (leading zeros stay) | Step keys, ±, no decimal/padded `0` |
-| `positive-integer` | Numeric keypad | Digits only | Kept as typed | Step keys, no sign, `0` spans two columns |
-| `decimal` | Numeric keypad | Signed decimal with invariant `.` | Parsed and re-formatted invariantly (`.5` → `0.5`, `1.50` → `1.5`) | Step keys, ±, `.` separator |
-| `positive-decimal` | Numeric keypad | Non-negative decimal | Same as `decimal` | Step keys, no sign, `.` separator |
-| `date-slash` | Numeric keypad | `yyyy/M/d` parts while editing, valid date on commit | `yyyy/MM/dd` | Step keys, `/` separator |
-| `date-dot` | Numeric keypad | Same with `.` | `yyyy/MM/dd` (normalized to slash for adapters) | Step keys, `.` separator |
-| `ip-address` | Numeric keypad | Four 1–3 digit parts, values `0–255`, max 15 chars | Parts without leading zeros, `.`-joined | Step keys, `.` separator |
+| Id | Default mode | Accepts | Commit normalization | Numeric keypad | `AllowsIme` |
+|---|---|---|---|---|---|
+| `text` | Full keyboard | Any text without control characters | Unchanged | General (＋/− characters, ABC, decimal point) | **true** |
+| `password` | Full keyboard | Printable ASCII `0x20`–`0x7E` | Unchanged | General | false |
+| `ascii-token` | Full keyboard | `[A-Za-z0-9/_.:-]*`, non-empty | `Trim()` | General | false |
+| `integer` | Numeric keypad | Signed integer | Kept as typed (leading zeros stay) | Step keys, ±, no decimal/padded `0` | false |
+| `positive-integer` | Numeric keypad | Digits only | Kept as typed | Step keys, no sign, `0` spans two columns | false |
+| `decimal` | Numeric keypad | Signed decimal with invariant `.` | Parsed and re-formatted invariantly (`.5` → `0.5`, `1.50` → `1.5`) | Step keys, ±, `.` separator | false |
+| `positive-decimal` | Numeric keypad | Non-negative decimal | Same as `decimal` | Step keys, no sign, `.` separator | false |
+| `date-slash` | Numeric keypad | `yyyy/M/d` parts while editing, valid date on commit | `yyyy/MM/dd` | Step keys, `/` separator | false |
+| `date-dot` | Numeric keypad | Same with `.` | `yyyy/MM/dd` (normalized to slash for adapters) | Step keys, `.` separator | false |
+| `ip-address` | Numeric keypad | Four 1–3 digit parts, values `0–255`, max 15 chars | Parts without leading zeros, `.`-joined | Step keys, `.` separator | false |
 
 `InputProfileRegistry` resolves ids case-insensitively. `InputProfiles.All`
 enumerates the built-ins in a stable order.
@@ -102,8 +102,18 @@ The geometry and span rules are documented in [layouts.md](layouts.md#numpad).
 | `NumericKeypad` | virtual | `NumericKeypadOptions` for the Numpad slot mapping. Defaults to `NumericKeypadOptions.General`. |
 | `MaxLength` | virtual | Optional profile-level limit combined with the target limit. |
 | `AllowEmpty` | virtual | Whether an empty value can be committed. |
+| `AllowsIme` | virtual | Whether the optional managed IME may be used; default `false`. |
 | `IsIntermediateValid` | virtual | Legal editing states. |
 | `TryValidate` | abstract | Commit validation and normalization. |
+
+`AllowsIme` (virtual, default `false`) gates the optional managed pinyin IME. Only
+`text` returns `true`; password, ASCII token, integer, decimal, date and IPv4
+profiles stay IME-free. A custom profile can opt in with
+`public override bool AllowsIme => true;`, but it must also allow the full keyboard:
+a numeric-only profile has no letter surface for a composition. The host must also
+configure an engine with `options.UseIme(...)`; `AllowsIme` alone does not create a
+key or candidate row. See [ime.md](ime.md) and
+[ADR 0004](adr/0004-managed-pinyin-ime.md).
 
 ## Custom profiles
 

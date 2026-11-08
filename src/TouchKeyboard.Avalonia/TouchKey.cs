@@ -329,8 +329,10 @@ public sealed class TouchKey : Border
         _secondary.Text = secondary;
         _secondary.IsVisible = !showGlyph && secondary.Length > 0 && secondary != primary;
 
-        // The label stays the accessible name even when the cap is drawn as an icon.
-        AutomationProperties.SetName(this, primary);
+        // Text keys can override the short cap label with a full sentence (the IME
+        // toggle); other keys keep their localized label as the accessible name.
+        var accessibleName = _definition.AccessibleName is { } custom ? Resolve(custom) : primary;
+        AutomationProperties.SetName(this, accessibleName);
 
         if (glyph is { } key && TouchKeyboardGlyphs.TryGet(key, out var shape))
         {

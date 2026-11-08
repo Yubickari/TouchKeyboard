@@ -18,9 +18,16 @@ starts at the same x on every row of a surface.
 
 ### AnsiStyle
 
-Five rows, every row exactly **15 units**. Tab, Caps and the IME slot are
-commandless `KeyStyle.Spacer` cells: they keep the geometry aligned, never take a
-press and never enter the accessibility tree.
+Five rows, every row exactly **15 units**. Tab and Caps are commandless
+`KeyStyle.Spacer` cells: they keep the geometry aligned, never take a press and
+never enter the accessibility tree. There is no IME spacer: with no IME key, Space
+fills the slot.
+
+> **0.2.0 rule:** with no IME key, Space fills the former IME slot
+> (`AnsiStyle` 7.0 units, `PhoneHybrid` 3.5). When an IME engine is configured and
+> the profile allows IME, Space returns to its base width (5.5 / 2.5) and the slot
+> holds a real `ime.toggle` key (中/英). The IME key is present even in English mode,
+> so toggling 中/英 does not change the width. See [ime.md](ime.md).
 
 | Row | Keys and widths | Total |
 |---|---|---|
@@ -28,7 +35,11 @@ press and never enter the accessibility tree.
 | 1 | **Tab spacer 1.5** + `Q..P`10 + `[`1 + `]`1 + `\`1.5 | 15 |
 | 2 | **Caps spacer 1.75** + `A..L`9 + `;`1 + `'`1 + `Enter`2.25 | 15 |
 | 3 | `Shift`2.25 + `Z..M`7 + `,` `.` `/`3 + `Shift`2.75 | 15 |
-| 4 | `123`1.5 + `←`1.25 + `→`1.25 + `Space`5.5 + **IME spacer 1.5** + `Clear`1.5 + `Confirm`2.5 | 15 |
+| 4 | `123`1.5 + `←`1.25 + `→`1.25 + `Space`5.5 (**7.0 without IME**) + **`ime.toggle` 1.5 (only with IME)** + `Clear`1.5 + `Confirm`2.5 | 15 |
+
+> The render above shows the no-IME state with Space expanded over the slot. With an
+> IME engine and the `text` profile, the bottom row instead shows Space 5.5 plus a
+> 1.5-unit `ime.toggle` key; row total stays 15.
 
 AnsiStyle keeps the complete US ANSI symbol set on its main page and Shift layer,
 so it has no separate symbol page in v1.
@@ -43,17 +54,41 @@ from the bottom row. A 10-unit bottom row is the design width.
 | 0 | `Q W E R T Y U I O P` | 10 |
 | 1 | **inset 0.5** + `A S D F G H J K L` + **inset 0.5** | 10 |
 | 2 | `Shift`1.5 + `Z X C V B N M`7 + `⌫`1.5 | 10 |
-| 3 | `符号`1 + `123`1 + `←`1 + `Space`2.5 + `→`1 + **IME spacer 1** + `Clear`1 + `Confirm`1.5 | 10 |
+| 3 | `符号`1 + `123`1 + `←`1 + `Space`2.5 (**3.5 without IME**) + `→`1 + **`ime.toggle` 1 (only with IME)** + `Clear`1 + `Confirm`1.5 | 10 |
 
 The first letter row fixes the key width at one unit. The home row is inset by half
 a unit on both sides, so `A` sits half a key right of `Q`; the Z row starts after
 the 1.5-unit Shift, so `Z` lines up with `S`. Caret keys flank the space bar, which
-fills the remaining width; the symbol entry sits left of the numeric entry. The symbol page belongs to the full keyboard; the numeric keypad
-never opens it.
+fills the remaining width; the symbol entry sits left of the numeric entry. With an
+IME engine and the `text` profile, Space becomes 2.5 and a 1-unit `ime.toggle`
+sits between the right caret key and Clear; the row stays 10 units. The symbol page
+has no IME slot and belongs to the full keyboard; the numeric keypad never opens it.
+
+![Chinese IME composition](images/keyboard-ime-composition.png)
+
+*AnsiStyle with the optional pinyin IME: composition in the editor, a fixed
+candidate row, Space 5.5 and a 1.5-unit 中/英 key.*
 
 ![Phone-style full keyboard](images/keyboard-phone-hybrid.png)
 
 *PhoneHybrid main page.*
+
+When an IME session is active, the candidate row is the first of the five rows on
+the main page: candidate row (key height) + four letter rows = the same total height
+as the five-row symbol page. The candidate row is hidden on the symbol page, which
+has no IME slot. Switching to the general numeric keypad keeps the candidate row
+(empty) and the same total height; a numeric-only profile uses a compact four-row
+keyboard area.
+
+![PhoneHybrid with pinyin candidate row](images/keyboard-ime-phone-hybrid.png)
+
+*PhoneHybrid + pinyin: candidate first row, four letter rows, no height jump when
+switching to the symbol page or numeric keypad.*
+
+![PhoneHybrid symbol page with IME session](images/keyboard-ime-phone-hybrid-symbols.png)
+
+*PhoneHybrid symbol page: five key rows and no candidate row, matching the main
+page height.*
 
 ### Symbol page
 
@@ -143,6 +178,11 @@ column while Confirm still spans two rows.*
 
 *Signed-decimal Numpad: the sign slot renders a vector ± sized with the digit keys.*
 
+![Compact numeric-only keyboard area](images/keyboard-numeric-compact.png)
+
+*Profile-restricted numeric keypad: the keyboard area is four rows high and no
+candidate row is reserved, so a numeric-only field opens more compactly.*
+
 ### Sequence
 
 The retained phone-style 5×6 numeric page (renamed from `Phone`). It can be built
@@ -176,7 +216,8 @@ the cap down slightly, which stays visible in both themes.
 (with the X shifted left inside the tag), clear (an eraser), enter, shift (outline
 and filled), caret arrows (a filled triangle plus a caret bar), step arrows (a
 triangle paired with a `+`/`−` sign), sign toggle (±), space, password show/hide,
-keyboard, symbol, numeric and a reserved IME slot. Compact keys use a smaller icon factor. Icon keys
+keyboard, symbol, numeric and an IME glyph reserved for a future icon treatment
+(the 0.2.0 toggle uses the text 中/英; `KeyGlyph.Ime` is retained but unused). Compact keys use a smaller icon factor. Icon keys
 keep a localized label; it is the accessible name and the text fallback when a
 frontend cannot draw the glyph.
 

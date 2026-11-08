@@ -15,6 +15,12 @@ public abstract class InputProfile
     /// <summary>Whether the full keyboard is allowed; numeric profiles return false.</summary>
     public virtual bool AllowsFullKeyboard => true;
 
+    /// <summary>
+    /// Whether this profile may use the optional managed IME. False by default;
+    /// only <c>text</c> opts in. The host must also configure an engine.
+    /// </summary>
+    public virtual bool AllowsIme => false;
+
     /// <summary>Keys exposed by the numeric keypad for this profile.</summary>
     public virtual NumericKeypadOptions NumericKeypad => NumericKeypadOptions.General;
 

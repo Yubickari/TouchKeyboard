@@ -10,7 +10,7 @@ namespace TouchKeyboard.Core;
 /// </summary>
 public static class InputProfiles
 {
-    /// <summary>Free text; printable characters, no IME in v1.</summary>
+    /// <summary>Free text; printable characters, optionally with the managed IME.</summary>
     public static InputProfile Text { get; } = new TextInputProfile();
 
     /// <summary>Password text; printable ASCII, masked by the frontend.</summary>
@@ -59,6 +59,9 @@ public static class InputProfiles
 internal sealed class TextInputProfile : InputProfile
 {
     public override string Id => "text";
+
+    /// <inheritdoc />
+    public override bool AllowsIme => true;
 
     public override bool IsIntermediateValid(string text)
     {

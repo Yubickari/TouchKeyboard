@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TouchKeyboard.Ime.Pinyin</AssemblyName>
+    <RootNamespace>TouchKeyboard.Ime.Pinyin</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>TouchKeyboard.Ime.Pinyin</PackageId>
+    <Description>Optional managed pinyin IME for TouchKeyboard: full pinyin, word/sentence segmentation, common abbreviations and a compact common lexicon.</Description>
+    <PackageTags>avalonia;touch;keyboard;ime;pinyin;chinese;netstandard</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TouchKeyboard.Core\TouchKeyboard.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\pinyin-common.bin"
+                      LogicalName="TouchKeyboard.Ime.Pinyin.Resources.pinyin-common.bin" />
+    <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="NOTICE" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="Resources\pinyin-common.bin" Pack="true" PackagePath="resources\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+</Project>

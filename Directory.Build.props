@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.2.0</Version>
     <Authors>TouchKeyboard contributors</Authors>
     <Copyright>Copyright (c) 2026 TouchKeyboard contributors</Copyright>
     <Product>TouchKeyboard</Product>
@@ -26,15 +26,4 @@
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)README.md"
-          Pack="true"
-          PackagePath="\"
-          Visible="false" />
-    <None Include="$(MSBuildThisFileDirectory)assets/icon.png"
-          Pack="true"
-          PackagePath="\"
-          Visible="false" />
-  </ItemGroup>
 </Project>

@@ -25,7 +25,10 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Package smoke (local feed)
+      - name: Install AOT toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Package smoke (local feed, three consumer shapes and AOT)
         run: bash build/smoke-pack.sh
 
       - name: Preflight (tests, packages, contents, hygiene)

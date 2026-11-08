@@ -36,6 +36,19 @@ public sealed class TouchKeyboardOptions
     public bool HandlePhysicalKeyboard { get; set; } = true;
 
     /// <summary>
+    /// Compact appearance facade on top of <see cref="Theme"/>: overall scale,
+    /// font/icon scale and a few semantic colours. Defaults keep the current look.
+    /// </summary>
+    public TouchKeyboardStyle Style { get; } = new TouchKeyboardStyle();
+
+    /// <summary>
+    /// Enables long-press dragging of the panel by its title row. Dragging is
+    /// clamped to the current window and only moves when the panel is smaller than
+    /// the window. Default true.
+    /// </summary>
+    public bool EnablePanelDrag { get; set; } = true;
+
+    /// <summary>
     /// Reserved for platform-specific suppression. v1 suppresses the system OSK
     /// by moving focus to the host rather than by platform hooks.
     /// </summary>
@@ -49,4 +62,23 @@ public sealed class TouchKeyboardOptions
 
     /// <summary>Optional editor surface factory; the default is the custom-drawn <see cref="TouchKeyboardEditor"/>.</summary>
     public Func<IEditorSurface>? EditorSurfaceFactory { get; set; }
+
+    /// <summary>Optional managed IME configuration; no engine means no IME UI.</summary>
+    public TouchKeyboardImeOptions Ime { get; } = new TouchKeyboardImeOptions();
+
+    /// <summary>
+    /// Enables the optional managed IME with one line:
+    /// <c>options.UseIme(new PinyinImeEngine())</c>. The engine is explicit; there
+    /// is no reflection, assembly scanning or DI requirement.
+    /// </summary>
+    public TouchKeyboardOptions UseIme(IImeEngine engine)
+    {
+        if (engine is null)
+        {
+            throw new ArgumentNullException(nameof(engine));
+        }
+
+        Ime.Engine = engine;
+        return this;
+    }
 }

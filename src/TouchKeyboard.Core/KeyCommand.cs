@@ -53,7 +53,10 @@ public enum KeyCommandKind
     Submit,
 
     /// <summary>Close and discard; the host performs the close.</summary>
-    Close
+    Close,
+
+    /// <summary>Toggle the IME between Chinese and English input; only when an engine is configured.</summary>
+    ToggleIme
 }
 
 /// <summary>
@@ -130,6 +133,9 @@ public readonly struct KeyCommand : IEquatable<KeyCommand>
 
     /// <summary>Close and discard.</summary>
     public static KeyCommand Close => new KeyCommand(KeyCommandKind.Close);
+
+    /// <summary>Toggle Chinese/English input.</summary>
+    public static KeyCommand ToggleIme => new KeyCommand(KeyCommandKind.ToggleIme);
 
     /// <inheritdoc />
     public bool Equals(KeyCommand other)

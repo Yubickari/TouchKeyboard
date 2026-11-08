@@ -88,6 +88,8 @@ public sealed class TouchKeyboardController : IDisposable
             return;
         }
 
+        var ime = _host.Options.Ime;
+        var imeEnabled = ResolveImeEnabled(profile, ime);
         var session = new KeyboardSession(new KeyboardSessionOptions
         {
             Text = adapter.GetText(),
@@ -99,11 +101,31 @@ public sealed class TouchKeyboardController : IDisposable
             Minimum = adapter.Minimum,
             Maximum = adapter.Maximum,
             FullKeyboardLayout = _host.Options.FullKeyboardLayout,
-            NumericKeypadLayout = _host.Options.NumericKeypadLayout
+            NumericKeypadLayout = _host.Options.NumericKeypadLayout,
+            ImeEngine = ime.Engine,
+            ImeEnabled = imeEnabled,
+            ImeCandidatePageSize = ime.CandidatePageSize,
+            ImeMaxCompositionLength = ime.MaxCompositionLength,
+            ImeFullWidthPunctuation = ime.FullWidthPunctuation
         });
 
         _host.Open(session, adapter);
         e.Handled = true;
+    }
+
+    private bool? ResolveImeEnabled(InputProfile profile, TouchKeyboardImeOptions ime)
+    {
+        if (ime.Engine is null || !profile.AllowsIme || !profile.AllowsFullKeyboard)
+        {
+            return null;
+        }
+
+        if (ime.RememberMode && _host.LastImeEnabled is { } remembered)
+        {
+            return remembered;
+        }
+
+        return ime.DefaultEnabled;
     }
 
     private void OnWindowDeactivated(object? sender, EventArgs e)

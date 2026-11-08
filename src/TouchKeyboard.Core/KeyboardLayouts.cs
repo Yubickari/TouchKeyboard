@@ -10,8 +10,8 @@ namespace TouchKeyboard.Core;
 /// </summary>
 public static class KeyboardLayouts
 {
-    private static readonly KeyboardLayout FullPhoneHybrid = BuildFullPhoneHybrid();
-    private static readonly KeyboardLayout FullAnsiStyle = BuildFullAnsiStyle();
+    private static readonly KeyboardLayout FullPhoneHybrid = BuildFullPhoneHybrid(imeKey: null);
+    private static readonly KeyboardLayout FullAnsiStyle = BuildFullAnsiStyle(imeKey: null);
     private static readonly KeyboardLayout SymbolPage = BuildSymbolPage();
     private static readonly KeyboardLayout GeneralNumpad = BuildNumpad("numeric-general-numpad", NumpadSlots.General);
     private static readonly KeyboardLayout GeneralSequence = BuildGeneralSequence();
@@ -21,17 +21,53 @@ public static class KeyboardLayouts
     /// Only <see cref="FullKeyboardLayoutKind.PhoneHybrid"/> has a separate symbol
     /// page in v1. <see cref="FullKeyboardLayoutKind.AnsiStyle"/> keeps every ANSI
     /// symbol on its main page and Shift layer, so it always returns the main page.
+    /// This overload has no IME key: Space fills the former IME slot (AnsiStyle 7.0
+    /// units, PhoneHybrid 3.5) and row totals stay 15/10.
     /// </remarks>
     public static KeyboardLayout Full(
         FullKeyboardLayoutKind layout,
         FullKeyboardPage page = FullKeyboardPage.Main)
+        => Full(layout, page, imeKey: null);
+
+    /// <summary>
+    /// Returns the full keyboard with an optional IME toggle key in the former
+    /// commandless IME slot. Pass <c>null</c> for the no-IME layout, where Space
+    /// expands over the slot.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="imeKey"/> does not carry
+    /// a <see cref="KeyCommandKind.ToggleIme"/> command, or does not fit the
+    /// geometry's IME slot width (1.5 units for AnsiStyle, 1.0 for PhoneHybrid).</exception>
+    public static KeyboardLayout Full(
+        FullKeyboardLayoutKind layout,
+        FullKeyboardPage page,
+        KeyDefinition? imeKey)
     {
+        if (imeKey is not null)
+        {
+            if (imeKey.Command.Kind != KeyCommandKind.ToggleIme)
+            {
+                throw new ArgumentException(
+                    "The IME key must dispatch KeyCommandKind.ToggleIme.",
+                    nameof(imeKey));
+            }
+
+            var slotWidth = layout == FullKeyboardLayoutKind.AnsiStyle ? 1.5 : 1.0;
+            if (Math.Abs(imeKey.WidthUnits - slotWidth) > 0.0001)
+            {
+                throw new ArgumentException(
+                    "The IME key width must match the layout slot.",
+                    nameof(imeKey));
+            }
+        }
+
         switch (layout)
         {
             case FullKeyboardLayoutKind.PhoneHybrid:
-                return page == FullKeyboardPage.Symbols ? SymbolPage : FullPhoneHybrid;
+                return page == FullKeyboardPage.Symbols
+                    ? SymbolPage
+                    : BuildFullPhoneHybrid(imeKey);
             case FullKeyboardLayoutKind.AnsiStyle:
-                return FullAnsiStyle;
+                return imeKey is null ? FullAnsiStyle : BuildFullAnsiStyle(imeKey);
             default:
                 throw new ArgumentOutOfRangeException(nameof(layout));
         }
@@ -88,8 +124,9 @@ public static class KeyboardLayouts
     /// <summary>Builds the 5×4 Numpad for an explicit slot mapping.</summary>
     public static KeyboardLayout Numpad(string id, NumpadSlots slots) => BuildNumpad(id, slots);
 
-    private static KeyboardLayout BuildFullAnsiStyle()
+    private static KeyboardLayout BuildFullAnsiStyle(KeyDefinition? imeKey)
     {
+        var spaceWidth = imeKey is null ? 7.0 : 5.5;
         var rows = new List<KeyboardRow>
         {
             Row(
@@ -153,21 +190,35 @@ public static class KeyboardLayouts
                 CharKey('/', '?'),
                 GlyphKey("key.shift.right", Labels.Shift, KeyCommand.ToggleShift, KeyGlyph.Shift, 2.75, KeyStyle.Action)),
 
-            Row(
-                NamedKey("key.numeric", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, 1.5, KeyStyle.Action),
-                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, 1.25, KeyStyle.Action, repeatable: true),
-                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, 1.25, KeyStyle.Action, repeatable: true),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 5.5, KeyStyle.Action, glyph: KeyGlyph.Space),
-                KeyDefinition.Spacer("spacer.ime", 1.5),
-                GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, 1.5, KeyStyle.Action),
-                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.5, KeyStyle.Primary))
+            BuildAnsiBottomRow(spaceWidth, imeKey)
         };
 
         return new KeyboardLayout("full-ansi-style", KeyboardMode.FullKeyboard, rows);
     }
 
-    private static KeyboardLayout BuildFullPhoneHybrid()
+    private static KeyboardRow BuildAnsiBottomRow(double spaceWidth, KeyDefinition? imeKey)
     {
+        var keys = new List<KeyDefinition>
+        {
+            NamedKey("key.numeric", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, 1.5, KeyStyle.Action),
+            GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, 1.25, KeyStyle.Action, repeatable: true),
+            GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, 1.25, KeyStyle.Action, repeatable: true),
+            NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), spaceWidth, KeyStyle.Action, glyph: KeyGlyph.Space)
+        };
+
+        if (imeKey is not null)
+        {
+            keys.Add(imeKey);
+        }
+
+        keys.Add(GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, 1.5, KeyStyle.Action));
+        keys.Add(NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 2.5, KeyStyle.Primary));
+        return Row(keys.ToArray());
+    }
+
+    private static KeyboardLayout BuildFullPhoneHybrid(KeyDefinition? imeKey)
+    {
+        var spaceWidth = imeKey is null ? 3.5 : 2.5;
         var rows = new List<KeyboardRow>
         {
             // The letter width is one unit, fixed by this first row.
@@ -209,18 +260,31 @@ public static class KeyboardLayouts
                 GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, 1.5, KeyStyle.Action, repeatable: true)),
 
             // Caret keys flank the space bar; the space key fills the remaining width.
-            Row(
-                NamedKey("key.symbols", Labels.Symbols, KeyCommand.SwitchToSymbolPage, style: KeyStyle.Action),
-                NamedKey("key.numbers", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, style: KeyStyle.Action),
-                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), 2.5, KeyStyle.Action, glyph: KeyGlyph.Space),
-                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true),
-                KeyDefinition.Spacer("spacer.ime", 1.0),
-                GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, style: KeyStyle.Action),
-                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 1.5, KeyStyle.Primary))
+            BuildPhoneHybridBottomRow(spaceWidth, imeKey)
         };
 
         return new KeyboardLayout("full-phone-hybrid", KeyboardMode.FullKeyboard, rows);
+    }
+
+    private static KeyboardRow BuildPhoneHybridBottomRow(double spaceWidth, KeyDefinition? imeKey)
+    {
+        var keys = new List<KeyDefinition>
+        {
+            NamedKey("key.symbols", Labels.Symbols, KeyCommand.SwitchToSymbolPage, style: KeyStyle.Action),
+            NamedKey("key.numbers", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, style: KeyStyle.Action),
+            GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
+            NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), spaceWidth, KeyStyle.Action, glyph: KeyGlyph.Space),
+            GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true)
+        };
+
+        if (imeKey is not null)
+        {
+            keys.Add(imeKey);
+        }
+
+        keys.Add(GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, style: KeyStyle.Action));
+        keys.Add(NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, 1.5, KeyStyle.Primary));
+        return Row(keys.ToArray());
     }
 
     private static KeyboardLayout BuildSymbolPage()

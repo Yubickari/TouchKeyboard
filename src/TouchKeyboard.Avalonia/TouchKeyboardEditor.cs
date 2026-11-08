@@ -21,6 +21,7 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
     private bool _caretVisible = true;
     private bool _revealPassword;
     private double _scrollOffset;
+    private string _composition = string.Empty;
 
     /// <summary>Creates the editor surface.</summary>
     public TouchKeyboardEditor()
@@ -47,9 +48,10 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
 
     /// <summary>
     /// Horizontal offset of the caret in the drawn text, in logical pixels. Trailing
-    /// spaces are measured, so the caret visibly follows them.
+    /// spaces are measured, so the caret visibly follows them. A pending IME
+    /// composition is included because the caret sits after it.
     /// </summary>
-    public double CaretOffset => MeasureCaretX(GetDisplayText());
+    public double CaretOffset => MeasureCaretX(GetDisplayText()) + MeasureTextWidth(_composition);
 
     /// <summary>Whether the text is masked.</summary>
     public bool IsPassword { get; private set; }
@@ -82,6 +84,15 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
 
     /// <summary>Caret brush.</summary>
     public IBrush CaretBrush { get; set; } = Brushes.Blue;
+
+    /// <summary>Inline IME composition text brush.</summary>
+    public IBrush CompositionTextBrush { get; set; } = Brushes.Blue;
+
+    /// <summary>Underline brush below the inline IME composition.</summary>
+    public IBrush CompositionUnderlineBrush { get; set; } = Brushes.Blue;
+
+    /// <summary>Underline thickness for the inline composition.</summary>
+    public double CompositionUnderlineThickness { get; set; } = 1.5;
 
     /// <summary>Editor font family.</summary>
     public FontFamily EditorFontFamily { get; set; } = FontFamily.Default;
@@ -134,13 +145,22 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
         using (context.PushClip(new Rect(Bounds.Size)))
         {
             var display = GetDisplayText();
-            var text = string.IsNullOrEmpty(display)
-                ? Format(PlaceholderText, MutedBrush)
-                : Format(display, TextBrush);
+            var composition = _composition;
+            var hasText = display.Length > 0;
+            var hasComposition = composition.Length > 0;
+
+            var reference = hasText
+                ? Format(display, TextBrush)
+                : Format(hasComposition ? composition : PlaceholderText, hasComposition ? CompositionTextBrush : MutedBrush);
+            var textHeight = reference.Height;
 
             var viewportWidth = Math.Max(1, Bounds.Width - EditorPadding.Left - EditorPadding.Right);
-            var textWidth = MeasureTextWidth(display);
-            var caretX = MeasureCaretX(display);
+            var prefix = hasText ? display.Substring(0, Math.Min(CaretIndex, display.Length)) : string.Empty;
+            var suffix = hasText && CaretIndex < display.Length ? display.Substring(CaretIndex) : string.Empty;
+            var prefixWidth = MeasureTextWidth(prefix);
+            var compositionWidth = MeasureTextWidth(composition);
+            var textWidth = prefixWidth + compositionWidth + MeasureTextWidth(suffix);
+            var caretX = prefixWidth + compositionWidth;
 
             if (caretX + EditorPadding.Left - _scrollOffset > Bounds.Width - EditorPadding.Right)
             {
@@ -154,12 +174,49 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
             var maxScroll = Math.Max(0, textWidth - viewportWidth);
             _scrollOffset = Math.Max(0, Math.Min(_scrollOffset, maxScroll));
 
-            var textY = Math.Max(0, (Bounds.Height - text.Height) / 2);
-            context.DrawText(text, new Point(EditorPadding.Left - _scrollOffset, textY));
+            var textY = Math.Max(0, (Bounds.Height - textHeight) / 2);
+            var origin = EditorPadding.Left - _scrollOffset;
+
+            if (!hasText && !hasComposition)
+            {
+                context.DrawText(Format(PlaceholderText, MutedBrush), new Point(origin, textY));
+            }
+            else
+            {
+                if (prefix.Length > 0)
+                {
+                    context.DrawText(Format(prefix, TextBrush), new Point(origin, textY));
+                }
+
+                if (hasComposition)
+                {
+                    var compositionX = origin + prefixWidth;
+                    context.DrawText(
+                        Format(composition, CompositionTextBrush),
+                        new Point(compositionX, textY));
+
+                    var thickness = Math.Max(1, CompositionUnderlineThickness);
+                    context.DrawRectangle(
+                        CompositionUnderlineBrush,
+                        null,
+                        new Rect(
+                            compositionX,
+                            textY + textHeight - thickness,
+                            compositionWidth,
+                            thickness));
+                }
+
+                if (suffix.Length > 0)
+                {
+                    context.DrawText(
+                        Format(suffix, TextBrush),
+                        new Point(origin + prefixWidth + compositionWidth, textY));
+                }
+            }
 
             if (_caretVisible)
             {
-                var caretHeight = Math.Max(EditorFontSize, text.Height);
+                var caretHeight = Math.Max(EditorFontSize, textHeight);
                 var caretY = Math.Max(0, (Bounds.Height - caretHeight) / 2);
                 var caret = new Rect(
                     EditorPadding.Left - _scrollOffset + caretX,
@@ -178,6 +235,7 @@ public sealed class TouchKeyboardEditor : Control, IEditorSurface
         Text = state.Text;
         CaretIndex = state.CaretIndex;
         IsPassword = _session?.Profile.Id == "password";
+        _composition = state.Ime is { IsComposing: true } ? state.Ime.Input : string.Empty;
         _caretVisible = true;
         InvalidateVisual();
     }

@@ -5,7 +5,7 @@ Avalonia 12 on `net8.0` and `net10.0`. The core package is UI-free, so the host
 application keeps full control over its window and controls.
 
 ```bash
-dotnet add package TouchKeyboard.Avalonia --version 0.1.0-preview.1
+dotnet add package TouchKeyboard.Avalonia --version 0.2.0
 ```
 
 ## Minimal setup
@@ -85,14 +85,43 @@ public MainWindow()
 | `Theme` | `null` | `null` follows the window's actual theme variant; set `TouchKeyboardTheme.Light`/`.Dark` (or a custom instance) to pin one. |
 | `FullKeyboardLayout` | `AnsiStyle` | `AnsiStyle` or `PhoneHybrid`. |
 | `NumericKeypadLayout` | `Numpad` | `Numpad` is the enabled surface; `Sequence` is retained for custom scenarios. |
-| `MaxPanelWidth` | `1280` | Panel width cap in logical pixels. |
-| `NumericPanelMaxWidth` | `720` | Width cap for the numeric keypad area. |
-| `KeyHeight` | `0` | `0` selects 56/64/72 from the window height. |
+| `MaxPanelWidth` | `1280` | Panel width cap in logical pixels; multiplied by `Style.Scale`. |
+| `NumericPanelMaxWidth` | `720` | Width cap for the numeric keypad area; multiplied by `Style.Scale`. |
+| `KeyHeight` | `0` | Base key height; `0` selects 56/64/72 from the window height. Multiplied by `Style.Scale`, minimum 44 px. |
+| `Style` | `Scale=1` | Compact sizing/palette facade; see [customization.md](customization.md). |
+| `EnablePanelDrag` | `true` | Long-press the title row to drag the panel inside the window. |
 | `HandlePhysicalKeyboard` | `true` | While open: Escape closes, Enter confirms, Backspace/arrows/up/down edit, text inserts. |
 | `SuppressSystemKeyboard` | `true` | Reserved; v1 suppresses the platform OSK by moving focus to the custom-drawn host instead of using a text input. |
 | `Culture` | `null` | Culture name for the built-in localizer; `null` follows the current UI culture. |
 | `Localizer` | `null` | Custom `ITouchKeyboardLocalizer`; wins over `Culture`. |
 | `EditorSurfaceFactory` | `null` | Factory for a custom `IEditorSurface`; defaults to the custom-drawn `TouchKeyboardEditor`. |
+| `Ime` | engine `null` | Optional managed IME configuration; see [ime.md](ime.md). |
+
+## Optional Chinese input
+
+Install the optional language pack and activate it with one line:
+
+```bash
+dotnet add package TouchKeyboard.Ime.Pinyin --version 0.2.0
+```
+
+```csharp
+using TouchKeyboard.Ime.Pinyin;
+
+KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
+```
+
+`text` fields then get a 中/英 key and a candidate row (44 px on AnsiStyle; on
+PhoneHybrid it is the first of five rows and uses the key height). Numeric, date,
+password and ASCII profiles stay IME-free. With no engine there is no IME key or
+candidate row and Space fills the former IME slot (AnsiStyle 7.0 units,
+PhoneHybrid 3.5); with an engine and an IME-capable profile Space returns to
+5.5/2.5 and the key stays present in English mode, so toggling does not change the
+width. The candidate row never scrolls: it displays as many complete candidate
+labels as fit (up to nine) and adapts the Core page size; switch pages with the
+56 px 切页 keys. The base `TouchKeyboard.Avalonia` package never references a language pack.
+See [ime.md](ime.md), [ADR 0004](adr/0004-managed-pinyin-ime.md) and the
+[design plan](design/2026-11-08-chinese-input-and-language-packs.md).
 
 ## Theming
 
@@ -123,6 +152,29 @@ Press feedback is an overlay (`PressedOverlay`) plus a small scale
 (`PressedScale`); no key has a hover state. `KeyLabelOffset` nudges labels down to
 compensate for font metrics.
 
+For a small set of knobs use `options.Style` (`Scale`, `FontScale`, `IconScale`,
+`AccentColor`, `ConfirmColor`, `ConfirmTextColor`, `SelectedCandidateColor`,
+`SelectedCandidateTextColor`, `PanelColor`, `KeyColor`, `TextColor`). It is applied
+on top of the resolved theme and leaves the defaults untouched. The full
+`TouchKeyboardOptions.Theme` remains available for every brush and metric. See
+[customization.md](customization.md).
+
+### Panel dragging
+
+Long-press the title row (about 420 ms), then drag. The panel is clamped to the
+current window; if it already fills the window there is little or no room. The
+position is preserved for the host lifetime and is clamped on window resize.
+`KeyboardHost.ResetPanelPosition()` restores the default bottom-centred position.
+Set `options.EnablePanelDrag = false` to turn it off; the close button keeps its
+normal tap behavior.
+
+The optional IME adds `CandidateBarHeight` (default 44; PhoneHybrid first-row mode uses the key height), `CandidateBackground`,
+`CandidateSelectedBackground`, `CandidateText`, `CandidateSelectedText`,
+`CandidateMutedText`, `CandidateCornerRadius`, `CandidateFontSize`,
+`CompositionText`, `CompositionUnderline` and `CompositionUnderlineThickness`.
+Both light and dark presets ship values. The candidate bar keeps its height while
+composing, paging or toggling 中/英.
+
 ## Localization
 
 `ITouchKeyboardLocalizer` has two jobs: resolve key label resource keys and format
@@ -136,6 +188,12 @@ Built-in cultures are `zh-CN` and `en-US`. Core validation never returns sentenc
 it returns `InputValidationError` codes that the localizer turns into text. To add a
 language, implement the interface and map the codes listed in
 [profiles.md](profiles.md#validation-errors).
+
+The IME adds keys such as `key.ime.active`/`key.ime.inactive`,
+`key.ime.active.name`/`key.ime.inactive.name`, `ime.candidates`, `ime.previous`,
+`ime.next`, `ime.no-candidate`, `ime.hint.chinese`, `ime.hint.english`,
+`ime.candidate.name`, `ime.page` and `ime.composing`. Custom localizers should fill
+them; `Get` returns the resource key when a key is missing.
 
 ## Custom editor surface
 
@@ -175,7 +233,10 @@ KeyboardHost.Configure(options => options.EditorSurfaceFactory = () => new ReadO
 ```
 
 A real editable control used as the surface may bring back the platform OSK/IME;
-that is the trade-off the plan's D3 decision describes.
+that is the trade-off the plan's D3 decision describes. A custom surface does not
+have to render the IME composition, but the candidate row no longer repeats the raw
+pinyin string; the surface should render composition itself if it needs to show it.
+The `IEditorSurface` contract has no new members.
 
 ## Custom adapter
 
@@ -247,7 +308,10 @@ Use it through `tk:TouchKeyboardInput.Profile="serial-number"`. See
 Keys are `Border`-based rather than buttons, so a normal `Border` would be reported
 as a non-control element. `TouchKey` therefore provides its own automation peer with
 `AutomationControlType.Button` and a localized accessible name (icon keys use their
-label resource key). The close and password reveal buttons do the same. The editor
+label resource key; the IME toggle uses `KeyDefinition.AccessibleName`). The close
+and password reveal buttons do the same. IME candidate and paging buttons are touch
+targets of at least 44 px and are named “第 N 个候选，文本” / “上一页候选” /
+“下一页候选”; the candidate bar itself is named “候选词”. The editor
 surface is custom-drawn, so screen readers get the key names and the panel chrome
 but not a native text-editing semantic; hosts that need full text semantics should
 inject their own `IEditorSurface`.
@@ -282,3 +346,6 @@ rendered frames and asserts session/state behaviour. See
 | Dark mode ignored | The window's actual theme variant must be dark, and `Options.Theme` must stay `null`. |
 | Physical input leaks into the field | Keep `HandlePhysicalKeyboard` enabled so the host handles keys while open. |
 | Typed spaces look invisible | Expected in a text buffer; the caret still advances. |
+| No 中/英 key or candidate bar | Check `UseIme(...)`, the `text` profile and that a language package is installed. |
+| Candidates show boxes | Install a CJK font or set a font fallback chain; see [ime.md](ime.md#故障排查). |
+| Candidate bar makes the panel too tall | Lower `KeyHeight`; PhoneHybrid uses the candidate row as its first row and the numeric-only keypad is compact. |

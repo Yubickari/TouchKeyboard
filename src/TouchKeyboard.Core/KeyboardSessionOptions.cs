@@ -35,4 +35,25 @@ public sealed class KeyboardSessionOptions
 
     /// <summary>General numeric keypad surface; Numpad is the enabled one.</summary>
     public NumericKeypadLayoutKind NumericKeypadLayout { get; set; } = NumericKeypadLayoutKind.Numpad;
+
+    /// <summary>
+    /// Optional managed IME engine. When <c>null</c>, or when the profile does not
+    /// allow IME, the session has no IME state and the full keyboard expands Space.
+    /// </summary>
+    public IImeEngine? ImeEngine { get; set; }
+
+    /// <summary>
+    /// Initial Chinese/English state. <c>null</c> means Chinese when an engine and
+    /// an IME-capable profile are present.
+    /// </summary>
+    public bool? ImeEnabled { get; set; }
+
+    /// <summary>Candidates per page; clamped to 1–9. Default 9.</summary>
+    public int ImeCandidatePageSize { get; set; } = 9;
+
+    /// <summary>Maximum raw pinyin length; clamped to 8–64. Default 32.</summary>
+    public int ImeMaxCompositionLength { get; set; } = 32;
+
+    /// <summary>Whether the engine maps common punctuation to full-width forms. Default true.</summary>
+    public bool ImeFullWidthPunctuation { get; set; } = true;
 }

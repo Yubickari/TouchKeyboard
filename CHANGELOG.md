@@ -4,9 +4,63 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-11-08
+
+The first release. The `0.1.0` line is not released.
 
 ### Added
+
+- Optional managed pinyin IME: Core `IImeEngine`, `ImeCandidate`,
+  `ImeCompositionState`, the internal `ImeComposition` state machine and
+  `KeyboardState.Ime`; `InputProfile.AllowsIme`; `KeyCommandKind.ToggleIme`; the
+  `ime.toggle` full-keyboard key; and session routing for composition, candidate
+  selection/paging, Space/1–9/Enter commits, punctuation mapping, backspace,
+  arrows, mode/page toggles, clear and cancel.
+- `TouchKeyboard.Ime.Pinyin` (common lexicon, about 20k words) and
+  `TouchKeyboard.Ime.Pinyin.Extended` (about 100k words), both `netstandard2.0`
+  and dependent only on Core (the extended pack also on the common pack). The
+  pinyin engine supports full pinyin, word/sentence segmentation and common
+  initial abbreviations; the lexicons are embedded, deflate-compressed and
+  loaded lazily.
+- Reproducible dictionary build (`tools/build-pinyin-dict.py`) from Unihan
+  `kMandarin` (Unicode License V3) and jieba `dict.txt` (MIT), with generated
+  phrase readings, a project-owned polyphone override table, source snapshot
+  hashes and full licence texts in each package's `NOTICE`.
+- Avalonia IME UI: `TouchKeyboardImeOptions`, `TouchKeyboardOptions.Ime` and the
+  one-line `UseIme(engine)`; the 中/英 key, fixed 44 px candidate bar,
+  candidate/paging touch targets, inline composition text and underline,
+  no-candidate/mode hints, candidate/paging accessibility names and zh-CN/en-US
+  IME strings. Custom `IEditorSurface` implementations fall back to the candidate
+  bar prefix without a contract change.
+- No-IME layout baseline: the commandless `spacer.ime` is removed; Space expands
+  to 7.0 units (`AnsiStyle`) or 3.5 (`PhoneHybrid`). With an engine and an
+  IME-capable profile, Space returns to 5.5/2.5 and the slot holds `ime.toggle`.
+- `docs/ime.md`, a Chinese `text` field in the demo wired to the pinyin engine,
+  and the 0.2.0 device-checklist items for Chinese input, CJK fonts, OSK and
+  1024×600.
+- Demo manual-test controls: a collapsible, theme-aware appearance panel with
+  full-keyboard geometry and theme selectors, overall/font/icon scale sliders,
+  accent/confirm/selected-candidate/panel/key colour selectors, long-press drag
+  toggle, reset-position and reset-appearance buttons, and a Chinese field for
+  candidate/press-feedback checks.
+- Candidate text is no longer ellipsized: candidate buttons size to their full
+  label, every candidate keeps its natural width instead of stretching to fill the
+  row (including a 2–3 candidate page), and long candidates such as “各个” /
+  “各个方向” render completely.
+  The row has no scrollbar: the Avalonia frontend shrinks the Core page size
+  (1–9) to fit the available width and pages only through 56 px 切页 keys.
+- Compact appearance API: `TouchKeyboardOptions.Style` with `Scale`, `FontScale`,
+  `IconScale` and semantic `AccentColor` / `ConfirmColor` /
+  `SelectedCandidateColor` / `PanelColor` / `KeyColor` / `TextColor` overrides;
+  `TouchKeyboardTheme.IconScale`; and `EnablePanelDrag` plus
+  `ResetPanelPosition()` for long-press title-row dragging clamped to the window.
+- 135 core tests + 40 pinyin/extended tests + 48 Avalonia headless tests per
+  target framework (446 executions), including the 129-entry golden set,
+  composition/commit/cancel/paging, no-engine compatibility, IME-key visibility,
+  fixed candidate-row geometry, dark theme, custom-editor fallback and 1024×600.
+- Package smoke now covers Avalonia-only, Avalonia + Pinyin and Avalonia +
+  Extended, verifies that Avalonia-only has no language-pack dependency, and runs
+  a trimmed AOT publish that loads both dictionaries and commits a composition.
 
 - P1 walking skeleton: solution, `TouchKeyboard.Core` and
   `TouchKeyboard.Avalonia` projects, demo app, core test project.
@@ -45,23 +99,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo selectors for the full-keyboard geometry (AnsiStyle / PhoneHybrid) and the
   app theme variant (system / light / dark).
 - Documentation set: architecture, Avalonia integration, input profiles, layout
-  reference, roadmap, release runbook, WPF porting notes, three ADRs (core purity,
-  TFM matrix, no-IME) and a real-device acceptance checklist.
+  reference, roadmap, release runbook, WPF porting notes, four ADRs (core purity,
+  TFM matrix, no-IME and managed pinyin IME) and a real-device acceptance checklist.
 - Release preparation: `assets/icon.png` plus `PackageIcon` metadata, GitHub issue
   templates, a tag-driven release workflow with NuGet Trusted Publishing, and the
   package smoke test wired into CI and the release workflow.
 - `build/preflight.sh` now checks the packaged icon and XML docs and refuses a tag
   release from a dirty working tree.
 - Local development notes moved to the ignored `docs/local/` folder.
-- Draft development plan for optional Chinese input and per-language IME NuGet
-  packages (routes, size and package analysis; no decisions taken).
-- 101 core tests and 23 Avalonia headless tests per target framework (248
-  executions), including the layout matrix, Numpad slot spans, symbol-page
-  switching, dark-theme resolution, press feedback, icon rendering and
-  accessible names.
+- Design plan and ADR 0004 for the optional managed pinyin IME, optional
+  per-language/text packs and the one-line `UseIme` API.
+- The earlier baseline had 101 core tests and 23 Avalonia headless tests per
+  target framework (248 executions), including the layout matrix, Numpad slot
+  spans, symbol-page switching, dark-theme resolution, press feedback, icon
+  rendering and accessible names.
 
 ### Changed
 
+- Decision record D12 (Chinese input) revised for the optional `0.2.0` managed
+  pinyin IME; D17 (IME package layering), D18 (IME activation and profile gate) and
+  D19 (no-IME Space expansion) added, and D7 simplified to the MIT/permissive-data
+  licence policy. ADR 0003 is superseded by ADR 0004; `0.1.0` is not released and
+  `0.2.0` is the first release.
+- `Version` is `0.2.0`; the release now ships four packages (`Core`, `Avalonia`,
+  `Ime.Pinyin`, `Ime.Pinyin.Extended`) with package-content, NOTICE/dictionary and
+  AOT/trim checks.
+- `0.2.0` no-IME layout: the full keyboards no longer render a commandless IME
+  spacer; Space expands over the slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When
+  an engine and an IME-capable profile are present, the `ime.toggle` key returns and
+  Space goes back to 5.5/2.5; toggling 中/英 does not change the width.
+- PhoneHybrid height model refined: the 26-key main page and general numeric page
+  use the candidate row as their first of five rows, so the candidate row height
+  equals the key height and the main page matches the five-row symbol page. The
+  symbol page hides the candidate row (no IME slot); numeric-only profiles use a
+  compact four-row keyboard area. Switching main/symbol/numeric on PhoneHybrid
+  keeps the panel height stable.
+- IME candidate buttons now paint the press overlay across the whole cap; their
+  content is inset with an inner margin instead of `Border.Padding`, which previously
+  left unpainted strips on the left and right.
+- Licence policy: code MIT; optional language data uses only permissive or
+  attribution licences with a short `NOTICE`; no share-alike/copyleft data; MIT's
+  disclaimer applies and no quality/stability guarantee is made.
 - `FullKeyboardLayoutKind.AnsiStrict` is renamed to `AnsiStyle`, implemented and
   made the default full keyboard. `PhoneHybrid` is now four letter rows with a
   symbol entry and no number row.
@@ -103,7 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0-preview.1] - 2026-11-06
 
-Not released yet.
+Not released; superseded by the `0.2.0` first release.
 
-[Unreleased]: https://github.com/Yubickari/TouchKeyboard/commits/main
+[0.2.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.0
 [0.1.0-preview.1]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.1.0-preview.1

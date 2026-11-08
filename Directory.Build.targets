@@ -5,4 +5,17 @@
          Avalonia itself remains fully functional; only the stats task is skipped. -->
     <UsedAvaloniaProducts></UsedAvaloniaProducts>
   </PropertyGroup>
+
+  <!-- Root README/icon are only for the base packages. Language packs carry
+       their own README, icon and NOTICE next to the project. -->
+  <ItemGroup Condition="'$(PackageId)' == 'TouchKeyboard.Core' Or '$(PackageId)' == 'TouchKeyboard.Avalonia'">
+    <None Include="$(MSBuildThisFileDirectory)README.md"
+          Pack="true"
+          PackagePath="\"
+          Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)assets/icon.png"
+          Pack="true"
+          PackagePath="\"
+          Visible="false" />
+  </ItemGroup>
 </Project>

@@ -24,16 +24,47 @@ pointer capture, focus and the bridge to the host application's controls.
 | Project | TFM | Purpose |
 |---|---|---|
 | `TouchKeyboard.Core` | `netstandard2.0` | Model, layouts, session, validation. No package dependencies. |
-| `TouchKeyboard.Avalonia` | `net8.0;net10.0` | Avalonia 12 frontend: overlay, keys, editor surface, adapters. |
+| `TouchKeyboard.Avalonia` | `net8.0;net10.0` | Avalonia 12 frontend: overlay, keys, editor surface, IME UI, adapters. |
+| `TouchKeyboard.Ime.Pinyin` | `netstandard2.0` | Optional managed pinyin engine and common lexicon. |
+| `TouchKeyboard.Ime.Pinyin.Extended` | `netstandard2.0` | Optional extended lexicon; reuses the common engine. |
 | `TouchKeyboard.Demo` | `net8.0` | Sample window used for manual testing and screenshots. |
 | `TouchKeyboard.Core.Tests` | `net8.0;net10.0` | Core unit tests, architecture test, layout matrix. |
-| `TouchKeyboard.Avalonia.Tests` | `net8.0;net10.0` | Headless Avalonia interaction and render tests. |
+| `TouchKeyboard.Ime.Pinyin.Tests` | `net8.0;net10.0` | Engine, dictionary, golden-set, extended and performance tests. |
+| `TouchKeyboard.Avalonia.Tests` | `net8.0;net10.0` | Headless Avalonia interaction, IME and render tests. |
 
 The core is the compatibility floor and must stay UI-free. An architecture test
 (`ArchitectureTests.Core_does_not_reference_any_ui_or_platform_assembly`) fails if
 the core references Avalonia, WPF, WindowsBase, X11 or similar. The core also never
 uses timers, dispatchers, fonts or brushes; long-press repeat, caret blink and
 theming live in the frontend.
+
+### IME layering (0.2.0)
+
+The optional managed pinyin IME keeps the same dependency direction:
+
+```text
+TouchKeyboard.Avalonia  ──uses──>  IImeEngine (Core contract)
+        │                               ▲
+        │                               └── TouchKeyboard.Ime.Pinyin
+        │                                   TouchKeyboard.Ime.Pinyin.Extended
+        └── KeyboardSession / KeyboardState.Ime / KeyCommand.ToggleIme
+```
+
+- Core owns `IImeEngine`, `ImeCandidate`, the internal composition state machine
+  and `ImeCompositionState` in `KeyboardState`; it stays `netstandard2.0` and
+  UI-free.
+- `TouchKeyboard.Avalonia` owns the IME key, the fixed candidate row, inline
+  composition rendering, theming, localization and accessibility; it never
+  references a language pack.
+- Language packs implement `IImeEngine`; the extended pack reuses the common
+  engine and loader with a larger lexicon.
+- `InputProfile.AllowsIme` gates the feature; only `text` returns `true` by
+  default. The session also requires the full keyboard.
+- `options.UseIme(new PinyinImeEngine())` is the whole activation step. There is
+  no reflection, assembly scanning or DI requirement.
+
+The design and decisions are in
+[design/2026-11-08-chinese-input-and-language-packs.md](design/2026-11-08-chinese-input-and-language-packs.md).
 
 ## Core domain model
 
@@ -67,7 +98,8 @@ A `KeyboardLayout` is immutable and describes a surface in one of two shapes:
 
 `KeyDefinition` carries a stable id, a `KeyLabel` (literal text or localization
 resource key), optional shifted label/command, an optional `KeyGlyph` vector icon,
-the command, unit width, cell spans, visual `KeyStyle` and repeatability.
+the command, unit width, cell spans, visual `KeyStyle` and repeatability, plus an
+optional accessible name for text keys such as the IME toggle.
 `KeyboardLayouts` builds every built-in surface:
 
 | Layout id | Built by | Shape |
@@ -85,22 +117,38 @@ separator fills the bottom slot. Empty slots change the geometry instead of
 producing disabled keys — `0` widens over an empty decimal slot and Confirm
 stretches over an empty right-row-2 slot. See [layouts.md](layouts.md).
 
+The full keyboards have no inert IME spacer: when no IME key is present, Space
+fills the former IME slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When an engine
+and an IME-capable profile are present, the slot holds `ime.toggle` and Space
+returns to 5.5/2.5; row totals stay 15/10. The IME key remains in English mode, so
+中/英 toggling never changes the width. See D19 in
+[design/decisions.md](design/decisions.md) and [ime.md](ime.md).
+
 ### Commands
 
 `KeyCommand` is a UI-agnostic struct with a `KeyCommandKind` and optional text:
 insert text, backspace, clear, move caret, step digit up/down, toggle sign, toggle
-shift, switch to full keyboard / numeric keypad, switch full-keyboard page, submit
-and close. A key dispatches its command; the frontend decides which commands are
-host actions (submit, close) and which go to the session.
+shift, switch to full keyboard / numeric keypad, switch full-keyboard page, toggle
+IME, submit and close. A key dispatches its command; the frontend
+decides which commands are host actions (submit, close) and which go to the session.
 
 ### Session and state
 
-`KeyboardSession` owns the edit buffer, caret, mode, page, sticky shift, layout and
-commit/cancel lifecycle. `Execute(KeyCommand)` mutates the session; `TryCommit`
-validates and normalizes; `Cancel` discards. Every change raises `StateChanged`
-with a new immutable `KeyboardState` snapshot (text, caret, mode, page, shift,
-layout, error, dirty flag, cancelled flag). Frontends render snapshots only; they
-never mutate session fields directly.
+`KeyboardSession` owns the edit buffer, caret, mode, page, sticky shift, optional
+IME composition, layout and commit/cancel lifecycle. `Execute(KeyCommand)` mutates
+the session; `TryCommit` validates and normalizes; `Cancel` discards. Every change
+raises `StateChanged` with a new immutable `KeyboardState` snapshot (text, caret,
+mode, page, shift, layout, error, dirty flag, cancelled flag and optional
+`ImeCompositionState`). Frontends render snapshots only; they never mutate session
+fields directly.
+
+When an engine is configured and the profile allows IME, the session creates an
+internal `ImeComposition`: Chinese letters start/extend a raw pinyin composition,
+candidates come from the engine, and Space/1–9/Enter commit through the normal
+insert path so `MaxLength` and `IsIntermediateValid` still apply. The composition
+is not written to `State.Text` until a candidate (or the raw input when there are
+no candidates) is committed. `SelectImeCandidate` and `ChangeImePage` are host
+entry points for the candidate bar. See [ime.md](ime.md).
 
 Layout selection inside a session:
 
@@ -137,10 +185,10 @@ code list lives in [profiles.md](profiles.md#validation-errors).
 | Component | Responsibility |
 |---|---|
 | `TouchKeyboardController` | Watches window pointer presses, resolves an editable target, builds the adapter and session, opens the host, restores focus on close, cancels on window deactivation. |
-| `TouchKeyboardHost` | Overlay chrome: scrim, panel, title/unit/error row, close button, editor row, fixed five-row keyboard area, page/mode rendering, theme resolution. |
+| `TouchKeyboardHost` | Overlay chrome: scrim, panel, title/unit/error row, close button, editor row, candidate row, variable-height keyboard area, page/mode rendering, theme resolution, IME key/candidate rendering from `KeyboardState.Ime`, and long-press title-row dragging clamped to the window. PhoneHybrid uses the candidate row as the first of five rows (hiding it on the symbol page); numeric-only profiles use a compact four-row area. |
 | `KeyboardLayoutView` | Renders a `KeyboardLayout` as rows or as a cell grid. Rows share one unit grid (gaps are half-margins inside unit columns). |
 | `TouchKey` | Border-based key: no focus, pointer capture, strong press overlay + scale, long-press repeat, vector glyphs, accessible name/peer. |
-| `TouchKeyboardEditor` | Default custom-drawn single-line editor surface: text, caret, horizontal scroll, password mask. Measures trailing whitespace so the caret follows spaces. |
+| `TouchKeyboardEditor` | Default custom-drawn single-line editor surface: text, caret, horizontal scroll, password mask and inline IME composition with an underline. Measures trailing whitespace so the caret follows spaces and composition. |
 | `TouchKeyboardTheme` | Brushes and metrics for panel, editor, keys, press feedback and label offset; `Light` and `Dark` presets. |
 | `TouchKeyboardLocalizer` | Resolves key labels and formats core validation errors (zh-CN / en-US). |
 | Adapters | Read target text/metadata and write committed text back (`TextBox`, `NumericUpDown`, `CalendarDatePicker`, custom). |
@@ -156,27 +204,36 @@ pins a preset. See [avalonia.md](avalonia.md) for integration details.
 | New numeric scenario | Build `NumericKeypadOptions`/`NumpadSlots` and call `KeyboardLayouts.Numpad(id, slots)`. |
 | Host-specific control | Implement `IEditorAdapter` (or `IEditorAdapterFactory`) and register it. |
 | Own editor widget | Implement `IEditorSurface` and inject it through `TouchKeyboardOptions.EditorSurfaceFactory`. |
+| Size/palette | Use `TouchKeyboardOptions.Style` for scale/font/icon/semantic colours, or `Theme` for every brush and metric. See [customization.md](customization.md) and [public-api.md](public-api.md). |
+| Movable panel | `TouchKeyboardOptions.EnablePanelDrag` (default true) and `TouchKeyboardHost.ResetPanelPosition()`. |
+| New language / IME | Implement `IImeEngine` in a separate `netstandard2.0` package and activate it with `TouchKeyboardOptions.UseIme(engine)`. |
 | New UI stack | Build a frontend on the core; keep pointer, focus, fonts and brushes out of the core. |
 | Custom icon set | Provide a new frontend renderer for `KeyGlyph`; the core only names icons. |
 
 ## Testing strategy
 
 - Core unit tests cover profiles, layouts (row widths, grid spans), session
-  behavior, validation and the architecture rule.
+  behavior, IME composition/commit/cancel/pagination, the no-engine baseline and
+  the architecture rule.
+- Pinyin tests cover query, segmentation, abbreviations, polyphones, pagination,
+  determinism, a 129-entry golden set, extended lexicon, corrupted-data fail-fast,
+  NOTICE and latency.
 - Avalonia headless tests cover opening/closing, adapters, physical input, shift,
   mode/page switching, dark theme resolution, press feedback, icon rendering,
-  accessible names, and Z-under-S alignment in PhoneHybrid.
-- `build/preflight.sh` runs Release tests, packs both packages, checks package
-  contents (dll/xml/README/icon) and runs the hygiene scan.
-- `build/smoke-pack.sh` packs and consumes both packages from a local feed in
-  throwaway Core and Avalonia projects.
+  accessible names, Z-under-S alignment, IME-key visibility, fixed candidate bar
+  geometry, candidate taps/paging, composition frames and 1024×600 layout.
+- `build/preflight.sh` runs Release tests, packs all four packages, checks package
+  contents (dll/xml/README/icon/NOTICE/dictionary resources) and runs the hygiene
+  scan.
+- `build/smoke-pack.sh` packs and consumes all four packages from a local feed in
+  Avalonia-only, +Pinyin and +Extended projects, checks the Avalonia-only
+  dependency graph and runs a trimmed AOT publish.
 
 ## Known limitations
 
-- v1 has no IME or Chinese input; profiles are ASCII/digit oriented. The IME slot
-  is reserved as a spacer and `KeyGlyph.Ime` is reserved. A draft, undecided plan
-  for an optional managed Chinese input and language-pack design lives in
-  [design/2026-11-08-chinese-input-and-language-packs.md](design/2026-11-08-chinese-input-and-language-packs.md).
+- The optional pinyin IME is managed and dictionary-based; it does not bridge the
+  system IME, inject keys, or support Wubi/handwriting/fuzzy pinyin/cloud input or
+  user learning. Candidate quality is best-effort, not guaranteed.
 - The editor is single-line: no selection, clipboard, undo or multi-line layout.
 - Editing happens in the session buffer; the target control is written only on
   confirm. Closing the panel always discards.

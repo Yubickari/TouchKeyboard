@@ -1,13 +1,14 @@
 # Release process
 
-Releases publish `TouchKeyboard.Core` and `TouchKeyboard.Avalonia` to nuget.org, plus
-a GitHub release carrying the `.nupkg`/`.snupkg` artifacts. Publishing uses NuGet
-**Trusted Publishing** (OIDC), so no long-lived API key is stored anywhere.
+Releases publish `TouchKeyboard.Core`, `TouchKeyboard.Avalonia`,
+`TouchKeyboard.Ime.Pinyin` and `TouchKeyboard.Ime.Pinyin.Extended` to nuget.org,
+plus a GitHub release carrying the `.nupkg`/`.snupkg` artifacts. Publishing uses
+NuGet **Trusted Publishing** (OIDC), so no long-lived API key is stored anywhere.
 
 ## Version source
 
-`Directory.Build.props` holds the single `<Version>` used by both packages. A
-release tag must be `v<Version>`, for example `v0.1.0-preview.1`. `build/preflight.sh`
+`Directory.Build.props` holds the single `<Version>` used by all four packages. A
+release tag must be `v<Version>`, for example `v0.2.0`. `build/preflight.sh`
 fails when the tag and version disagree, and (on a tag build) when the working tree
 is dirty.
 
@@ -46,7 +47,11 @@ bash build/smoke-pack.sh
 ```
 
 `smoke-pack.sh` also verifies that a plain console project can reference the core
-package and that a minimal Avalonia 12 app can reference the frontend package.
+package, that a minimal Avalonia 12 app can reference the frontend package without
+pulling a language pack, that the Avalonia + Pinyin and Avalonia + Extended shapes
+run a real query through the exported engine, and that a trimmed AOT publish can
+load the dictionaries and commit a composition. The AOT step needs `clang` and
+`zlib` (the CI workflow installs them on Ubuntu).
 
 ## Release checklist
 
@@ -57,19 +62,20 @@ package and that a minimal Avalonia 12 app can reference the frontend package.
 4. Commit, then create and push the tag:
 
    ```bash
-   git tag v0.1.0-preview.1
-   git push origin v0.1.0-preview.1
+   git tag v0.2.0
+   git push origin v0.2.0
    ```
 
-5. Watch the **Release** workflow. It runs the package smoke, preflight, exchanges
-   the OIDC token for a short-lived NuGet key, pushes both packages (skipping
-   duplicates) and creates the GitHub release with the artifacts attached.
+5. Watch the **Release** workflow. It runs the package smoke (three consumer
+   shapes plus AOT), preflight, exchanges the OIDC token for a short-lived NuGet
+   key, pushes all four packages (skipping duplicates) and creates the GitHub
+   release with the artifacts attached.
 6. Validate from the public feed in a clean project:
 
    ```bash
    dotnet new console -o /tmp/osk-smoke
    cd /tmp/osk-smoke
-   dotnet add package TouchKeyboard.Avalonia --version 0.1.0-preview.1
+   dotnet add package TouchKeyboard.Avalonia --version 0.2.0
    dotnet build
    ```
 
@@ -82,16 +88,25 @@ package and that a minimal Avalonia 12 app can reference the frontend package.
 |---|---|
 | `TouchKeyboard.Core` | `lib/netstandard2.0/TouchKeyboard.Core.dll`, `.xml`, `README.md`, `icon.png`, `.snupkg` alongside |
 | `TouchKeyboard.Avalonia` | `lib/net8.0` and `lib/net10.0` `.dll` + `.xml`, `README.md`, `icon.png`, `.snupkg` alongside |
+| `TouchKeyboard.Ime.Pinyin` | `lib/netstandard2.0` `.dll` + `.xml`, `README.md`, `icon.png`, `NOTICE`, `resources/pinyin-common.bin`, `.snupkg` alongside |
+| `TouchKeyboard.Ime.Pinyin.Extended` | `lib/netstandard2.0` `.dll` + `.xml`, `README.md`, `icon.png`, `NOTICE`, `resources/pinyin-extended.bin`, `.snupkg` alongside |
 
-`preflight.sh` fails the release when any of those entries is missing.
+Data packs use only permissive/attribution licences (no share-alike or copyleft)
+and list their sources and snapshot hashes in `NOTICE`; there is no separate legal
+gate. `preflight.sh` checks all four package shapes, the `NOTICE`/README text and
+the dictionary resources, and fails the release when any entry is missing. The
+package smoke must still pass the no-engine behavior matrix (including expanded
+Space) for the Avalonia-only shape. See [ADR 0004](adr/0004-managed-pinyin-ime.md)
+and [ime.md](ime.md).
 
 ## Post-release validation
 
-- [ ] Both package pages show the icon and README.
+- [ ] All four package pages show the icon and README; the two language packs show `NOTICE` in the package contents.
 - [ ] `dotnet add package` resolves from nuget.org (not just the local feed).
 - [ ] A clean Avalonia 12 app builds with the package and shows the keyboard.
-- [ ] The symbol package is listed and sourcelink points at the tag commit.
-- [ ] The GitHub release has both `.nupkg` and `.snupkg` files.
+- [ ] A clean Avalonia app with `TouchKeyboard.Ime.Pinyin` shows the 中/英 key and candidate row for a `text` field.
+- [ ] The symbol packages are listed and sourcelink points at the tag commit.
+- [ ] The GitHub release has all `.nupkg` and `.snupkg` files.
 
 ## Failure and rollback
 

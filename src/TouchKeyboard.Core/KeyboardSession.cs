@@ -16,6 +16,7 @@ public sealed class KeyboardSession
     private readonly decimal? _minimum;
     private readonly decimal? _maximum;
     private readonly FullKeyboardLayoutKind _fullKeyboardLayout;
+    private readonly bool _imeFullWidthPunctuation;
     private NumericKeypadLayoutKind _numericKeypadLayout;
 
     private string _text;
@@ -26,6 +27,7 @@ public sealed class KeyboardSession
     private InputValidationError? _error;
     private bool _cancelled;
     private KeyboardLayout _layout;
+    private ImeComposition? _ime;
 
     /// <summary>Creates a session for one field.</summary>
     public KeyboardSession(KeyboardSessionOptions options)
@@ -58,7 +60,17 @@ public sealed class KeyboardSession
         _maximum = options.Maximum;
         _fullKeyboardLayout = options.FullKeyboardLayout;
         _numericKeypadLayout = options.NumericKeypadLayout;
+        _imeFullWidthPunctuation = options.ImeFullWidthPunctuation;
         _effectiveMaxLength = ResolveMaxLength(Profile.MaxLength, options.MaxLength);
+
+        if (options.ImeEngine is not null && Profile.AllowsIme && Profile.AllowsFullKeyboard)
+        {
+            _ime = new ImeComposition(
+                options.ImeEngine,
+                options.ImeEnabled ?? true,
+                options.ImeCandidatePageSize,
+                options.ImeMaxCompositionLength);
+        }
 
         _text = options.Text ?? string.Empty;
         _initialText = _text;
@@ -108,7 +120,7 @@ public sealed class KeyboardSession
             case KeyCommandKind.Close:
                 return;
             case KeyCommandKind.InsertText:
-                Insert(command.Text);
+                HandleInsert(command.Text);
                 return;
             case KeyCommandKind.Backspace:
                 Backspace();
@@ -117,34 +129,78 @@ public sealed class KeyboardSession
                 Clear();
                 return;
             case KeyCommandKind.MoveCaretLeft:
-                MoveCaret(-1);
+                if (!HandleImeSelectionMove(-1))
+                {
+                    MoveCaret(-1);
+                }
+
                 return;
             case KeyCommandKind.MoveCaretRight:
-                MoveCaret(1);
+                if (!HandleImeSelectionMove(1))
+                {
+                    MoveCaret(1);
+                }
+
                 return;
             case KeyCommandKind.StepDigitUp:
-                StepDigit(1);
+                if (!HandleImeSelectionMove(-1))
+                {
+                    StepDigit(1);
+                }
+
                 return;
             case KeyCommandKind.StepDigitDown:
-                StepDigit(-1);
+                if (!HandleImeSelectionMove(1))
+                {
+                    StepDigit(-1);
+                }
+
                 return;
             case KeyCommandKind.ToggleSign:
                 ToggleSign();
                 return;
             case KeyCommandKind.ToggleShift:
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+
                 ToggleShift();
                 return;
             case KeyCommandKind.SwitchToFullKeyboard:
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+
                 SwitchToFullKeyboard();
                 return;
             case KeyCommandKind.SwitchToNumericKeypad:
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+
                 SwitchToNumericKeypad();
                 return;
             case KeyCommandKind.SwitchToSymbolPage:
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+
                 SwitchToSymbolPage();
                 return;
             case KeyCommandKind.SwitchToMainPage:
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+
                 SwitchToMainPage();
+                return;
+            case KeyCommandKind.ToggleIme:
+                ToggleIme();
                 return;
             default:
                 return;
@@ -171,8 +227,62 @@ public sealed class KeyboardSession
     }
 
     /// <summary>
+    /// Selects a candidate by its index on the current candidate page and commits
+    /// it into the buffer. Out-of-range indices and non-composing sessions are ignored.
+    /// </summary>
+    public void SelectImeCandidate(int index)
+    {
+        if (_cancelled || _ime is null || !_ime.IsComposing)
+        {
+            return;
+        }
+
+        if (_ime.TrySelectFromCurrentPage(index, out _))
+        {
+            CommitImeComposition();
+        }
+    }
+
+    /// <summary>
+    /// Changes the number of candidates per page (1–9). The current page resets to
+    /// the first page and the selection resets to the first candidate.
+    /// </summary>
+    public void SetImeCandidatePageSize(int pageSize)
+    {
+        if (_cancelled || _ime is null)
+        {
+            return;
+        }
+
+        if (_ime.SetPageSize(pageSize))
+        {
+            _error = null;
+            Publish();
+        }
+    }
+
+    /// <summary>
+    /// Moves one candidate page forward or backward. The selection resets to the
+    /// first candidate; page movement does not wrap and is ignored without candidates.
+    /// </summary>
+    public void ChangeImePage(int delta)
+    {
+        if (_cancelled || _ime is null || !_ime.IsComposing)
+        {
+            return;
+        }
+
+        if (_ime.ChangePage(delta))
+        {
+            _error = null;
+            Publish();
+        }
+    }
+
+    /// <summary>
     /// Validates the buffer and returns the normalized text. This does not write
-    /// to the target control; the host performs the write-back.
+    /// to the target control; the host performs the write-back. A pending IME
+    /// composition is committed into the buffer first.
     /// </summary>
     public bool TryCommit(out string text, out InputValidationError? error)
     {
@@ -183,6 +293,13 @@ public sealed class KeyboardSession
         {
             error = new InputValidationError(InputValidationErrorCode.CommitRejected);
             SetError(error);
+            return false;
+        }
+
+        if (!CommitCompositionForAction())
+        {
+            error = _error;
+            text = _text;
             return false;
         }
 
@@ -265,10 +382,11 @@ public sealed class KeyboardSession
 
         _cancelled = true;
         _error = null;
+        _ime?.Reset();
         Publish();
     }
 
-    private void Insert(string? value)
+    private void HandleInsert(string? value)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -276,25 +394,121 @@ public sealed class KeyboardSession
         }
 
         var text = value!;
+
+        if (_ime is not null)
+        {
+            if (_ime.IsComposing)
+            {
+                if (text.Length == 1)
+                {
+                    var character = text[0];
+                    if (IsAsciiLetter(character))
+                    {
+                        AppendComposition(character);
+                        return;
+                    }
+
+                    if (character >= '1' && character <= '9')
+                    {
+                        if (_ime.TrySelectFromCurrentPage(character - '1', out _))
+                        {
+                            CommitImeComposition();
+                        }
+
+                        return;
+                    }
+
+                    if (character == '0')
+                    {
+                        return;
+                    }
+
+                    if (character == ' ')
+                    {
+                        CommitImeComposition();
+                        return;
+                    }
+                }
+
+                if (!CommitCompositionForAction())
+                {
+                    return;
+                }
+            }
+            else if (_ime.IsEnabled && text.Length == 1 && IsAsciiLetter(text[0]))
+            {
+                BeginComposition(text[0]);
+                return;
+            }
+
+            if (_ime.IsEnabled
+                && _imeFullWidthPunctuation
+                && text.Length == 1
+                && _ime.TryMapPunctuation(text[0], out var mapped)
+                && !string.IsNullOrEmpty(mapped))
+            {
+                text = mapped;
+            }
+        }
+
+        InsertText(text);
+    }
+
+    private void InsertText(string text)
+    {
+        if (TryInsertText(text, reportError: false))
+        {
+            _error = null;
+            Publish();
+        }
+    }
+
+    /// <summary>
+    /// Inserts into the buffer after the maximum-length and intermediate-state
+    /// checks. Composition commits use <paramref name="reportError"/> so a failed
+    /// candidate insertion keeps the composition and surfaces the error.
+    /// </summary>
+    private bool TryInsertText(string text, bool reportError)
+    {
         var candidate = _text.Insert(_caret, text);
         if (_effectiveMaxLength > 0 && candidate.Length > _effectiveMaxLength)
         {
-            return;
+            if (reportError)
+            {
+                _error = new InputValidationError(InputValidationErrorCode.MaxLengthExceeded, _effectiveMaxLength);
+            }
+
+            return false;
         }
 
         if (!Profile.IsIntermediateValid(candidate))
         {
-            return;
+            if (reportError)
+            {
+                _error = new InputValidationError(InputValidationErrorCode.CommitRejected);
+            }
+
+            return false;
         }
 
         _text = candidate;
         _caret += text.Length;
-        _error = null;
-        Publish();
+        return true;
     }
 
     private void Backspace()
     {
+        if (_ime is { IsComposing: true })
+        {
+            if (_ime.RemoveLastLetter())
+            {
+                _error = null;
+                Publish();
+            }
+
+            return;
+        }
+
         if (_caret == 0)
         {
             return;
@@ -308,11 +522,116 @@ public sealed class KeyboardSession
 
     private void Clear()
     {
+        _ime?.Reset();
         _text = string.Empty;
         _caret = 0;
         _error = null;
         Publish();
     }
+
+    private void BeginComposition(char letter)
+    {
+        if (_ime is null || !_ime.IsEnabled || !IsAsciiLetter(letter))
+        {
+            return;
+        }
+
+        if (_ime.AppendLetter(ToLowerAscii(letter)))
+        {
+            _error = null;
+            Publish();
+        }
+    }
+
+    private void AppendComposition(char letter)
+    {
+        if (_ime is null || !IsAsciiLetter(letter))
+        {
+            return;
+        }
+
+        if (_ime.AppendLetter(ToLowerAscii(letter)))
+        {
+            _error = null;
+            Publish();
+        }
+    }
+
+    private bool HandleImeSelectionMove(int delta)
+    {
+        if (_ime is null || !_ime.IsComposing)
+        {
+            return false;
+        }
+
+        if (_ime.CandidateCount == 0)
+        {
+            // Keep the caret in the buffer stable while composing, even when the
+            // engine returned no candidate.
+            return true;
+        }
+
+        if (_ime.MoveSelection(delta))
+        {
+            _error = null;
+            Publish();
+        }
+
+        return true;
+    }
+
+    private bool CommitCompositionForAction()
+        => _ime is not { IsComposing: true } || CommitImeComposition();
+
+    private bool CommitImeComposition()
+    {
+        if (_ime is null || !_ime.IsComposing)
+        {
+            return true;
+        }
+
+        var text = _ime.CommitText;
+        if (string.IsNullOrEmpty(text))
+        {
+            _ime.Reset();
+            _error = null;
+            Publish();
+            return true;
+        }
+
+        if (!TryInsertText(text, reportError: true))
+        {
+            Publish();
+            return false;
+        }
+
+        _ime.Reset();
+        _error = null;
+        Publish();
+        return true;
+    }
+
+    private void ToggleIme()
+    {
+        if (_ime is null)
+        {
+            return;
+        }
+
+        if (!CommitCompositionForAction())
+        {
+            return;
+        }
+
+        _ime.ToggleEnabled();
+        _error = null;
+        _layout = BuildLayout();
+        Publish();
+    }
+
+    private static bool IsAsciiLetter(char c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+
+    private static char ToLowerAscii(char c) => c >= 'A' && c <= 'Z' ? (char)(c + ('a' - 'A')) : c;
 
     private void MoveCaret(int delta)
     {
@@ -462,12 +781,41 @@ public sealed class KeyboardSession
     {
         if (_mode == KeyboardMode.FullKeyboard)
         {
-            return KeyboardLayouts.Full(_fullKeyboardLayout, _page);
+            return KeyboardLayouts.Full(_fullKeyboardLayout, _page, BuildImeKey());
         }
 
         return Profile.AllowsFullKeyboard
             ? KeyboardLayouts.GeneralNumeric(_numericKeypadLayout)
             : KeyboardLayouts.ProfileNumeric(Profile);
+    }
+
+    /// <summary>
+    /// Builds the IME toggle for the full keyboard. The key stays present in
+    /// English mode (so switching back is always possible); only the label and
+    /// accessible name follow the active state.
+    /// </summary>
+    private KeyDefinition? BuildImeKey()
+    {
+        if (_ime is null)
+        {
+            return null;
+        }
+
+        var active = _ime.IsEnabled;
+        var width = _fullKeyboardLayout == FullKeyboardLayoutKind.AnsiStyle ? 1.5 : 1.0;
+        return new KeyDefinition(
+            id: "ime.toggle",
+            label: KeyLabel.Resource(active ? "key.ime.active" : "key.ime.inactive"),
+            command: KeyCommand.ToggleIme,
+            widthUnits: width,
+            style: KeyStyle.Action,
+            repeatable: false,
+            shiftedLabel: null,
+            shiftedCommand: null,
+            columnSpan: 1,
+            rowSpan: 1,
+            glyph: null,
+            accessibleName: KeyLabel.Resource(active ? "key.ime.active.name" : "key.ime.inactive.name"));
     }
 
     private void SetError(InputValidationError error)
@@ -494,7 +842,8 @@ public sealed class KeyboardSession
             _numericKeypadLayout,
             _error,
             !string.Equals(_text, _initialText, StringComparison.Ordinal),
-            _cancelled);
+            _cancelled,
+            _ime?.Snapshot());
 
     private static int ResolveMaxLength(int? profileMaxLength, int targetMaxLength)
     {

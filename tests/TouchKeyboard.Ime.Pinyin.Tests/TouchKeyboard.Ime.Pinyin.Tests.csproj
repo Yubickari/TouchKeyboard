@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>TouchKeyboard.Ime.Pinyin.Tests</AssemblyName>
+    <RootNamespace>TouchKeyboard.Ime.Pinyin.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\broken.bin"
+                      LogicalName="TouchKeyboard.Ime.Pinyin.Tests.Resources.broken.bin" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TouchKeyboard.Core\TouchKeyboard.Core.csproj" />
+    <ProjectReference Include="..\..\src\TouchKeyboard.Ime.Pinyin\TouchKeyboard.Ime.Pinyin.csproj" />
+    <ProjectReference Include="..\..\src\TouchKeyboard.Ime.Pinyin.Extended\TouchKeyboard.Ime.Pinyin.Extended.csproj" />
+  </ItemGroup>
+</Project>

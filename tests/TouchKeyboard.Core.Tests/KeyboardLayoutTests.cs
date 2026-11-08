@@ -46,7 +46,7 @@ public sealed class KeyboardLayoutTests
     }
 
     [Fact]
-    public void Ansi_style_reserves_tab_caps_and_ime_as_commandless_spacers()
+    public void Ansi_style_reserves_tab_and_caps_but_no_commandless_ime_spacer()
     {
         var keys = Flatten(KeyboardLayouts.Full(FullKeyboardLayoutKind.AnsiStyle)).ToList();
 
@@ -54,13 +54,26 @@ public sealed class KeyboardLayoutTests
             && key.WidthUnits == 1.5 && key.Command.Kind == KeyCommandKind.None);
         Assert.Contains(keys, key => key.Id == "spacer.caps" && key.Style == KeyStyle.Spacer
             && key.WidthUnits == 1.75 && key.Command.Kind == KeyCommandKind.None);
-        Assert.Contains(keys, key => key.Id == "spacer.ime" && key.Style == KeyStyle.Spacer
-            && key.WidthUnits == 1.5 && key.Command.Kind == KeyCommandKind.None);
+        Assert.DoesNotContain(keys, key => key.Id == "spacer.ime");
         Assert.All(keys.Where(key => key.Style == KeyStyle.Spacer), spacer =>
         {
             Assert.Equal(KeyCommandKind.None, spacer.Command.Kind);
             Assert.Null(spacer.Glyph);
         });
+    }
+
+    [Fact]
+    public void No_ime_space_expands_over_the_former_ime_slot()
+    {
+        var ansi = KeyboardLayouts.Full(FullKeyboardLayoutKind.AnsiStyle).Rows[4];
+        var phone = KeyboardLayouts.Full(FullKeyboardLayoutKind.PhoneHybrid).Rows[3];
+
+        Assert.Equal(7.0, ansi.Keys.Single(key => key.Id == "key.space").WidthUnits);
+        Assert.Equal(3.5, phone.Keys.Single(key => key.Id == "key.space").WidthUnits);
+        Assert.Equal(15d, ansi.TotalUnits);
+        Assert.Equal(10d, phone.TotalUnits);
+        Assert.DoesNotContain(ansi.Keys, key => key.Command.Kind == KeyCommandKind.ToggleIme);
+        Assert.DoesNotContain(phone.Keys, key => key.Command.Kind == KeyCommandKind.ToggleIme);
     }
 
     [Fact]
@@ -95,24 +108,25 @@ public sealed class KeyboardLayoutTests
     }
 
     [Fact]
-    public void Ansi_style_bottom_row_has_numeric_caret_space_clear_and_confirm()
+    public void Ansi_style_bottom_row_expands_space_and_has_no_ime_key()
     {
         var layout = KeyboardLayouts.Full(FullKeyboardLayoutKind.AnsiStyle);
         var row = layout.Rows[4];
 
         Assert.Equal(15d, row.TotalUnits);
+        Assert.Equal(6, row.Keys.Count);
         Assert.Equal(KeyCommandKind.SwitchToNumericKeypad, row.Keys[0].Command.Kind);
         Assert.Equal(1.5, row.Keys[0].WidthUnits);
         Assert.Equal(KeyGlyph.ArrowLeft, row.Keys[1].Glyph);
         Assert.Equal(KeyGlyph.ArrowRight, row.Keys[2].Glyph);
-        Assert.Equal(5.5, row.Keys[3].WidthUnits);
+        Assert.Equal(7.0, row.Keys[3].WidthUnits);
         Assert.Equal(KeyCommand.Insert(" "), row.Keys[3].Command);
         Assert.Equal(KeyGlyph.Space, row.Keys[3].Glyph);
-        Assert.Equal(KeyStyle.Spacer, row.Keys[4].Style);
-        Assert.Equal(KeyGlyph.Clear, row.Keys[5].Glyph);
-        Assert.Equal(KeyCommandKind.Submit, row.Keys[6].Command.Kind);
-        Assert.Equal(KeyStyle.Primary, row.Keys[6].Style);
-        Assert.Equal(2.5, row.Keys[6].WidthUnits);
+        Assert.Equal(KeyGlyph.Clear, row.Keys[4].Glyph);
+        Assert.Equal(KeyCommandKind.Submit, row.Keys[5].Command.Kind);
+        Assert.Equal(KeyStyle.Primary, row.Keys[5].Style);
+        Assert.Equal(2.5, row.Keys[5].WidthUnits);
+        Assert.DoesNotContain(row.Keys, key => key.Style == KeyStyle.Spacer);
     }
 
     [Fact]
@@ -170,11 +184,11 @@ public sealed class KeyboardLayoutTests
     }
 
     [Fact]
-    public void Phone_hybrid_bottom_row_uses_unit_entries_and_flanks_space_with_caret_keys()
+    public void Phone_hybrid_bottom_row_expands_space_and_has_no_ime_key()
     {
         var keys = KeyboardLayouts.Full(FullKeyboardLayoutKind.PhoneHybrid).Rows[3].Keys;
 
-        Assert.Equal(8, keys.Count);
+        Assert.Equal(7, keys.Count);
         Assert.Equal(KeyCommandKind.SwitchToSymbolPage, keys[0].Command.Kind);
         Assert.Equal(1.0, keys[0].WidthUnits);
         Assert.Equal(KeyCommandKind.SwitchToNumericKeypad, keys[1].Command.Kind);
@@ -182,15 +196,14 @@ public sealed class KeyboardLayoutTests
         Assert.Equal(KeyGlyph.ArrowLeft, keys[2].Glyph);
         Assert.Equal(1.0, keys[2].WidthUnits);
         Assert.Equal(KeyGlyph.Space, keys[3].Glyph);
-        Assert.Equal(2.5, keys[3].WidthUnits);
+        Assert.Equal(3.5, keys[3].WidthUnits);
         Assert.Equal(KeyGlyph.ArrowRight, keys[4].Glyph);
         Assert.Equal(1.0, keys[4].WidthUnits);
-        Assert.Equal(KeyStyle.Spacer, keys[5].Style);
+        Assert.Equal(KeyGlyph.Clear, keys[5].Glyph);
         Assert.Equal(1.0, keys[5].WidthUnits);
-        Assert.Equal(KeyGlyph.Clear, keys[6].Glyph);
-        Assert.Equal(1.0, keys[6].WidthUnits);
-        Assert.Equal(KeyCommandKind.Submit, keys[7].Command.Kind);
-        Assert.Equal(1.5, keys[7].WidthUnits);
+        Assert.Equal(KeyCommandKind.Submit, keys[6].Command.Kind);
+        Assert.Equal(1.5, keys[6].WidthUnits);
+        Assert.DoesNotContain(keys, key => key.Style == KeyStyle.Spacer);
     }
 
     [Fact]

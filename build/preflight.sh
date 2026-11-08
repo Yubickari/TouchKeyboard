@@ -30,17 +30,22 @@ fi
 
 echo "preflight: tests"
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
+dotnet test tests/TouchKeyboard.Ime.Pinyin.Tests/TouchKeyboard.Ime.Pinyin.Tests.csproj -c Release
 dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
 
 echo "preflight: pack"
 rm -rf artifacts
 dotnet pack src/TouchKeyboard.Core/TouchKeyboard.Core.csproj -c Release -o artifacts
 dotnet pack src/TouchKeyboard.Avalonia/TouchKeyboard.Avalonia.csproj -c Release -o artifacts
+dotnet pack src/TouchKeyboard.Ime.Pinyin/TouchKeyboard.Ime.Pinyin.csproj -c Release -o artifacts
+dotnet pack src/TouchKeyboard.Ime.Pinyin.Extended/TouchKeyboard.Ime.Pinyin.Extended.csproj -c Release -o artifacts
 
 core_package="artifacts/TouchKeyboard.Core.$version.nupkg"
 avalonia_package="artifacts/TouchKeyboard.Avalonia.$version.nupkg"
+pinyin_package="artifacts/TouchKeyboard.Ime.Pinyin.$version.nupkg"
+extended_package="artifacts/TouchKeyboard.Ime.Pinyin.Extended.$version.nupkg"
 
-for package in "$core_package" "$avalonia_package"; do
+for package in "$core_package" "$avalonia_package" "$pinyin_package" "$extended_package"; do
   if [[ ! -f "$package" ]]; then
     echo "preflight: missing package $package" >&2
     exit 1
@@ -72,6 +77,29 @@ require_entry "$avalonia_package" 'lib/net10.0/TouchKeyboard.Avalonia.dll'
 require_entry "$avalonia_package" 'lib/net10.0/TouchKeyboard.Avalonia.xml'
 require_entry "$avalonia_package" 'README.md'
 require_entry "$avalonia_package" 'icon.png'
+require_entry "$pinyin_package" 'lib/netstandard2.0/TouchKeyboard.Ime.Pinyin.dll'
+require_entry "$pinyin_package" 'lib/netstandard2.0/TouchKeyboard.Ime.Pinyin.xml'
+require_entry "$pinyin_package" 'README.md'
+require_entry "$pinyin_package" 'icon.png'
+require_entry "$pinyin_package" 'NOTICE'
+require_entry "$pinyin_package" 'resources/pinyin-common.bin'
+require_entry "$extended_package" 'lib/netstandard2.0/TouchKeyboard.Ime.Pinyin.Extended.dll'
+require_entry "$extended_package" 'lib/netstandard2.0/TouchKeyboard.Ime.Pinyin.Extended.xml'
+require_entry "$extended_package" 'README.md'
+require_entry "$extended_package" 'icon.png'
+require_entry "$extended_package" 'NOTICE'
+require_entry "$extended_package" 'resources/pinyin-extended.bin'
+
+echo "preflight: package licence/data checks"
+for package in "$pinyin_package" "$extended_package"; do
+  unzip -p "$package" NOTICE > .tmp/notice.txt
+  grep -q "Unicode License" .tmp/notice.txt
+  grep -q "jieba" .tmp/notice.txt
+  grep -q "MIT" .tmp/notice.txt
+  unzip -p "$package" README.md > .tmp/readme.txt
+  grep -qi "not.*guarantee\|no candidate quality" .tmp/readme.txt
+done
+rm -f .tmp/notice.txt .tmp/readme.txt
 
 echo "preflight: hygiene"
 bash build/hygiene.sh

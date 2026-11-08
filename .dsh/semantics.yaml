@@ -1,8 +1,8 @@
 version: 1
 meta:
   project: TouchKeyboard
-  updated: 2026-11-07
-exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**" ]
+  updated: 2026-11-08
+exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**", ".nuget/**", "artifacts/**", ".tmp/**" ]
 concepts:
   - id: touchkeyboard.product
     terms: [ 软键盘, 触摸键盘, 虚拟键盘, 内置键盘 ]
@@ -24,7 +24,7 @@ concepts:
     canonical:
       symbol: InputProfile
       type: class
-    note: A named input contract that selects validation, default mode, numeric keypad key set and commit normalization for one field.
+    note: A named input contract that selects validation, default mode, numeric keypad key set, IME capability and commit normalization for one field.
     accepted:
       - symbol: InputProfiles
         path: src/TouchKeyboard.Core/InputProfiles.cs
@@ -35,14 +35,14 @@ concepts:
     canonical:
       symbol: KeyboardSession
       type: class
-    note: Owns the edit buffer, caret, mode, full-keyboard page, shift state and commit/cancel lifecycle for one field; closing discards and confirming commits.
+    note: Owns the edit buffer, caret, mode, full-keyboard page, shift state, optional IME composition and commit/cancel lifecycle for one field; closing discards and confirming commits.
   - id: keyboard.state
     terms: [ 键盘状态, 会话状态, 键盘快照 ]
     kind: entity
     canonical:
       symbol: KeyboardState
       type: class
-    note: An immutable snapshot of text, caret, mode, full-keyboard page, shift and validation error that a frontend renders.
+    note: An immutable snapshot of text, caret, mode, full-keyboard page, shift, validation error and optional IME composition that a frontend renders.
   - id: keyboard.layout
     terms: [ 键盘布局, 按键布局, 键位表 ]
     kind: entity
@@ -60,21 +60,21 @@ concepts:
     canonical:
       symbol: KeyDefinition
       type: class
-    note: One key's stable id, primary and shifted labels, optional KeyGlyph icon, command, unit width, column/row span, style and repeatability.
+    note: One key's stable id, primary and shifted labels, optional accessible name, optional KeyGlyph icon, command, unit width, column/row span, style and repeatability.
   - id: keyboard.command
     terms: [ 按键命令, 键命令, 按键动作 ]
     kind: entity
     canonical:
       symbol: KeyCommand
       type: struct
-    note: A UI-agnostic action (insert text, backspace, clear, move caret, step digit, toggle sign, switch mode, switch full-keyboard page, submit, close) dispatched by a key.
+    note: A UI-agnostic action (insert text, backspace, clear, move caret, step digit, toggle sign, toggle shift, switch mode, switch page, toggle IME, submit, close) dispatched by a key.
   - id: keyboard.host
     terms: [ 键盘宿主, 键盘浮层, 键盘面板 ]
     kind: entity
     canonical:
       symbol: TouchKeyboardHost
       type: control
-    note: The Avalonia overlay control that renders one session, the field label/unit, the editor surface and the active keyboard layout; it follows the host window's theme variant unless a theme is pinned.
+    note: The Avalonia overlay control that renders one session, the field label/unit, the editor surface, the IME candidate bar and the active keyboard layout; it follows the host window's theme variant unless a theme is pinned.
   - id: keyboard.editor_adapter
     terms: [ 编辑适配器, 控件适配器, 编辑器目标 ]
     kind: reference
@@ -109,14 +109,14 @@ concepts:
     canonical:
       symbol: KeyCommandKind
       type: enum
-    note: The closed set of UI-agnostic session actions a key can dispatch.
+    note: The closed set of UI-agnostic session actions a key can dispatch, including ToggleIme when an IME engine is configured.
   - id: keyboard.editor_surface
     terms: [ 编辑显示面, 自绘编辑框, 值显示面 ]
     kind: entity
     canonical:
       symbol: TouchKeyboardEditor
       type: control
-    note: The Avalonia single-line editor surface that draws text, caret, password mask and horizontal scroll without being a TextBox.
+    note: The Avalonia single-line editor surface that draws text, caret, password mask, horizontal scroll and inline IME composition without being a TextBox.
   - id: keyboard.validation_code
     terms: [ 校验代码, 输入错误代码, 错误码枚举 ]
     kind: enum
@@ -193,35 +193,35 @@ concepts:
     canonical:
       symbol: TouchKeyboardOptions
       type: class
-    note: Host configuration for theme, key height, layout defaults, physical input, localizer and editor surface injection.
+    note: Host configuration for theme, key height, layout defaults, physical input, localizer, editor surface injection and the optional IME engine.
   - id: keyboard.theme
     terms: [ 键盘主题, 配色主题, 主题配置 ]
     kind: entity
     canonical:
       symbol: TouchKeyboardTheme
       type: class
-    note: Brushes and metrics for the panel, editor, key roles, press feedback and label offset; light and dark presets ship in the Avalonia frontend.
+    note: Brushes and metrics for the panel, editor, key roles, press feedback, label offset and IME candidate/composition surfaces; light and dark presets ship in the Avalonia frontend.
   - id: keyboard.localizer
     terms: [ 键盘本地化, 文案解析, 本地化器 ]
     kind: reference
     canonical:
       symbol: ITouchKeyboardLocalizer
       type: interface
-    note: Resolves named key labels and formats core validation errors; built-in zh-CN and en-US implementations ship with the Avalonia frontend.
+    note: Resolves named key labels (including IME keys), formats core validation errors and names IME candidates; built-in zh-CN and en-US implementations ship with the Avalonia frontend.
   - id: keyboard.ansi_style
     terms: [ ANSI 风格全键盘, 严格 ANSI, ANSI 布局 ]
     kind: entity
     canonical:
       symbol: AnsiStyle
       type: layout
-    note: The strict 15-unit ANSI full keyboard with Tab/Caps/IME reserved spaces, exact Enter/Shift/backslash widths and a bottom function row.
+    note: The strict 15-unit ANSI full keyboard with Tab/Caps reserved spaces and an IME slot that folds into Space when no IME key is present (AnsiStyle Space 7.0); with an engine and IME-capable profile the slot holds the 中/英 toggle and Space returns to 5.5. It keeps exact Enter/Shift/backslash widths and a bottom function row.
   - id: keyboard.phone_hybrid
     terms: [ 手机混合全键盘, 手机全键盘, 手机布局 ]
     kind: entity
     canonical:
       symbol: PhoneHybrid
       type: layout
-    note: A four-row phone-style QWERTY full keyboard with symbol and numeric entry points, no number row, and a bottom function row.
+    note: A four-row phone-style QWERTY full keyboard with symbol and numeric entry points, no number row, and a bottom function row; with no IME key Space expands over the former IME slot (3.5 units), and with an IME key Space returns to 2.5 plus the 中/英 toggle.
   - id: keyboard.numpad
     terms: [ 九宫格, 小键盘, 数字盘 ]
     kind: entity
@@ -292,3 +292,59 @@ concepts:
       symbol: TouchButton
       type: control
     note: "Touch-first chrome button for the overlay header (close and password reveal): no focus, no hover state, a themed press overlay, a small press scale and an accessible name."
+  - id: keyboard.ime_engine
+    terms: [ 输入法引擎, 拼音引擎, 语言包引擎, IME 引擎 ]
+    kind: reference
+    canonical:
+      symbol: IImeEngine
+      type: interface
+    note: The language-pack contract that turns a romanized composition string into ranked candidate text and maps language punctuation, with no UI or platform dependency.
+  - id: keyboard.ime_candidate
+    terms: [ 候选词, 候选文本, 候选 ]
+    kind: entity
+    canonical:
+      symbol: ImeCandidate
+      type: class
+    note: "One candidate returned by an IME engine: display text only; ranking and scoring stay inside the engine."
+  - id: keyboard.ime_composition
+    terms: [ 组合态, 拼音组合, 组合输入, 输入法组合 ]
+    kind: entity
+    canonical:
+      symbol: ImeComposition
+      type: class
+    note: The core state machine that owns the raw composition string, candidate page and selection while text is composed; it writes to the session buffer only when a candidate or the raw input is committed.
+  - id: keyboard.ime_state
+    terms: [ 组合态快照, 输入法状态, 候选状态, 候选栏状态 ]
+    kind: entity
+    canonical:
+      symbol: ImeCompositionState
+      type: class
+    note: An immutable snapshot of IME enablement, composition input, current candidate page and selection that every frontend renders.
+  - id: keyboard.ime_options
+    terms: [ 输入法选项, IME 配置, 候选栏配置, 输入法配置 ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardImeOptions
+      type: class
+    note: "Host configuration for the optional IME: engine, default enabled state, mode memory, candidate page size, composition length cap and punctuation mapping."
+  - id: keyboard.ime_capability
+    terms: [ 输入法能力, IME 门控, 档位输入法开关 ]
+    kind: entity
+    canonical:
+      symbol: AllowsIme
+      type: property
+    note: Whether a profile lets its field use the optional IME; text allows it, while password, ASCII token, numeric and date profiles do not.
+  - id: keyboard.pinyin_extended_engine
+    terms: [ 扩展词库, 扩展拼音引擎, 专业词库, 文本包 ]
+    kind: entity
+    canonical:
+      symbol: ExtendedPinyinImeEngine
+      type: class
+    note: The optional extended pinyin engine that reuses the common engine and adds a larger or domain lexicon; installing it is the only change needed to get more vocabulary.
+  - id: keyboard.pinyin_engine
+    terms: [ 中文拼音引擎, 拼音输入, 常用拼音词库, 拼音语言包 ]
+    kind: entity
+    canonical:
+      symbol: PinyinImeEngine
+      type: class
+    note: The managed pinyin engine shipped in the optional TouchKeyboard.Ime.Pinyin pack with the common lexicon; it has no native or platform dependency.

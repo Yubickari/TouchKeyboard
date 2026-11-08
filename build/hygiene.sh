@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 scan_paths=()
-for path in src samples tests docs .github; do
+for path in src samples tests tools docs .github; do
   if [[ -e "$path" ]]; then
     scan_paths+=("$path")
   fi

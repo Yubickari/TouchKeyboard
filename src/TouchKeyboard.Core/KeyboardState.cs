@@ -21,6 +21,36 @@ public sealed class KeyboardState
         InputValidationError? error,
         bool isDirty,
         bool isCancelled)
+        : this(
+            text,
+            caretIndex,
+            mode,
+            isShiftActive,
+            layout,
+            fullKeyboardLayout,
+            page,
+            numericKeypadLayout,
+            error,
+            isDirty,
+            isCancelled,
+            ime: null)
+    {
+    }
+
+    /// <summary>Creates a state snapshot with an optional IME composition state.</summary>
+    public KeyboardState(
+        string text,
+        int caretIndex,
+        KeyboardMode mode,
+        bool isShiftActive,
+        KeyboardLayout layout,
+        FullKeyboardLayoutKind fullKeyboardLayout,
+        FullKeyboardPage page,
+        NumericKeypadLayoutKind numericKeypadLayout,
+        InputValidationError? error,
+        bool isDirty,
+        bool isCancelled,
+        ImeCompositionState? ime)
     {
         Text = text;
         CaretIndex = caretIndex;
@@ -33,6 +63,7 @@ public sealed class KeyboardState
         Error = error;
         IsDirty = isDirty;
         IsCancelled = isCancelled;
+        Ime = ime;
     }
 
     /// <summary>The current buffer.</summary>
@@ -67,6 +98,13 @@ public sealed class KeyboardState
 
     /// <summary>Whether the session was cancelled.</summary>
     public bool IsCancelled { get; }
+
+    /// <summary>
+    /// The optional IME state. <c>null</c> when no engine is configured or the
+    /// profile does not allow IME; the no-IME layout then expands Space over the
+    /// former IME slot.
+    /// </summary>
+    public ImeCompositionState? Ime { get; }
 }
 
 /// <summary>Event data for <see cref="KeyboardSession.StateChanged"/>.</summary>

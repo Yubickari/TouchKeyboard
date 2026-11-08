@@ -21,6 +21,40 @@ public sealed class KeyDefinition
         int columnSpan = 1,
         int rowSpan = 1,
         KeyGlyph? glyph = null)
+        : this(
+            id,
+            label,
+            command,
+            widthUnits,
+            style,
+            repeatable,
+            shiftedLabel,
+            shiftedCommand,
+            columnSpan,
+            rowSpan,
+            glyph,
+            accessibleName: null)
+    {
+    }
+
+    /// <summary>
+    /// Creates a key definition with an optional accessible name. Text keys such
+    /// as the IME toggle use it for a full localized sentence instead of the cap
+    /// label.
+    /// </summary>
+    public KeyDefinition(
+        string id,
+        KeyLabel label,
+        KeyCommand command,
+        double widthUnits,
+        KeyStyle style,
+        bool repeatable,
+        KeyLabel? shiftedLabel,
+        KeyCommand? shiftedCommand,
+        int columnSpan,
+        int rowSpan,
+        KeyGlyph? glyph,
+        KeyLabel? accessibleName)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -53,6 +87,7 @@ public sealed class KeyDefinition
         ColumnSpan = columnSpan;
         RowSpan = rowSpan;
         Glyph = glyph;
+        AccessibleName = accessibleName;
     }
 
     /// <summary>Stable key id, for example <c>key.a</c> or <c>key.backspace</c>.</summary>
@@ -90,6 +125,12 @@ public sealed class KeyDefinition
     /// accessible name and the text fallback.
     /// </summary>
     public KeyGlyph? Glyph { get; }
+
+    /// <summary>
+    /// Optional accessible name that overrides the cap label, for example a full
+    /// sentence for the IME toggle. The frontend resolves it like a label.
+    /// </summary>
+    public KeyLabel? AccessibleName { get; }
 
     /// <summary>Creates an empty cell that keeps a grid aligned.</summary>
     public static KeyDefinition Spacer(string id, double widthUnits = 1.0)

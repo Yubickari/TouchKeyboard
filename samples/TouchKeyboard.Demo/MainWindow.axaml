@@ -40,12 +40,156 @@
           </ComboBox>
         </Grid>
 
+        <Expander x:Name="AppearancePanel"
+                  Header="外观 / 尺寸 / 拖动测试"
+                  IsExpanded="True"
+                  HorizontalContentAlignment="Stretch">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+              <TextBlock Text="整体缩放" VerticalAlignment="Center" Width="72" />
+              <Slider x:Name="ScaleSlider"
+                      Grid.Column="1"
+                      Minimum="0.7"
+                      Maximum="1.2"
+                      Value="1"
+                      TickFrequency="0.05"
+                      IsSnapToTickEnabled="True"
+                      ValueChanged="OnAppearanceChanged" />
+              <TextBlock x:Name="ScaleValueText"
+                         Grid.Column="2"
+                         Text="1.00"
+                         Width="44"
+                         TextAlignment="Right"
+                         VerticalAlignment="Center" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+              <TextBlock Text="字号倍率" VerticalAlignment="Center" Width="72" />
+              <Slider x:Name="FontScaleSlider"
+                      Grid.Column="1"
+                      Minimum="0.7"
+                      Maximum="1.2"
+                      Value="1"
+                      TickFrequency="0.05"
+                      IsSnapToTickEnabled="True"
+                      ValueChanged="OnAppearanceChanged" />
+              <TextBlock x:Name="FontScaleValueText"
+                         Grid.Column="2"
+                         Text="1.00"
+                         Width="44"
+                         TextAlignment="Right"
+                         VerticalAlignment="Center" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+              <TextBlock Text="图标倍率" VerticalAlignment="Center" Width="72" />
+              <Slider x:Name="IconScaleSlider"
+                      Grid.Column="1"
+                      Minimum="0.7"
+                      Maximum="1.2"
+                      Value="1"
+                      TickFrequency="0.05"
+                      IsSnapToTickEnabled="True"
+                      ValueChanged="OnAppearanceChanged" />
+              <TextBlock x:Name="IconScaleValueText"
+                         Grid.Column="2"
+                         Text="1.00"
+                         Width="44"
+                         TextAlignment="Right"
+                         VerticalAlignment="Center" />
+            </Grid>
+
+            <WrapPanel ItemSpacing="16" LineSpacing="8">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="强调色" VerticalAlignment="Center" />
+                <ComboBox x:Name="AccentSelector"
+                          Width="120"
+                          SelectedIndex="0"
+                          SelectionChanged="OnColorChanged">
+                  <ComboBoxItem Content="默认" Tag="Default" />
+                  <ComboBoxItem Content="青绿" Tag="Teal" />
+                  <ComboBoxItem Content="蓝色" Tag="Blue" />
+                  <ComboBoxItem Content="橙色" Tag="Orange" />
+                  <ComboBoxItem Content="紫色" Tag="Purple" />
+                </ComboBox>
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="确定键" VerticalAlignment="Center" />
+                <ComboBox x:Name="ConfirmSelector"
+                          Width="120"
+                          SelectedIndex="0"
+                          SelectionChanged="OnColorChanged">
+                  <ComboBoxItem Content="跟随强调色" Tag="Accent" />
+                  <ComboBoxItem Content="绿色" Tag="Green" />
+                  <ComboBoxItem Content="橙色" Tag="Orange" />
+                  <ComboBoxItem Content="红色" Tag="Red" />
+                </ComboBox>
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="候选选中" VerticalAlignment="Center" />
+                <ComboBox x:Name="CandidateSelector"
+                          Width="120"
+                          SelectedIndex="0"
+                          SelectionChanged="OnColorChanged">
+                  <ComboBoxItem Content="跟随强调色" Tag="Accent" />
+                  <ComboBoxItem Content="浅青" Tag="Mint" />
+                  <ComboBoxItem Content="浅黄" Tag="Amber" />
+                  <ComboBoxItem Content="浅紫" Tag="Lavender" />
+                </ComboBox>
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="面板" VerticalAlignment="Center" />
+                <ComboBox x:Name="PanelSelector"
+                          Width="100"
+                          SelectedIndex="0"
+                          SelectionChanged="OnColorChanged">
+                  <ComboBoxItem Content="默认" Tag="Default" />
+                  <ComboBoxItem Content="浅灰" Tag="Light" />
+                  <ComboBoxItem Content="白色" Tag="White" />
+                </ComboBox>
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="普通按键" VerticalAlignment="Center" />
+                <ComboBox x:Name="KeySelector"
+                          Width="100"
+                          SelectedIndex="0"
+                          SelectionChanged="OnColorChanged">
+                  <ComboBoxItem Content="默认" Tag="Default" />
+                  <ComboBoxItem Content="白色" Tag="White" />
+                  <ComboBoxItem Content="浅灰" Tag="Gray" />
+                </ComboBox>
+              </StackPanel>
+            </WrapPanel>
+
+            <WrapPanel ItemSpacing="16" LineSpacing="8">
+              <CheckBox x:Name="DragCheckBox"
+                        Content="允许长按标题行拖动"
+                        IsChecked="True"
+                        Click="OnDragChanged" />
+              <Button Content="重置面板位置" Click="OnResetPosition" />
+              <Button Content="恢复默认外观" Click="OnResetAppearance" />
+            </WrapPanel>
+
+            <TextBlock x:Name="TestInstructionsText"
+                       TextWrapping="Wrap"
+                       Text="人工测试：1) 点“中文名称”，输入 nihao 或 gege，观察候选是否完整、候选选中色，并按住候选键检查整个按键变色；候选行不滚动，用 ‹ / › 切页；2) 切换 PhoneHybrid，输入中文后点“符号”和“123”，确认面板高度不跳；点“数量”查看数字专用紧凑高度；3) 缩小整体缩放后长按标题行拖动，点“重置面板位置”复位；4) 切换主题和颜色，检查确定键与候选选中是否可读。" />
+          </StackPanel>
+        </Expander>
+
         <TextBlock TextWrapping="Wrap"
-                   Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard." />
+                   Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard. Text fields use the optional managed pinyin IME: tap 中/英 to switch, tap a candidate or press Space to commit." />
 
         <TextBox tk:TouchKeyboardInput.Profile="text"
                  tk:TouchKeyboardInput.Label="名称"
                  PlaceholderText="名称" />
+
+        <TextBox tk:TouchKeyboardInput.Profile="text"
+                 tk:TouchKeyboardInput.Label="中文名称（拼音）"
+                 PlaceholderText="例如：nihao → 你好" />
 
         <TextBox tk:TouchKeyboardInput.Profile="password"
                  tk:TouchKeyboardInput.Label="密码"
