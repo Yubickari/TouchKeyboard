@@ -38,7 +38,7 @@ the core references Avalonia, WPF, WindowsBase, X11 or similar. The core also ne
 uses timers, dispatchers, fonts or brushes; long-press repeat, caret blink and
 theming live in the frontend.
 
-### IME layering (0.2.0)
+### IME layering
 
 The optional managed pinyin IME keeps the same dependency direction:
 
@@ -63,8 +63,8 @@ TouchKeyboard.Avalonia  ──uses──>  IImeEngine (Core contract)
 - `options.UseIme(new PinyinImeEngine())` is the whole activation step. There is
   no reflection, assembly scanning or DI requirement.
 
-The design and decisions are in
-[design/2026-11-08-chinese-input-and-language-packs.md](design/2026-11-08-chinese-input-and-language-packs.md).
+The package boundaries and activation rules are recorded in
+[ADR 0004](adr/0004-managed-pinyin-ime.md).
 
 ## Core domain model
 
@@ -121,8 +121,8 @@ The full keyboards have no inert IME spacer: when no IME key is present, Space
 fills the former IME slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When an engine
 and an IME-capable profile are present, the slot holds `ime.toggle` and Space
 returns to 5.5/2.5; row totals stay 15/10. The IME key remains in English mode, so
-中/英 toggling never changes the width. See D19 in
-[design/decisions.md](design/decisions.md) and [ime.md](ime.md).
+中/英 toggling never changes the width. See
+[ADR 0004](adr/0004-managed-pinyin-ime.md) and [ime.md](ime.md).
 
 ### Commands
 
@@ -237,6 +237,6 @@ pins a preset. See [avalonia.md](avalonia.md) for integration details.
 - The editor is single-line: no selection, clipboard, undo or multi-line layout.
 - Editing happens in the session buffer; the target control is written only on
   confirm. Closing the panel always discards.
-- No F-keys, numpad/NumLock block, Ctrl/Alt/Win combinations or system keys.
-- WPF is not implemented yet; the core is designed so a second frontend can reuse
-  it (see [wpf-porting.md](wpf-porting.md)).
+- No F-keys, NumLock keypad block, Ctrl/Alt/Win combinations or system keys.
+- WPF is not implemented; the core is designed so a second frontend can reuse
+  it (see [WPF porting notes](contributing/wpf-porting.md)).

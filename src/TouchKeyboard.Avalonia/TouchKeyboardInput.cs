@@ -4,9 +4,8 @@ using Avalonia.Controls;
 namespace TouchKeyboard.Avalonia;
 
 /// <summary>
-/// UI metadata attached to an input control. P1 exposes the label, unit and the
-/// per-control enable switch; the input profile attached property arrives with
-/// the core model in P2.
+/// UI metadata attached to an input control: the input profile, header label,
+/// unit and the per-control enable switch.
 /// </summary>
 public static class TouchKeyboardInput
 {

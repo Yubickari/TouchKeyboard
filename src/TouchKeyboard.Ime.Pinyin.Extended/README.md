@@ -10,8 +10,8 @@ engine type changes.
 ## Install and activate
 
 ```bash
-dotnet add package TouchKeyboard.Avalonia --version 0.2.0
-dotnet add package TouchKeyboard.Ime.Pinyin.Extended --version 0.2.0
+dotnet add package TouchKeyboard.Avalonia
+dotnet add package TouchKeyboard.Ime.Pinyin.Extended
 ```
 
 ```csharp
@@ -23,6 +23,9 @@ KeyboardHost.Configure(options =>
     options.UseIme(new ExtendedPinyinImeEngine());
 });
 ```
+
+`KeyboardHost` is the `x:Name` generated for the `TouchKeyboardHost` in the
+host's XAML.
 
 `TouchKeyboard.Ime.Pinyin.Extended` depends on the matching
 `TouchKeyboard.Ime.Pinyin` and `TouchKeyboard.Core` versions. Do not mix minor
@@ -39,5 +42,5 @@ readings and the polyphone override table are project-owned.
 The data and software are provided as-is. No candidate quality, coverage,
 performance or stability guarantee is made; maintenance is best-effort.
 
-For configuration options and troubleshooting see `docs/ime.md` in the
-repository.
+For configuration options and troubleshooting see
+[Chinese input](https://github.com/Yubickari/TouchKeyboard/blob/main/docs/ime.md).

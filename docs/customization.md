@@ -1,6 +1,6 @@
 # 外观、尺寸与面板拖动
 
-`0.2.0` 的默认外观保持当前方案。大多数宿主只需要 `TouchKeyboardOptions.Style`
+默认外观使用内置明暗主题。大多数宿主只需要 `TouchKeyboardOptions.Style`
 里的少量旋钮；需要精确控制每一个画刷和度量时，仍可直接提供
 `TouchKeyboardTheme`。`Style` 会叠加在解析后的主题上，默认值不改变当前外观。
 
@@ -41,6 +41,9 @@ KeyboardHost.Configure(options =>
     options.EnablePanelDrag = true;
 });
 ```
+
+`KeyboardHost` 是 XAML 中 `x:Name` 生成的 code-behind 字段，控件类型是
+`TouchKeyboardHost`。
 
 | 配置项 | 默认 | 作用 |
 |---|---|---|
@@ -102,18 +105,11 @@ options.Theme = new TouchKeyboardTheme
 
 拖动只影响渲染位置，不改变面板布局、会话状态或目标控件。
 
-## Demo 人工测试
+## 演示程序
 
-`samples/TouchKeyboard.Demo` 提供可折叠的“外观 / 尺寸 / 拖动测试”面板：
-
-- 全键盘几何（AnsiStyle / PhoneHybrid）和系统/浅色/深色主题切换；
-- 整体缩放、字号倍率、图标倍率滑杆；
-- 强调色、确定键、候选选中、面板、普通按键颜色选择；
-- 长按标题行拖动开关、重置面板位置、恢复默认外观；
-- 中文字段用于检查候选完整显示、候选选中色、整键按压反馈；
-- 候选行无滚动条，按宽度自动分页（最多 9 个），所有候选键保持自然宽度（1 个或 2–3 个都不拉伸整行）；切页键加宽到 56 px；
-- PhoneHybrid 下切到符号页/数字键盘检查面板高度不跳；
-- “数量”等数字专用字段检查紧凑键盘区。
+`samples/TouchKeyboard.Demo` 展示全部输入档位、两套全键盘形态、明暗主题、
+缩放滑杆和语义色选择。运行方法和可尝试的检查项见
+[Demo README](../samples/TouchKeyboard.Demo/README.md)。
 
 ## 公共 API 一览
 
@@ -131,7 +127,7 @@ options.Theme = new TouchKeyboardTheme
 Core 仍然不引用 Avalonia、字体、画刷或平台 API；外观 API 全部留在
 `TouchKeyboard.Avalonia`。
 
-## 发布建议
+## 使用建议
 
 - 在第一次打开面板前完成 `Configure`；运行中再次调用 `Configure` 可以更新外观，
   但 IME 选项只影响下一次会话。

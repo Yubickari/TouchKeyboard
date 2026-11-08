@@ -2,7 +2,7 @@
 
 - **Status:** accepted (2026-11-06)
 - **Deciders:** TouchKeyboard contributors
-- **Related:** `design/decisions.md` D5, D6; `architecture.md`
+- **Related:** [Decision log](decisions.md) D5, D6; [Architecture](../architecture.md)
 
 ## Context
 
@@ -39,8 +39,8 @@ The solution builds and tests both Avalonia target frameworks on every CI run.
 ## Alternatives considered
 
 - **Target the core at `net8.0` only**: simpler and allows modern APIs, but loses
-  the wide compatibility floor for no functional gain in the preview.
+  the wide compatibility floor for no functional gain in the initial release.
 - **Multi-target the core (`netstandard2.0;net8.0`)**: possible later if a measurable
   need appears; adds build and test cost now.
 - **Ship Avalonia 11 builds too**: requires maintaining two frontend packages and a
-  second API baseline; the plan explicitly declined dual maintenance for v1.
+  second API baseline; the initial plan declined dual maintenance.

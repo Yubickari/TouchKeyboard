@@ -2,7 +2,7 @@
 
 - **Status:** accepted (2026-11-06)
 - **Deciders:** TouchKeyboard contributors
-- **Related:** `design/decisions.md` D3, D5, D6, D12
+- **Related:** [Decision log](decisions.md) D3, D5, D6, D12
 
 ## Context
 
@@ -41,5 +41,5 @@ An architecture test fails the build if the core assembly references Avalonia, W
   event models.
 - **Logic inside the Avalonia package**: simplest for the first frontend, rejected
   because it blocks the WPF port and headless testing of input rules.
-- **Multi-targeting the core to `net8.0` for modern APIs**: rejected for the first
-  preview; the compatibility floor is more valuable than a few convenience APIs.
+- **Multi-targeting the core to `net8.0` for modern APIs**: rejected for the initial
+  release; the compatibility floor is more valuable than a few convenience APIs.

@@ -57,7 +57,9 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
 
 1. Update `CHANGELOG.md` (the release notes are generated from it plus commits) and
    bump `<Version>` in `Directory.Build.props` if needed.
-2. Review `README.md` / `README.zh.md` for status, test counts and screenshots.
+2. Review `README.md` / `README.zh.md` for install commands, version, links and
+   screenshots; review the package READMEs under `src/*/README.md` for absolute
+   links.
 3. Run `bash build/preflight.sh` and `bash build/smoke-pack.sh` locally.
 4. Commit, then create and push the tag:
 
@@ -94,14 +96,15 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
 Data packs use only permissive/attribution licences (no share-alike or copyleft)
 and list their sources and snapshot hashes in `NOTICE`; there is no separate legal
 gate. `preflight.sh` checks all four package shapes, the `NOTICE`/README text and
-the dictionary resources, and fails the release when any entry is missing. The
-package smoke must still pass the no-engine behavior matrix (including expanded
-Space) for the Avalonia-only shape. See [ADR 0004](adr/0004-managed-pinyin-ime.md)
-and [ime.md](ime.md).
+the dictionary resources, and fails the release when any entry is missing. Package
+READMEs must use absolute URLs for images and links: NuGet does not resolve URLs
+relative to the repository. The package smoke must still pass the no-engine
+behavior matrix (including expanded Space) for the Avalonia-only shape. See
+[ADR 0004](adr/0004-managed-pinyin-ime.md) and [ime.md](ime.md).
 
 ## Post-release validation
 
-- [ ] All four package pages show the icon and README; the two language packs show `NOTICE` in the package contents.
+- [ ] All four package pages show the icon and README, and README links/images resolve; the two language packs show `NOTICE` in the package contents.
 - [ ] `dotnet add package` resolves from nuget.org (not just the local feed).
 - [ ] A clean Avalonia 12 app builds with the package and shows the keyboard.
 - [ ] A clean Avalonia app with `TouchKeyboard.Ime.Pinyin` shows the 中/英 key and candidate row for a `text` field.
@@ -133,6 +136,7 @@ published. Screenshots must contain fictional sample data only.
 
 ## Related documents
 
-- [roadmap.md](roadmap.md) — milestones and remaining hardening work.
-- [design/decisions.md](design/decisions.md) — packaging and license decisions (D4–D8).
+- [roadmap.md](roadmap.md) — future direction and non-goals.
+- [adr/decisions.md](adr/decisions.md) — package, licence and API decisions.
+- [release/device-checklist.md](release/device-checklist.md) — real-device acceptance.
 - [architecture.md](architecture.md) — package layout and target frameworks.

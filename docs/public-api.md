@@ -1,13 +1,13 @@
-# 0.2.0 公共 API 与开放方式
+# 公共 API 与扩展方式
 
-本页只列 `0.2.0` 对宿主开放、并计划在补丁/次版本中保持兼容的 API。完整外观示例见
+本页列出对宿主开放的公共 API。完整外观示例见
 [customization.md](customization.md)，中文输入见 [ime.md](ime.md)，档位见
 [profiles.md](profiles.md)。
 
 ## 兼容策略
 
 - 公共 API **只增不改**：新构造/重载/属性方法可以追加，旧签名保留。
-- 枚举值只追加；`KeyCommandKind.ToggleIme` 在 `Close` 之后追加，旧值不变。
+- 枚举值只追加，现有值不变。
 - 语言包与 Core/Avalonia 同一 minor；扩展包依赖同版本常用包。
 - 不承诺内部实现：`ImeComposition`、候选栏内部控件、自动化 Peer、主题派生实现
   都不是公共 API。
@@ -65,6 +65,9 @@ var session = new KeyboardSession(new KeyboardSessionOptions
 ```csharp
 KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
+
+`KeyboardHost` 是 XAML 中 `x:Name` 生成的 code-behind 字段，控件类型是
+`TouchKeyboardHost`。
 
 ## 开放方式
 

@@ -23,7 +23,7 @@ Five rows, every row exactly **15 units**. Tab and Caps are commandless
 never enter the accessibility tree. There is no IME spacer: with no IME key, Space
 fills the slot.
 
-> **0.2.0 rule:** with no IME key, Space fills the former IME slot
+> **Space and IME:** with no IME key, Space fills the former IME slot
 > (`AnsiStyle` 7.0 units, `PhoneHybrid` 3.5). When an IME engine is configured and
 > the profile allows IME, Space returns to its base width (5.5 / 2.5) and the slot
 > holds a real `ime.toggle` key (中/英). The IME key is present even in English mode,
@@ -42,7 +42,7 @@ fills the slot.
 > 1.5-unit `ime.toggle` key; row total stays 15.
 
 AnsiStyle keeps the complete US ANSI symbol set on its main page and Shift layer,
-so it has no separate symbol page in v1.
+so it has no separate symbol page.
 
 ### PhoneHybrid
 
@@ -134,7 +134,7 @@ The Numpad is a real 5×4 cell grid where every key is one unit:
   and insert `+`/`−` as characters when it does not.
 - `L2` is the ABC key for the general surface, `±` for signed scenarios, and
   empty otherwise.
-- `R2` is reserved for scenario keys; no built-in scenario fills it in v1.
+- `R2` is reserved for scenario keys; no built-in scenario fills it.
 - The bottom separator slot takes `.`, a date/IP separator or `:`, or stays empty.
 
 Empty slots are not disabled buttons. They change the geometry:
@@ -217,14 +217,11 @@ the cap down slightly, which stays visible in both themes.
 and filled), caret arrows (a filled triangle plus a caret bar), step arrows (a
 triangle paired with a `+`/`−` sign), sign toggle (±), space, password show/hide,
 keyboard, symbol, numeric and an IME glyph reserved for a future icon treatment
-(the 0.2.0 toggle uses the text 中/英; `KeyGlyph.Ime` is retained but unused). Compact keys use a smaller icon factor. Icon keys
-keep a localized label; it is the accessible name and the text fallback when a
-frontend cannot draw the glyph.
+(the toggle uses the text 中/英; `KeyGlyph.Ime` is retained but unused). Compact
+keys use a smaller icon factor. Icon keys keep a localized label; it is the
+accessible name and the text fallback when a frontend cannot draw the glyph.
 
 All glyphs are drawn on one 24×24 design canvas. Features keep their relative
 position across glyphs: the space bar's bottom line shares the eraser's baseline
 (y = 21.5), so the space and clear keys line up, and the password eye sits on the
 same canvas as the slashed eye so only the slash changes when visibility toggles.
-Three candidate looks for the caret and step icons are rendered in
-[icon-variants.png](images/icon-variants.png); the caret-bar set (option A) is the
-one in use.

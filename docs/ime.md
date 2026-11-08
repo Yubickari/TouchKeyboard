@@ -1,6 +1,6 @@
 # 中文输入（可选托管拼音 IME）
 
-`0.2.0` 的中文输入是**可选能力**：框架能力在 `TouchKeyboard.Avalonia`，输入逻辑在
+中文输入是**可选能力**：框架能力在 `TouchKeyboard.Avalonia`，输入逻辑在
 `TouchKeyboard.Core`，语言数据在独立的 NuGet 包。不装语言包、不调用 `UseIme`
 时，键盘与无 IME 状态完全一致；不会出现 IME 键或候选栏。
 
@@ -25,8 +25,8 @@
 ## 安装与一行接入
 
 ```bash
-dotnet add package TouchKeyboard.Avalonia --version 0.2.0
-dotnet add package TouchKeyboard.Ime.Pinyin --version 0.2.0
+dotnet add package TouchKeyboard.Avalonia
+dotnet add package TouchKeyboard.Ime.Pinyin
 ```
 
 ```csharp
@@ -50,6 +50,9 @@ KeyboardHost.Configure(options => options.UseIme(new ExtendedPinyinImeEngine()))
 
 引擎由宿主显式创建；没有反射、程序集扫描、DI 注册或语言市场。引擎不可变，
 加载词典后线程安全，建议整个应用共享一个实例。
+
+`KeyboardHost` 是 XAML 中 `x:Name` 生成的 code-behind 字段，控件类型是
+`TouchKeyboardHost`。
 
 ## 选项
 
@@ -151,27 +154,11 @@ IME 键始终存在，中/英切换不改变 Space 宽度。
 这是平台行为；需要系统 IME 的宿主应关闭 `HandlePhysicalKeyboard` 或使用自己的
 编辑面。触摸输入仍是主路径。
 
-## 包体积与性能（本机实测，非保证）
+## 包体积与性能
 
-以 macOS arm64 Release 构建、本仓库生成的词典为准：
-
-| 项 | 实测 |
-|---|---|
-| `TouchKeyboard.Core` nupkg / dll | 47 KB / 56 KB |
-| `TouchKeyboard.Avalonia` nupkg / dll | 96 KB / 78 KB |
-| `TouchKeyboard.Ime.Pinyin` nupkg / dll | 437 KB / 226 KB |
-| 常用词典资源（压缩） | 约 202 KB |
-| `TouchKeyboard.Ime.Pinyin.Extended` nupkg / dll | 2.2 MB / 1.13 MB |
-| 扩展词典资源（压缩） | 约 1.10 MB |
-| 常用词典首次加载 + 首次查询 | 约 41 ms |
-| 扩展词典首次加载 + 首次查询 | 约 178 ms |
-| 常用查询 p95 | 约 0.12 ms（目标 <5 ms） |
-| 扩展查询 p95 | 约 0.30 ms（目标 <10 ms） |
-| 129 条常用 golden set | top-1 97.7%、top-3 100%（开发目标 top-1 ≥80%、top-3 ≥95%） |
-
-这些是开发目标下的本机记录，不构成质量、性能或稳定性保证。低端设备、冷启动、
-不同文件系统和 CI 噪声都会影响实际数字。测试套件中的性能断言使用宽松上限以
-避免并行测试噪声；严格目标见设计文档第 8.6 节。
+语言包体积由词典决定：常用包较小，扩展包约为常用包的数倍；词典在首次查询时
+加载，之后复用。实际加载时间、查询速度和内存占用取决于设备、文件系统、冷启动
+和词典大小，不构成性能保证。
 
 ## 数据来源与许可
 
@@ -182,8 +169,7 @@ IME 键始终存在，中/英切换不改变 Space 宽度。
 
 两个语言包都携带 `NOTICE`，列出源、快照 SHA-256 和完整许可文本。词典构建脚本
 在 `tools/build-pinyin-dict.py`。不使用 CC-BY-SA、GPL/AGPL、专有或来源不明的
-数据，也没有单独的审核流程。软件和数据按现状提供，不承诺候选质量、覆盖率、
-性能或稳定性。
+数据。软件和数据按现状提供，不承诺候选质量、覆盖率、性能或稳定性。
 
 ## 故障排查
 

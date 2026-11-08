@@ -2,13 +2,13 @@
 
 - **Status:** accepted (2026-11-08)
 - **Deciders:** TouchKeyboard contributors
-- **Related:** `design/decisions.md` D12 (revised), D17, D18, D19; `design/2026-11-08-chinese-input-and-language-packs.md`; `architecture.md`; `profiles.md`; `avalonia.md`; `release.md`
-- **Supersedes:** ADR 0003 (the v1 no-IME plan was never released; `0.2.0` is the first release)
+- **Related:** [Decision log](decisions.md) D12 (revised), D17, D18, D19; [Architecture](../architecture.md); [Profiles](../profiles.md); [Avalonia integration](../avalonia.md); [Release runbook](../release.md)
+- **Supersedes:** [ADR 0003](0003-no-ime-v1.md)
 
 ## Context
 
 `TouchKeyboard` is an embedded, touch-first keyboard for small industrial panels. The
-v1 baseline deliberately shipped no IME: it avoided platform input methods, key
+initial baseline deliberately shipped no IME: it avoided platform input methods, key
 injection, candidate windows and native dependencies, and reserved only an empty IME
 slot and a `KeyGlyph.Ime`.
 
@@ -20,7 +20,7 @@ opt in by installing one optional package and adding one configuration line.
 
 Three routes were evaluated: a managed pinyin engine (A), a bridge to the platform
 IME (B), and key injection into the target control (C). B and C reintroduce the
-platform, focus, permission and OSK risks that v1 removed. A keeps the input logic
+platform, focus, permission and OSK risks that the initial design removed. A keeps the input logic
 managed and testable; its uncertainty is dictionary licensing and quality, which can
 be handled with a small licensed lexicon and optional text packs.
 
@@ -28,7 +28,7 @@ be handled with a small licensed lexicon and optional text packs.
 
 1. **Route A only.** Ship a managed pinyin engine with a composition state machine
    and a frontend-drawn candidate bar. Do not implement system IME bridging or key
-   injection in `0.2.0`; do not promise their APIs.
+   injection; do not promise their APIs.
 2. **Core owns the composition.** `KeyboardSession` owns the IME composition state
    and exposes an immutable `ImeCompositionState` through `KeyboardState.Ime`.
    `KeyboardSession.Execute` routes IME keys; `ToggleIme` is a session command, not a
@@ -40,7 +40,7 @@ be handled with a small licensed lexicon and optional text packs.
    the pinyin engine and the common lexicon. `TouchKeyboard.Ime.Pinyin.Extended`
    reuses the common engine and adds a larger/domain lexicon. Future languages follow
    the same `IImeEngine` contract. A separate `TouchKeyboard.Avalonia.Ime` package is
-   not introduced in `0.2.0`: it would add package and wiring burden for a small
+   not introduced: it would add package and wiring burden for a small
    amount of generic UI code.
 5. **One-line activation.** The host activates the feature with
    `options.UseIme(new PinyinImeEngine())`. Engine registration is explicit; there is
@@ -58,16 +58,13 @@ be handled with a small licensed lexicon and optional text packs.
    symbol page hides it because it has no IME slot. Numeric-only profiles use a
    compact four-row keyboard area. Composition, page changes and 中/英 toggles never
    change the panel height within a mode. It is not an overlay.
-8. **Chinese scope.** `0.2.0` covers pinyin only: full pinyin, word/sentence
+8. **Chinese scope.** The initial release covers pinyin only: full pinyin, word/sentence
    segmentation and common initial-letter abbreviations. No Wubi, handwriting, fuzzy
    pinyin, cloud input, user learning or Traditional/Simplified conversion.
 9. **Punctuation.** The language pack maps common punctuation to full-width forms
    through `IImeEngine.TryMapPunctuation`; technical symbols stay ASCII and the host
    can disable the mapping. The mapping is language-owned, not a Core branch.
-10. **Release target.** Ship the feature in `0.2.0`, optionally after a
-    `0.2.0-preview.1` field trial. `0.2.0` is the first release; do not publish a
-    separate `0.1.0`.
-11. **Licensing.** Code is MIT. The base lexicon uses Unihan character readings
+10. **Licensing.** Code is MIT. The base lexicon uses Unihan character readings
     (Unicode License) and the jieba word list/frequencies (MIT, with `NOTICE`), with
     generated phrase pronunciations and a project-owned polyphone override table.
     Optional text packs may use CC-BY 4.0 (attribution). No package ships CC-BY-SA,
@@ -75,11 +72,10 @@ be handled with a small licensed lexicon and optional text packs.
     sources and licences; no separate audit process is required. MIT's warranty
     disclaimer applies, and no candidate quality, coverage, performance or stability
     guarantee is made.
-12. **0.2.0 layout baseline.** Before the IME lands, the no-IME layout removes the
-    commandless IME spacer and lets Space fill the slot (AnsiStyle 7.0 units,
-    PhoneHybrid 3.5). When an IME key is present, Space returns to 5.5/2.5 and the
-    slot holds `ime.toggle`; toggling 中/英 keeps the key and does not change the
-    width.
+11. **No-IME layout baseline.** The no-IME layout removes the commandless IME spacer
+    and lets Space fill the slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When an IME
+    key is present, Space returns to 5.5/2.5 and the slot holds `ime.toggle`;
+    toggling 中/英 keeps the key and does not change the width.
 
 ## Consequences
 
@@ -94,13 +90,12 @@ be handled with a small licensed lexicon and optional text packs.
   password and ASCII fields are unchanged.
 - The composition state is shared by every frontend; a future WPF frontend only has
   to render `KeyboardState.Ime`.
-- Dictionary licensing, data quality, CJK fonts and 1024×600 layout are release
-  checks, but licensing is handled with a short `NOTICE`, not a separate process.
-- The optional pinyin and extended packages must be version-aligned with Core and
+- Dictionary licensing is recorded in a short `NOTICE`; data quality, CJK fonts and
+  1024×600 layout are validated on target devices.
+- The optional pinyin and extended packages are version-aligned with Core and
   published with their own README, icon, symbols and `NOTICE`.
-- ADR 0003 was never released as a `0.1.0` product; `0.2.0` is the first release and
-  supersedes it with this optional feature.
-- The `0.2.0` no-IME baseline expands Space over the former IME slot on both full
+- ADR 0003 is superseded by this optional feature.
+- The no-IME baseline expands Space over the former IME slot on both full
   keyboards; the IME toggle is restored only when an engine and an IME-capable
   profile are present.
 - The project remains free for anyone to use, modify and redistribute, with no
@@ -119,26 +114,10 @@ be handled with a small licensed lexicon and optional text packs.
 - **One mega-package with all languages.** Simplest install but violates “only install
   what you need” and maximizes size. Rejected.
 - **Separate `TouchKeyboard.Avalonia.Ime` UI package (P2).** Keeps the base package
-  smaller but adds a package and wiring step for every caller. Rejected for `0.2.0`;
-  the generic IME UI belongs to the Avalonia framework support.
+  smaller but adds a package and wiring step for every caller. Rejected; the generic
+  IME UI belongs to the Avalonia framework support.
 - **Host-owned composition.** Keeps `KeyboardSession` untouched but duplicates key
   routing per frontend and leaves `KeyboardState` without a single render source.
   Rejected in favour of Core ownership.
 - **Build an all-in-one Chinese IME immediately.** Wubi, handwriting, fuzzy pinyin
   and cloud input are outside the current product scope. Deferred.
-
-## Follow-up
-
-The design is implemented in `0.2.0`. Remaining work:
-
-- Run the three-platform real-device checklist (Windows/Linux/macOS touch, CJK
-  fonts, OSK suppression, DPI, 1024×600, dictionary load/memory).
-- Publish the four packages and verify installation from the public feed.
-
-The following items were completed with the implementation:
-
-- Core/Avalonia/pinyin/extended code, data sources, hashes and licences in `NOTICE`.
-- `docs/ime.md`, architecture/Avalonia/profile/layout/release docs, READMEs,
-  CHANGELOG, four-package preflight/smoke and AOT/trim checks.
-- 129-entry golden set (top-1 97.7%, top-3 100%) and local load/query timings in
-  [ime.md](../ime.md).

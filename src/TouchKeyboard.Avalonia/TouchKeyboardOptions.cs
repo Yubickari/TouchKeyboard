@@ -49,8 +49,8 @@ public sealed class TouchKeyboardOptions
     public bool EnablePanelDrag { get; set; } = true;
 
     /// <summary>
-    /// Reserved for platform-specific suppression. v1 suppresses the system OSK
-    /// by moving focus to the host rather than by platform hooks.
+    /// Reserved for platform-specific suppression. The default host suppresses the
+    /// system OSK by moving focus to the host rather than by platform hooks.
     /// </summary>
     public bool SuppressSystemKeyboard { get; set; } = true;
 

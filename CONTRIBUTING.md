@@ -32,7 +32,7 @@ bash build/smoke-pack.sh     # consume the packages from a local feed
 ## Style
 
 - Comments explain *why*. A comment that restates the next line is noise.
-- Public API uses the canonical names in `docs/design/decisions.md`.
+- Public API uses the canonical names in `docs/adr/decisions.md`.
 - Chinese and English user-facing copy change together once localization exists.
 - Keep the core dependency-free; adding a package to `TouchKeyboard.Core`
   requires an explicit decision.
@@ -45,4 +45,4 @@ bash build/smoke-pack.sh     # consume the packages from a local feed
 - Read [docs/architecture.md](docs/architecture.md), [docs/profiles.md](docs/profiles.md)
   and [docs/avalonia.md](docs/avalonia.md) before changing the model, a profile or
   the frontend wiring.
-- Real-device changes should follow [docs/testing/device-checklist.md](docs/testing/device-checklist.md).
+- Real-device changes should follow [docs/release/device-checklist.md](docs/release/device-checklist.md).

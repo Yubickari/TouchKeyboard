@@ -2,95 +2,158 @@
 
 [English](README.md) · **简体中文**
 
-面向小尺寸工控触摸屏的内置软键盘。输入逻辑是纯 .NET Standard 2.0 后端，
-Avalonia 是第一个前端，未来计划加入 WPF。
+面向小尺寸工控触摸屏的触屏软键盘。输入模型是纯 .NET Standard 2.0 核心，
+Avalonia 12 是首个前端，WPF 前端在计划中。
 
-> **状态：`0.2.0` 实现完成（2026-11-08）。** 核心包含十个输入档位、严格 ANSI 与
-> 手机式全键盘、5×4 Numpad 网格、无 IME 空格基线、不可变布局、会话/校验和可选
-> 托管 IME 组合态；Avalonia 已有浮层宿主、控制器、自绘编辑面、中/英键、固定候选
-> 栏、组合态内联绘制、矢量按键图标、自动明暗主题、触屏按压反馈、内置适配器、
-> 主题和 zh-CN/en-US 本地化。可选的 `TouchKeyboard.Ime.Pinyin` 与 `.Extended`
-> 提供托管拼音引擎和词库。`0.1.0` 不再发布；`0.2.0` 是首个发布目标。真机验证尚未
-> 完成，请勿把当前构建当作已通过生产验证。
+[![NuGet](https://img.shields.io/nuget/v/TouchKeyboard.Avalonia.svg)](https://www.nuget.org/packages/TouchKeyboard.Avalonia)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## 目标
+![AnsiStyle 全键盘](docs/images/keyboard-full.png)
 
-- 8–10 寸小屏和工控面板：大按键、不依赖系统 OSK、可整体禁用。
-- 文本、整数、小数、日期、IP 等字段只显示真正需要的按键；正整数不出现
-  正负号和小数点。
-- 输入规则与 UI 解耦，可在无 UI 环境单测，方便未来加 WPF 前端。
+## 特性
+
+- **按字段生成键盘。** 十个输入档位决定字段能看到哪些键、分隔符、范围校验和
+  提交规则。正整数不出现正负号和小数点，日期字段使用对应的分隔符。
+- **两套全键盘形态。** `AnsiStyle` 是默认的严格 5 行、每行 15 单位 ANSI 布局；
+  `PhoneHybrid` 是 4 行手机式布局，自带符号页。
+- **数字小键盘。** 5×4 `Numpad` 在通用场景和档位专用场景间共用一套网格；空槽
+  由相邻键合并（`0` 变宽、确定键变高），不生成禁用键。
+- **窗口内浮层。** Avalonia 宿主提供遮罩、字段名/单位/错误行、编辑面和模式切换
+  时高度稳定的键盘区。
+- **触屏交互。** 无悬停态；支持指针捕获、整键按压反馈，以及退格和方向键的长按
+  重复。
+- **主题与尺寸。** 自动跟随明暗主题，内置两套预设，`Style` 提供整体/字号/图标
+  缩放和语义色，标题行可长按拖动。
+- **可选中文输入。** 托管拼音引擎、候选栏、组合态内联绘制和独立语言包；基础包
+  保持语言中立。
+- **可复用核心。** 档位、布局、会话、校验和 IME 组合态不依赖 UI，可在无显示
+  环境测试。
 
 ## 包
 
 | 包 | 目标框架 | 职责 |
 |---|---|---|
-| `TouchKeyboard.Core` | `netstandard2.0` | 模式、档位、布局、会话、校验、IME 组合态 |
-| `TouchKeyboard.Avalonia` | `net8.0;net10.0` | Avalonia 宿主、按键、候选栏、适配器、主题 |
-| `TouchKeyboard.Ime.Pinyin` | `netstandard2.0` | 可选托管拼音引擎 + 常用词库（约 2 万词） |
-| `TouchKeyboard.Ime.Pinyin.Extended` | `netstandard2.0` | 可选扩展词库（约 10 万词） |
-| `TouchKeyboard.Wpf` | 未来 | WPF 前端，复用核心 |
+| [`TouchKeyboard.Core`](https://www.nuget.org/packages/TouchKeyboard.Core) | `netstandard2.0` | 档位、布局、会话、校验与 IME 组合态，无 UI 依赖。 |
+| [`TouchKeyboard.Avalonia`](https://www.nuget.org/packages/TouchKeyboard.Avalonia) | `net8.0;net10.0` | Avalonia 12 浮层宿主、按键、编辑面、主题、本地化与适配器。 |
+| [`TouchKeyboard.Ime.Pinyin`](https://www.nuget.org/packages/TouchKeyboard.Ime.Pinyin) | `netstandard2.0` | 可选托管拼音引擎与常用词库。 |
+| [`TouchKeyboard.Ime.Pinyin.Extended`](https://www.nuget.org/packages/TouchKeyboard.Ime.Pinyin.Extended) | `netstandard2.0` | 可选扩展词库，复用常用引擎。 |
 
-两个主模式：
+WPF 前端在计划中，尚未发布。
 
-1. **全键盘**：默认是严格 15 单位的 `AnsiStyle`（5 行，Tab/Caps 保留空位；无
-   IME 时空格 7.0 单位覆盖原 IME 槽位，有引擎且 `text` 档位时空格 5.5 单位 +
-   1.5 单位中/英键）；4 行手机式 `PhoneHybrid`（自带符号页）作为保留的可选形态
-   （无 IME 空格 3.5，有 IME 2.5 + 1 单位中/英键）。不含 F 键、小键盘或系统功能键。
-2. **数字小键盘**：通用场景与各档位共用的 5×4 `Numpad`；空槽由相邻键合并
-   （小数位为空时 `0` 跨两列，右中槽为空时“确定”跨两行），不生成禁用键。
+## 环境要求
 
-关闭面板 = 放弃修改；只有“确定”/Enter 才提交。标题行显示字段描述和单位。
+- Avalonia 12（使用 12.0.5 验证）与 .NET 8 或 .NET 10。
+- 仅使用 `TouchKeyboard.Core` 时，任何 `netstandard2.0` 项目都可引用。
+- 中文输入需要 CJK 字体。
 
-![严格 ANSI 全键盘](docs/images/keyboard-full.png)
+## 快速开始
+
+### 1. 安装
+
+```bash
+dotnet add package TouchKeyboard.Avalonia
+```
+
+### 2. 添加宿主并标记字段
+
+把 `TouchKeyboardHost` 放在窗口根 Grid 的最后，让遮罩盖住页面；附加属性用来
+选择档位并提供标题行文字：
+
+```xml
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tk="using:TouchKeyboard.Avalonia">
+  <Grid>
+    <StackPanel Margin="16" Spacing="12">
+      <TextBox tk:TouchKeyboardInput.Profile="text"
+               tk:TouchKeyboardInput.Label="名称" />
+
+      <NumericUpDown tk:TouchKeyboardInput.Profile="positive-decimal"
+                     tk:TouchKeyboardInput.Label="温度"
+                     tk:TouchKeyboardInput.Unit="℃"
+                     Minimum="0" Maximum="100" Value="25" />
+
+      <TextBox tk:TouchKeyboardInput.Profile="password"
+               tk:TouchKeyboardInput.Label="密码"
+               PasswordChar="*" />
+    </StackPanel>
+
+    <tk:TouchKeyboardHost x:Name="KeyboardHost" />
+  </Grid>
+</Window>
+```
+
+`AutoAttach` 默认开启：宿主会创建控制器，监听指针按下、定位目标字段、打开面板，
+并在关闭后恢复焦点。
+
+### 3. 配置
+
+下面的 `KeyboardHost` 是 XAML 中 `x:Name` 生成的 code-behind 字段；控件类型是
+`TouchKeyboardHost`。
+
+```csharp
+using Avalonia.Controls;
+using TouchKeyboard.Avalonia;
+using TouchKeyboard.Core;
+
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        KeyboardHost.Configure(options =>
+        {
+            options.FullKeyboardLayout = FullKeyboardLayoutKind.AnsiStyle;
+            options.KeyHeight = 64;
+            options.MaxPanelWidth = 1100;
+            options.Culture = "zh-CN";
+        });
+    }
+}
+```
+
+全部选项、适配器、本地化和排错见 [Avalonia 接入](docs/avalonia.md)。
+
+## 输入档位
+
+| 档位 id | 默认界面 | 接受内容 |
+|---|---|---|
+| `text` | 全键盘 | 除控制字符外的任意文本。 |
+| `password` | 全键盘 | 可打印 ASCII。 |
+| `ascii-token` | 全键盘 | `A–Z a–z 0–9 / _ . : -`，非空。 |
+| `integer` | 数字键盘 | 有符号整数。 |
+| `positive-integer` | 数字键盘 | 纯数字。 |
+| `decimal` | 数字键盘 | 用 `.` 的有符号小数。 |
+| `positive-decimal` | 数字键盘 | 用 `.` 的非负小数。 |
+| `date-slash` | 数字键盘 | `yyyy/M/d` 分段，提交为 `yyyy/MM/dd`。 |
+| `date-dot` | 数字键盘 | `yyyy.M.d` 分段，提交为 `yyyy/MM/dd`。 |
+| `ip-address` | 数字键盘 | 四段 1–3 位、`0–255`。 |
+
+内置档位中只有 `text` 默认允许可选 IME；自定义档位可用 `AllowsIme` 显式开启。
+档位契约、校验码和数字槽位映射见 [输入档位](docs/profiles.md)。
+
+## 布局
+
+`AnsiStyle` 是默认全键盘：5 行、每行 15 单位，Tab/Caps 作为不可交互的占位，
+不含 F 键、NumLock 小键盘块、Ctrl/Alt/Win 组合或系统功能键。没有 IME 键时，
+空格扩展覆盖 IME 槽位；有引擎且档位允许 IME 时，槽位放 1.5 单位中/英键，空格
+回到基础宽度。
+
+`PhoneHybrid` 是 4 行手机式字母键盘，带符号/数字入口，符号页归全键盘所有。
+数字模式使用 5×4 `Numpad`；档位专用数字键盘省略无效键，并把空出的格子合并给
+`0` 或确定键。
 
 ![档位专用数字键盘](docs/images/keyboard-numeric.png)
 
-![暗色主题](docs/images/keyboard-full-dark.png)
+![中文拼音组合态](docs/images/keyboard-ime-composition.png)
 
-![中文拼音输入与候选栏](docs/images/keyboard-ime-composition.png)
+每一行、Numpad 槽位表、符号页和主题度量见 [布局参考](docs/layouts.md)。
 
-*1024×700 测试环境的 Headless Skia 渲染。浮层默认跟随窗口主题变体，暗色壳自动
-使用暗色预设；全部布局、符号页、Numpad 槽位表与主题度量见
-[docs/layouts.md](docs/layouts.md)。*
-
-## 当前已完成
-
-- `InputProfile`：文本、密码、ASCII 标识、有符号/正整数、有符号/正小数、
-  用 `/` 或 `.` 的日期、IPv4；只有 `text` 的 `AllowsIme` 为 true。
-- 不可变 `KeyboardLayout` 数据：严格 `AnsiStyle` 与 4 行 `PhoneHybrid` 全键盘、
-  PhoneHybrid 符号页、真实网格 + 跨行跨列的 5×4 `Numpad`、按档位生成的特殊
-  数字键盘（无用键直接省略），以及保留的 `Sequence` 数字面。
-- `KeyGlyph` 语义图标：退格、清空、回车、Shift（空心/实心）、实心三角+光标条的方向箭头、
-  三角配 `+`/`−` 的步进图标、空格与密码显隐，由前端画成矢量图标，本地化标签
-  保留为无障碍名称。
-- `NumpadSlots` 场景槽位：步进键还是 `+`/`−` 字符、左中槽是 `ABC` 还是 `±`、
-  底部小数/日期/IP 分隔符。
-- `KeyboardSession`：插入、退格、清空、光标、按光标数字增减、正负号切换、
-  粘性 Shift、模式切换、全键盘页面切换、提交/取消、最大长度、数值范围校验。
-- 可选 IME：Core 提供 `IImeEngine`、`ImeCandidate`、`ImeCompositionState`；
-  支持中文组合、候选翻页/选中、空格/1–9/回车提交、全角标点；
-  `ime.toggle` 占据全键盘槽位。
-- Avalonia：带遮罩的 `TouchKeyboardHost`（按情境调整高度的键盘区 + 候选栏；PhoneHybrid 首行候选栏高度等于键高）、
-  自动挂载的控制器、自绘 `TouchKeyboardEditor`（组合文本 + 下划线、光标跟随尾部
-  空格）、指针捕获 + 长按重复 + 矢量图标的 `TouchKey`、`KeyboardLayoutView`、
-  `IEditorSurface` 注入、TextBox/NumericUpDown/CalendarDatePicker 适配器、自定义
-  适配器注册表、跟随窗口主题变体的明暗主题、zh-CN/en-US 本地化，以及无悬停态的
-  触屏式标题栏按钮。
-- 紧凑外观 API：`options.Style.Scale/FontScale/IconScale`，确定键、候选选中、面板、
-  按键和文字的语义色；`options.EnablePanelDrag` 支持长按标题行在窗口内拖动面板。
-- 每个目标框架 135 个核心测试 + 40 个拼音/扩展测试 + 48 个 Avalonia Headless
-  测试（共 446 次执行）。
-
-尚未实现：WPF，以及真机验证（Windows/Linux/macOS 触摸、CJK 字体回退、DPI、
-OSK 抑制）。`0.1.0` 不再发布；`0.2.0` 是首个发布目标。
-
-## 中文输入（可选）
-
-安装可选拼音包并加一行配置：
+## 可选中文输入
 
 ```bash
-dotnet add package TouchKeyboard.Avalonia --version 0.2.0
-dotnet add package TouchKeyboard.Ime.Pinyin --version 0.2.0
+dotnet add package TouchKeyboard.Ime.Pinyin
 ```
 
 ```csharp
@@ -100,9 +163,9 @@ using TouchKeyboard.Ime.Pinyin;
 KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
 
-`text` 档位自动出现中/英键和固定候选栏；数字、日期、密码、ASCII 档位行为不变；
-不装语言包时与无 IME 状态完全一致（无 IME 键/候选栏，Space 7.0/3.5）。扩展包
-只换引擎类型：
+`text` 字段会出现中/英键、固定候选栏和组合态内联绘制；数字、日期、密码和 ASCII
+档位保持无 IME。不装引擎时没有 IME 键和候选栏，空格保持无 IME 的加宽宽度。
+扩展包只替换引擎类型：
 
 ```csharp
 using TouchKeyboard.Ime.Pinyin.Extended;
@@ -110,104 +173,78 @@ using TouchKeyboard.Ime.Pinyin.Extended;
 KeyboardHost.Configure(options => options.UseIme(new ExtendedPinyinImeEngine()));
 ```
 
-引擎是纯托管、词典驱动，不接系统 IME，也不做按键注入。选项、交互规则、
-主题/本地化/无障碍、包体积、数据来源与排错见 [docs/ime.md](docs/ime.md)。
+引擎是纯托管、词典驱动，不接系统 IME，也不做按键注入。选项、交互规则、主题、
+本地化和排错见 [中文输入](docs/ime.md)。
 
-## 仓库结构
+## 行为
 
-```text
-src/TouchKeyboard.Core/             纯后端
-src/TouchKeyboard.Avalonia/         Avalonia 前端
-src/TouchKeyboard.Ime.Pinyin/       可选拼音引擎 + 常用词库
-src/TouchKeyboard.Ime.Pinyin.Extended/ 可选扩展词库
-samples/TouchKeyboard.Demo/         演示程序（含中文字段）
-tests/TouchKeyboard.Core.Tests/
-tests/TouchKeyboard.Ime.Pinyin.Tests/
-tests/TouchKeyboard.Avalonia.Tests/
-tools/build-pinyin-dict.py          可复现的词典构建脚本
-assets/icon.png                     包图标
-docs/architecture.md                分层、模型与数据流
-docs/avalonia.md                    接入、选项、主题、适配器
-docs/ime.md                         中文输入、语言包与许可
-docs/customization.md               尺寸、语义色与面板拖动
-docs/public-api.md                  公共 API 清单与扩展点
-docs/profiles.md                    输入档位、校验与数字键盘槽位
-docs/layouts.md                     布局参考
-docs/roadmap.md                     发布状态与版本计划
-docs/release.md                     NuGet 发布步骤
-docs/wpf-porting.md                 WPF 移植说明
-docs/design/decisions.md            已确认决策
-docs/adr/                           架构决策记录
-docs/testing/device-checklist.md    真机验收清单
-docs/images/                        渲染预览
-build/                              preflight、smoke 与 hygiene 脚本
+- 编辑发生在会话缓冲。**确定/Enter** 校验后写回；关闭面板、点遮罩或按 Esc
+  总是放弃修改。
+- 编辑面上方显示字段名、单位和校验错误。
+- 浮层默认跟随窗口明暗变体；设置 `options.Theme` 可固定预设。
+- `HandlePhysicalKeyboard` 默认开启，面板打开时接收物理键盘输入。
+- 内置适配器覆盖 `TextBox`、`NumericUpDown` 和 `CalendarDatePicker`；自定义控件
+  可注册 `IEditorAdapter`。
+- 默认编辑面为自绘，避免平台软键盘遮挡面板；需要原生文本语义的宿主可以注入
+  自己的 `IEditorSurface`。
+
+## 外观定制
+
+```csharp
+using Avalonia.Media;
+
+KeyboardHost.Configure(options =>
+{
+    options.Style.Scale = 0.9;
+    options.Style.FontScale = 1.0;
+    options.Style.IconScale = 1.1;
+    options.Style.AccentColor = Color.Parse("#FF0F766E");
+    options.Style.ConfirmTextColor = Colors.White;
+    options.EnablePanelDrag = true;
+});
 ```
 
-## 构建
-
-需要 .NET 8 与 .NET 10 SDK（AOT smoke 另需 `clang`/`zlib`）。
-
-```bash
-dotnet restore TouchKeyboard.sln
-dotnet build TouchKeyboard.sln -c Release
-dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
-dotnet test tests/TouchKeyboard.Ime.Pinyin.Tests/TouchKeyboard.Ime.Pinyin.Tests.csproj -c Release
-dotnet test tests/TouchKeyboard.Avalonia.Tests/TouchKeyboard.Avalonia.Tests.csproj -c Release
-bash build/preflight.sh
-bash build/smoke-pack.sh
-```
-
-运行 Demo：
-
-```bash
-dotnet run --project samples/TouchKeyboard.Demo
-```
-
-Demo 顶部可以切换全键盘样式（AnsiStyle / PhoneHybrid）与界面主题
-（跟随系统 / 浅色 / 深色），并提供可折叠测试面板中的整体/字号/图标缩放滑杆、强调色/确定键/
-候选选中/面板/普通按键颜色选择、长按拖动开关和复位按钮，以及一个接入拼音引擎
-的中文字段。可用中文字段检查候选栏和按压反馈，用 PhoneHybrid + 符号/123 检查
-高度模型。
-
-还原使用标准的 NuGet 用户缓存。受限环境/沙箱中请在还原前把 `NUGET_PACKAGES`
-指向可写目录；smoke 脚本默认使用仓库内的 `.nuget/packages`。
+`Style` 在解析后的主题上叠加缩放和语义色；需要控制全部画刷和度量时使用
+`options.Theme`。长按标题行可在窗口内拖动面板，
+`TouchKeyboardHost.ResetPanelPosition()` 恢复默认位置。详见
+[外观与尺寸](docs/customization.md)。
 
 ## 文档
 
-- [架构](docs/architecture.md)：分层、核心模型、数据流与扩展点。
-- [Avalonia 接入](docs/avalonia.md)：安装、选项、主题、适配器与排错。
-- [中文输入](docs/ime.md)：可选拼音包、候选栏、许可与体积。
-- [外观与拖动](docs/customization.md)：尺寸、字号/图标、语义色与标题行拖动。
-- [公共 API](docs/public-api.md)：0.2.0 API 清单、兼容策略与扩展点。
-- [输入档位](docs/profiles.md)：内置档位、校验规则与数字键盘槽位。
-- [布局参考](docs/layouts.md)：AnsiStyle / PhoneHybrid、符号页、Numpad 网格。
-- [路线图](docs/roadmap.md)：发布状态、就绪清单与版本计划。
-- [发布流程](docs/release.md)：版本、Trusted Publishing 与发布步骤。
-- [WPF 移植说明](docs/wpf-porting.md)：第二个前端需要实现什么。
-- [架构决策记录](docs/adr/) 与 [已确认决策](docs/design/decisions.md)。
-- [中文输入设计稿](docs/design/2026-11-08-chinese-input-and-language-packs.md)：托管拼音路线、可选语言/文本包与一行接入 API。
-- [真机验收清单](docs/testing/device-checklist.md)：0.2.0 真机测试项。
+- [Avalonia 接入](docs/avalonia.md)：安装、选项、适配器、主题、本地化与排错。
+- [输入档位](docs/profiles.md)：内置档位、校验规则与数字槽位。
+- [布局参考](docs/layouts.md)：AnsiStyle/PhoneHybrid、符号页、Numpad 网格。
+- [中文输入](docs/ime.md)：可选拼音包、候选栏、数据与许可。
+- [外观与尺寸](docs/customization.md)：缩放、语义色、主题与面板拖动。
+- [公共 API](docs/public-api.md)：API 清单、兼容策略与扩展点。
+- [架构](docs/architecture.md)：项目、核心模型、数据流与前端职责。
+- [演示程序](samples/TouchKeyboard.Demo/README.md)：可运行的 Avalonia 示例。
+- [变更记录](CHANGELOG.md)。
 
-## 已知限制
+面向贡献者：[CONTRIBUTING.md](CONTRIBUTING.md)、[发布流程](docs/release.md)、
+[架构决策记录](docs/adr/)、[真机验收清单](docs/release/device-checklist.md) 与
+[路线图](docs/roadmap.md)。
 
-- 托管拼音只做全拼、分词/整句和常用简拼；不做五笔、手写、模糊音、云输入、
-  自学习或繁简转换。
-- 候选质量是 best-effort；常用词库约 2 万词，扩展包约 10 万词；golden set 是
-  开发目标，不是质量保证。
-- 编辑面是单行：没有选择、剪贴板、撤销或多行布局。
-- 编辑发生在会话缓冲；只有确认才写回目标控件，关闭总是放弃。
-- 不含 F 键、NumLock 小键盘块、Ctrl/Alt/Win 组合或系统功能键。
-- WPF 尚未实现。
-- 真机行为（CJK 字体、OSK 抑制、DPI、1024×600、词典加载时间/内存）仍需按
-  清单记录，之后才能称 `0.2.0` 可现场使用。
+## 兼容性与限制
+
+- **平台：** 通过 Avalonia 桌面端支持 Windows、Linux、macOS，触摸和鼠标均可；
+  不支持 Avalonia 11。
+- **单行编辑面：** 没有选择、剪贴板、撤销/重做或多行布局；编辑总是整体确认或
+  放弃。
+- **无桌面按键块：** 不含 F1–F12、NumLock 小键盘块、Ctrl/Alt/Win/Menu 组合或
+  系统功能键。
+- **仅托管 IME：** 可选拼音引擎支持全拼、分词/整句和常用简拼；不做五笔、手写、
+  模糊音、云输入、自学习或繁简转换。候选质量是 best-effort。
+- **不桥接系统 IME，也不做按键注入。** 键盘只编辑自己的会话缓冲，通过适配器
+  提交。
+- **WPF 尚未实现。** 核心不依赖 UI，第二个前端可以复用。
+- **验证：** 单元测试、拼音测试和 Avalonia Headless 测试在 CI 中运行；触摸行为、
+  DPI、CJK 字体回退、OSK 抑制和小屏布局仍应在目标面板上验证后再部署。
 
 ## 许可证
 
-MIT，见 [LICENSE](LICENSE)。可选语言/文本数据只使用宽松或署名许可
-（CC0、MIT、BSD、Apache-2.0、Unicode License 或 CC-BY 4.0），并在 `NOTICE`
-记录来源；不随包分发 CC-BY-SA、GPL/AGPL、专有或来源不明的数据。拼音词库使用
-Unihan `kMandarin` 字音（Unicode License V3）和 jieba 词表/词频（MIT）；每个
-语言包携带 `NOTICE`，列出源、快照哈希和完整许可文本。项目不附加商业限制：
-任何人都可以免费使用、修改和再分发。
+代码使用 MIT，见 [LICENSE](LICENSE)。可选语言数据只使用宽松或署名许可
+（Unihan 字音使用 Unicode License V3，jieba 词表使用 MIT），并在每个语言包中
+携带 `NOTICE`。不包含 share-alike、copyleft、专有或来源不明的数据。
 
-软件和可选数据按现状提供；不承诺候选质量或稳定性，维护为 best-effort。
+软件和数据按现状提供；不承诺输入质量或稳定性。

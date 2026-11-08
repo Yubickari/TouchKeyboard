@@ -1,9 +1,8 @@
 # WPF frontend notes
 
 The core is UI-free and targets `netstandard2.0`, so a WPF frontend can reuse it
-without changes. WPF is **not implemented yet**; this note records the porting shape
-and the traps to budget for. Evaluate it in `0.2.0` after the Avalonia preview has
-been tested on real devices.
+without changes. WPF is **not implemented**; this note records the porting shape
+and the traps to budget for.
 
 ## What the core already provides
 
@@ -81,7 +80,8 @@ localization.
 ## Traps
 
 - **System OSK:** a custom-drawn editor avoids the touch keyboard, but any real
-  `TextBox` surface will trigger it. Document the trade-off (the plan's D3).
+  `TextBox` surface will trigger it. Document the trade-off described by the
+  editor-surface decision.
 - **Focus:** the overlay must take keyboard focus to handle Escape/Enter without
   leaking keys into the target; restore focus after closing.
 - **Pointer capture with touch:** WPF touch promotion (`Touch` → stylus → mouse) can

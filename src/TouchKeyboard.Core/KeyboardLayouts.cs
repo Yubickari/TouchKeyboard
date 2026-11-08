@@ -19,7 +19,7 @@ public static class KeyboardLayouts
     /// <summary>Returns the full keyboard for the requested geometry and page.</summary>
     /// <remarks>
     /// Only <see cref="FullKeyboardLayoutKind.PhoneHybrid"/> has a separate symbol
-    /// page in v1. <see cref="FullKeyboardLayoutKind.AnsiStyle"/> keeps every ANSI
+    /// page. <see cref="FullKeyboardLayoutKind.AnsiStyle"/> keeps every ANSI
     /// symbol on its main page and Shift layer, so it always returns the main page.
     /// This overload has no IME key: Space fills the former IME slot (AnsiStyle 7.0
     /// units, PhoneHybrid 3.5) and row totals stay 15/10.
@@ -73,7 +73,7 @@ public static class KeyboardLayouts
         }
     }
 
-    /// <summary>Whether the geometry has a separate symbol page in v1.</summary>
+    /// <summary>Whether the geometry has a separate symbol page.</summary>
     public static bool HasSymbolPage(FullKeyboardLayoutKind layout)
     {
         switch (layout)

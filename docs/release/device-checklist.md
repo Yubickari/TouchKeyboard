@@ -1,12 +1,7 @@
-# 真机验收清单（0.2.0）
+# 真机验收清单
 
-本清单对应设计文档第 10.4 节的真机验证项，用于 `0.2.0` 发布前（`0.1.0` 不发布）。
-建议每台设备复制一份记录；发现的问题请用 GitHub issue 模板（Bug report）提交，
-并附上本清单中的设备信息和截图。
-
-> `0.2.0` 的无 IME 空格宽度和可选拼音 IME 项见
-> [中文输入与语言包设计](../design/2026-11-08-chinese-input-and-language-packs.md)
-> 第 10.4 节；本清单对应 `0.2.0`。
+本清单用于发布前在目标设备上验收触屏行为。建议每台设备复制一份记录；发现的
+问题请用 GitHub issue 模板（Bug report）提交，并附上本清单中的设备信息和截图。
 
 ## 0. 设备与环境
 
@@ -17,7 +12,7 @@
 | 操作系统与版本 | 例：Windows 11 23H2 / Ubuntu 24.04 X11 / Ubuntu 24.04 Wayland / macOS 14 |
 | DPI 缩放 | 100% / 125% / 150% / 200% |
 | .NET SDK | `dotnet --version` |
-| TouchKeyboard 版本 / commit | 例：0.2.0 / f64688a |
+| TouchKeyboard 版本 / commit | 例：0.2.0 / abc1234 |
 | 安装的可选包 | 无 / `TouchKeyboard.Ime.Pinyin` / `.Extended` |
 | Avalonia 版本 | 12.0.5 |
 | 输入方式 | 电容触摸 / 电阻触摸 / 鼠标 / 触控板 |
