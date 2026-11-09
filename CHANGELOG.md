@@ -1,19 +1,67 @@
 # Changelog
 
+**English** · [简体中文](CHANGELOG.zh.md)
+
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-09
+
+Maintenance and language/font release.
+
+### Added
+
+- `KeyboardLanguage` (`Auto`, `Chinese`, `English`) and
+  `TouchKeyboardOptions.KeyLanguage`: switch key legends, chrome and validation
+  messages without changing the US ANSI QWERTY geometry. `Auto` follows
+  `Culture`, then the current UI culture; a custom `ITouchKeyboardLocalizer`
+  still wins.
+- Fully English key surface: `Confirm`, `Clear`, `Symbols`, `Space`, `Enter` and
+  an IME toggle that reads `CN`/`EN` instead of 中/英. The English validation
+  messages and accessible names are unchanged in meaning.
+- `TouchKeyboardFonts` with per-platform default chains: Windows
+  `Segoe UI, Microsoft YaHei UI, Microsoft YaHei`, macOS `Helvetica Neue,
+  PingFang SC, Hiragino Sans GB`, Linux `Noto Sans, Noto Sans CJK SC,
+  WenQuanYi Micro Hei, DejaVu Sans`.
+- `TouchKeyboardTheme.FontFamily` and `TouchKeyboardStyle.FontFamily`. The host
+  applies the family to key caps, the title/unit/error row, the editor surface,
+  candidate numbers/text, candidate hints and paging glyphs.
+- Chinese versions of the integration guide (`docs/avalonia.zh.md`), input
+  profile reference (`docs/profiles.zh.md`), layout reference
+  (`docs/layouts.zh.md`), demo README, package READMEs and changelog
+  (`CHANGELOG.zh.md`).
+- `AGENTS.md` and contributor rules that require a synchronized Chinese version
+  of every user-facing document.
+
 ### Changed
 
+- The default keyboard font is now platform-aware instead of always using the
+  Avalonia default family. Font files are not bundled; a CJK face is still
+  required on the machine.
+- English localizer: the active IME label changed from 中 to `CN`, so an
+  all-English host has no stray Chinese legend on the IME key.
 - Avalonia packages build against the 12.0.5 compatibility floor and declare
   `Avalonia >= 12.0.5`; CI also tests the suite against 12.1.5.
 - Updated `Microsoft.NET.Test.Sdk` from 17.12.0 to 18.11.0.
 - Updated the GitHub Actions used by CI and release to
   `actions/checkout@v7`, `actions/setup-dotnet@v6` and
   `actions/upload-artifact@v7`.
+- Documentation now records that basic real-device acceptance was completed on
+  Windows, Linux and macOS in November 2026. Platform-specific details are
+  tracked through GitHub issues and the device checklist.
+
+### Notes
+
+- Key geometry, row widths, IME slot widths and candidate-row heights are
+  unchanged by `KeyLanguage`. Only text changes.
+- `KeyboardLanguage.English` does not disable the optional pinyin engine by itself. An
+  all-English host can omit `TouchKeyboard.Ime.Pinyin`/`UseIme(...)`, or keep the
+  engine and expose an English legend and a CN/EN toggle.
+- The GitHub release body is generated from the matching section of
+  `CHANGELOG.zh.md`.
 
 ## [0.2.0] - 2026-11-08
 
@@ -76,5 +124,6 @@ First public release.
   [docs/ime.md](docs/ime.md) for scope and data sources.
 - WPF is planned but not included in this release.
 
-[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.1
 [0.2.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.0

@@ -26,8 +26,14 @@ frontend, and a WPF frontend is planned.
   row, editor surface and a keyboard area that keeps its height between modes.
 - **Touch-first interaction.** No hover states; pointer capture, press feedback
   and long-press repeat for Backspace and caret keys.
-- **Theming and sizing.** Automatic light/dark follow, two built-in presets, a
-  compact `Style` facade for scale and semantic colours, and a draggable panel.
+- **Theming, fonts and sizing.** Automatic light/dark follow, two built-in
+  presets, a compact `Style` facade for scale, semantic colours and the font
+  family, and a draggable panel. Platform-aware default font stacks keep Latin
+  and CJK text readable on Windows, macOS and Linux, while hosts can plug in
+  their own `FontFamily`.
+- **Chinese or English key legends.** `KeyboardLanguage.English` gives an
+  all-English surface (Confirm, Clear, Symbols, CN/EN) for an English-only host;
+  `Auto` follows the host culture. Geometry never changes.
 - **Optional Chinese input.** A managed pinyin engine, candidate bar, inline
   composition and language packs; the base package stays language-neutral.
 - **Reusable core.** Profiles, layouts, sessions, validation and IME
@@ -48,7 +54,9 @@ A WPF frontend is planned but not shipped.
 
 - Avalonia 12.0.5 or newer (tested with 12.0.5 and 12.1.5) on .NET 8 or .NET 10.
 - `TouchKeyboard.Core` alone can be consumed from any `netstandard2.0` project.
-- A CJK font is required for Chinese characters in fields and candidates.
+- The default font is a platform-aware stack, but it does not bundle fonts. A CJK
+  font is still required for Chinese characters in fields and candidates; minimal
+  Linux images should install Noto Sans CJK SC (or another CJK face).
 
 ## Quick start
 
@@ -121,6 +129,39 @@ public partial class MainWindow : Window
 See [Avalonia integration](docs/avalonia.md) for every option, adapter,
 localizer and troubleshooting topic.
 
+## Language and fonts
+
+The letter geometry is the same in both languages; only named key legends,
+chrome strings and validation messages change.
+
+```csharp
+using Avalonia.Media;
+using TouchKeyboard.Avalonia;
+
+KeyboardHost.Configure(options =>
+{
+    // Auto follows Culture (or the current UI culture). Pin one for an app
+    // whose UI language is independent of the operating system.
+    options.KeyLanguage = KeyboardLanguage.English;
+
+    // Use the platform default stack, or plug in any Avalonia FontFamily.
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
+
+| Setting | Default | Effect |
+|---|---|---|
+| `KeyLanguage` | `Auto` | Built-in language for key legends, chrome and validation messages. `Chinese` = zh-CN, `English` = en-US, `Auto` = `Culture` then the current UI culture. A custom `Localizer` still wins. |
+| `Style.FontFamily` | `null` | Overrides the font for key caps, the label/unit/error row, the editor and IME candidates. `null` keeps the resolved theme family. |
+| `TouchKeyboardTheme.FontFamily` | `TouchKeyboardFonts.Default` | Font of the full theme. `Style.FontFamily` is the small, theme-independent override. |
+
+Platform defaults come from `TouchKeyboardFonts.Windows` (`Segoe UI, Microsoft
+YaHei UI, Microsoft YaHei`), `TouchKeyboardFonts.MacOS` (`Helvetica Neue,
+PingFang SC, Hiragino Sans GB`) and `TouchKeyboardFonts.Linux` (`Noto Sans, Noto
+Sans CJK SC, WenQuanYi Micro Hei, DejaVu Sans`). The English surface uses
+`Confirm`/`Clear`/`Symbols` and the IME toggle shows `CN`/`EN`; the Chinese
+surface uses 确定/清空/符号 and 中/英.
+
 ## Input profiles
 
 | Profile id | Default surface | Accepts |
@@ -146,7 +187,7 @@ codes and numeric slot mapping.
 Tab and Caps kept as non-interactive spacers and no F-keys, NumLock keypad block,
 Ctrl/Alt/Win combinations or system keys. When no IME key is present, Space
 expands over the IME slot. With an engine and an IME-capable profile, the slot
-holds a 中/英 key and Space returns to its base width.
+holds an IME key (中/英, or CN/EN in English) and Space returns to its base width.
 
 `PhoneHybrid` is a four-row phone-style letters keyboard with a symbol/numeric
 entry and a full-keyboard-owned symbol page. The numeric mode uses the 5×4
@@ -173,8 +214,9 @@ using TouchKeyboard.Ime.Pinyin;
 KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
 
-`text` fields get a 中/英 key, a fixed candidate row and inline composition.
-Numeric, date, password and ASCII profiles stay IME-free. Without an engine
+`text` fields get an IME key (中/英, or CN/EN in English), a fixed candidate
+row and inline composition. Numeric, date, password and ASCII profiles stay
+IME-free. Without an engine
 there is no IME key or candidate row and Space keeps the expanded no-IME width.
 The extended pack only changes the engine type:
 
@@ -223,28 +265,31 @@ KeyboardHost.Configure(options =>
 `Style` applies scale and semantic colours on top of the resolved preset. For
 full control over brushes and metrics use `options.Theme`. Long-press the title
 row to drag the panel inside the window; `TouchKeyboardHost.ResetPanelPosition()`
-restores the default position. See [Appearance and sizing](docs/customization.md).
+restores the default position. See [Appearance, fonts and sizing](docs/customization.md).
 
 ## Documentation
 
-- [Avalonia integration](docs/avalonia.md) — setup, options, adapters, theming, localization, troubleshooting.
+- [Avalonia integration](docs/avalonia.md) — setup, options, adapters, language, fonts, theming, troubleshooting.
 - [Input profiles](docs/profiles.md) — built-in profiles, validation rules, numeric slots.
 - [Layouts](docs/layouts.md) — AnsiStyle/PhoneHybrid geometry, symbol page, Numpad grid.
 - [Chinese input](docs/ime.md) — optional pinyin packs, candidate bar, data and licensing.
-- [Appearance and sizing](docs/customization.md) — scale, semantic colours, themes, panel dragging.
+- [Appearance, fonts and sizing](docs/customization.md) — scale, fonts, semantic colours, themes, panel dragging.
 - [Public API](docs/public-api.md) — API inventory, compatibility policy and extension seams.
 - [Architecture](docs/architecture.md) — projects, core model, data flow and frontend responsibilities.
 - [Demo](samples/TouchKeyboard.Demo/README.md) — runnable Avalonia sample.
 - [Changelog](CHANGELOG.md).
 
-For contributors: [CONTRIBUTING.md](CONTRIBUTING.md), [release runbook](docs/release.md),
+For contributors: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md) (documentation language), [release runbook](docs/release.md),
 [architecture decision records](docs/adr/), [device acceptance checklist](docs/release/device-checklist.md)
 and the [roadmap](docs/roadmap.md).
 
 ## Compatibility and limitations
 
 - **Platforms:** Windows, Linux and macOS through Avalonia desktop; touch and
-  mouse input. Avalonia 11 is not supported.
+  mouse input. Avalonia 11 is not supported. Basic real-device acceptance was
+  completed on all three platforms in November 2026; platform-specific details
+  should be reported through the GitHub issue templates and tracked against the
+  device checklist.
 - **Single-line editor:** no selection, clipboard, undo/redo or multi-line
   layout. Editing is always confirmed or discarded as a whole.
 - **No desktop key block:** no F1–F12, NumLock keypad block, Ctrl/Alt/Win/Menu
@@ -258,8 +303,9 @@ and the [roadmap](docs/roadmap.md).
 - **WPF is not implemented.** The core is UI-free so a second frontend can reuse
   it.
 - **Validation:** unit, pinyin and Avalonia headless suites run on every CI
-  build. Touch behaviour, DPI scaling, CJK font fallback, OSK suppression and
-  small screens should still be checked on the target panel before deployment.
+  build. Basic real-device acceptance is complete on Windows, Linux and macOS.
+  Platform-specific details, edge-case DPI/OSK behaviour and any remaining
+  checklist items should be reported as GitHub issues before deployment.
 
 ## License
 

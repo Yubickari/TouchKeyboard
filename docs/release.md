@@ -8,7 +8,7 @@ NuGet **Trusted Publishing** (OIDC), so no long-lived API key is stored anywhere
 ## Version source
 
 `Directory.Build.props` holds the single `<Version>` used by all four packages. A
-release tag must be `v<Version>`, for example `v0.2.0`. `build/preflight.sh`
+release tag must be `v<Version>`, for example `v0.2.1`. `build/preflight.sh`
 fails when the tag and version disagree, and (on a tag build) when the working tree
 is dirty.
 
@@ -44,8 +44,11 @@ do not override `AvaloniaVersion` when packing a release.
 ## Local rehearsal
 
 ```bash
-# Tests, pack, package-content checks and hygiene:
+# Tests, pack, package-content checks, documentation language and hygiene:
 bash build/preflight.sh
+
+# Preview the Chinese GitHub release body generated from CHANGELOG.zh.md:
+bash build/release-notes.sh
 
 # Consume the produced packages from a local feed in two throwaway projects:
 bash build/smoke-pack.sh
@@ -60,29 +63,33 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
 
 ## Release checklist
 
-1. Update `CHANGELOG.md` (the release notes are generated from it plus commits) and
-   bump `<Version>` in `Directory.Build.props` if needed.
-2. Review `README.md` / `README.zh.md` for install commands, version, links and
-   screenshots; review the package READMEs under `src/*/README.md` for absolute
-   links.
+1. Update `CHANGELOG.md` and `CHANGELOG.zh.md`; bump `<Version>` in
+   `Directory.Build.props` if needed. The GitHub release body is generated from the
+   Chinese changelog section by `build/release-notes.sh`.
+2. Review `README.md` / `README.zh.md` and every paired user-facing document for
+   install commands, version, links and screenshots; review the package READMEs
+   under `src/*/README.md` (and their Chinese `README.zh.md` pages) for absolute
+   links. The release is blocked when a
+   required Chinese document is missing (see `AGENTS.md` and `preflight.sh`).
 3. Run `bash build/preflight.sh` and `bash build/smoke-pack.sh` locally.
 4. Commit, then create and push the tag:
 
    ```bash
-   git tag v0.2.0
-   git push origin v0.2.0
+   git tag v0.2.1
+   git push origin v0.2.1
    ```
 
 5. Watch the **Release** workflow. It runs the package smoke (three consumer
-   shapes plus AOT), preflight, exchanges the OIDC token for a short-lived NuGet
-   key, pushes all four packages (skipping duplicates) and creates the GitHub
-   release with the artifacts attached.
+   shapes plus AOT), preflight, extracts the Chinese release notes, exchanges the
+   OIDC token for a short-lived NuGet key, pushes all four packages (skipping
+   duplicates) and creates the GitHub release with the Chinese body and artifacts
+   attached.
 6. Validate from the public feed in a clean project:
 
    ```bash
    dotnet new console -o /tmp/osk-smoke
    cd /tmp/osk-smoke
-   dotnet add package TouchKeyboard.Avalonia --version 0.2.0
+   dotnet add package TouchKeyboard.Avalonia --version 0.2.1
    dotnet build
    ```
 
@@ -115,7 +122,7 @@ behavior matrix (including expanded Space) for the Avalonia-only shape. See
 - [ ] A clean Avalonia 12 app builds with the package and shows the keyboard.
 - [ ] A clean Avalonia app with `TouchKeyboard.Ime.Pinyin` shows the 中/英 key and candidate row for a `text` field.
 - [ ] The symbol packages are listed and sourcelink points at the tag commit.
-- [ ] The GitHub release has all `.nupkg` and `.snupkg` files.
+- [ ] The GitHub release has the Chinese release body, a link to both changelogs and all `.nupkg`/`.snupkg` files.
 
 ## Failure and rollback
 

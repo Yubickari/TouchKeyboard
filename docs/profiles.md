@@ -1,5 +1,7 @@
 # Input profiles
 
+**English** · [简体中文](profiles.zh.md)
+
 An `InputProfile` is the named contract for one field: which keyboard mode it opens
 in, whether the full keyboard is allowed, which numeric keypad keys apply, which
 editing states are legal, and how a committed value is validated and normalized.
@@ -71,7 +73,8 @@ arguments). The frontend localizes it; `FallbackMessage` is English-only.
 | `CommitRejected` | The adapter or a read-back rejected the value (also used after cancel). |
 
 The built-in `zh-CN` and `en-US` localizers map every code to a sentence; see
-[avalonia.md](avalonia.md#localization).
+[avalonia.md](avalonia.md#localization). `TouchKeyboardOptions.KeyLanguage` can pin
+the built-in language without a culture string.
 
 ## Numeric keypad key set
 

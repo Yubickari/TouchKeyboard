@@ -1,5 +1,7 @@
 # Layout reference
 
+**English** · [简体中文](layouts.zh.md)
+
 Every surface is immutable data built by `KeyboardLayouts.Full`,
 `KeyboardLayouts.GeneralNumeric` and `KeyboardLayouts.ProfileNumeric`. The core
 describes keys, unit widths, grid cells and semantic glyphs; the Avalonia frontend
@@ -26,8 +28,9 @@ fills the slot.
 > **Space and IME:** with no IME key, Space fills the former IME slot
 > (`AnsiStyle` 7.0 units, `PhoneHybrid` 3.5). When an IME engine is configured and
 > the profile allows IME, Space returns to its base width (5.5 / 2.5) and the slot
-> holds a real `ime.toggle` key (中/英). The IME key is present even in English mode,
-> so toggling 中/英 does not change the width. See [ime.md](ime.md).
+> holds a real `ime.toggle` key. The key reads 中/英 in the Chinese surface and
+> CN/EN in the English surface; it is present even in English input mode, so
+> toggling the IME mode does not change the width. See [ime.md](ime.md).
 
 | Row | Keys and widths | Total |
 |---|---|---|
@@ -35,11 +38,17 @@ fills the slot.
 | 1 | **Tab spacer 1.5** + `Q..P`10 + `[`1 + `]`1 + `\`1.5 | 15 |
 | 2 | **Caps spacer 1.75** + `A..L`9 + `;`1 + `'`1 + `Enter`2.25 | 15 |
 | 3 | `Shift`2.25 + `Z..M`7 + `,` `.` `/`3 + `Shift`2.75 | 15 |
-| 4 | `123`1.5 + `←`1.25 + `→`1.25 + `Space`5.5 (**7.0 without IME**) + **`ime.toggle` 1.5 (only with IME)** + `Clear`1.5 + `Confirm`2.5 | 15 |
+| 4 | `123`1.5 + `←`1.25 + `→`1.25 + `Space`5.5 (**7.0 without IME**) + **`ime.toggle` 1.5 (only with IME)** + `Clear`/清空 1.5 + `Confirm`/确定 2.5 | 15 |
 
 > The render above shows the no-IME state with Space expanded over the slot. With an
 > IME engine and the `text` profile, the bottom row instead shows Space 5.5 plus a
-> 1.5-unit `ime.toggle` key; row total stays 15.
+> 1.5-unit `ime.toggle` key (中/英 or CN/EN); row total stays 15.
+
+
+Named keys use the selected `KeyboardLanguage`: the tables below show the Chinese
+legends for clarity; an English surface reads `Symbols`, `Clear`, `Confirm`,
+`CN`/`EN` instead of 符号, 清空, 确定, 中/英. Letter, digit and symbol keys are
+literal and do not change with the language.
 
 AnsiStyle keeps the complete US ANSI symbol set on its main page and Shift layer,
 so it has no separate symbol page.
@@ -54,20 +63,20 @@ from the bottom row. A 10-unit bottom row is the design width.
 | 0 | `Q W E R T Y U I O P` | 10 |
 | 1 | **inset 0.5** + `A S D F G H J K L` + **inset 0.5** | 10 |
 | 2 | `Shift`1.5 + `Z X C V B N M`7 + `⌫`1.5 | 10 |
-| 3 | `符号`1 + `123`1 + `←`1 + `Space`2.5 (**3.5 without IME**) + `→`1 + **`ime.toggle` 1 (only with IME)** + `Clear`1 + `Confirm`1.5 | 10 |
+| 3 | `Symbols`/`符号`1 + `123`1 + `←`1 + `Space`2.5 (**3.5 without IME**) + `→`1 + **`ime.toggle` 1 (only with IME)** + `Clear`/清空 1 + `Confirm`/确定 1.5 | 10 |
 
 The first letter row fixes the key width at one unit. The home row is inset by half
 a unit on both sides, so `A` sits half a key right of `Q`; the Z row starts after
 the 1.5-unit Shift, so `Z` lines up with `S`. Caret keys flank the space bar, which
 fills the remaining width; the symbol entry sits left of the numeric entry. With an
 IME engine and the `text` profile, Space becomes 2.5 and a 1-unit `ime.toggle`
-sits between the right caret key and Clear; the row stays 10 units. The symbol page
+sits between the right caret key and Clear/清空; the row stays 10 units. The symbol page
 has no IME slot and belongs to the full keyboard; the numeric keypad never opens it.
 
 ![Chinese IME composition](images/keyboard-ime-composition.png)
 
 *AnsiStyle with the optional pinyin IME: composition in the editor, a fixed
-candidate row, Space 5.5 and a 1.5-unit 中/英 key.*
+candidate row, Space 5.5 and a 1.5-unit IME key (中/英 / CN/EN).*
 
 ![Phone-style full keyboard](images/keyboard-phone-hybrid.png)
 
@@ -217,7 +226,7 @@ the cap down slightly, which stays visible in both themes.
 and filled), caret arrows (a filled triangle plus a caret bar), step arrows (a
 triangle paired with a `+`/`−` sign), sign toggle (±), space, password show/hide,
 keyboard, symbol, numeric and an IME glyph reserved for a future icon treatment
-(the toggle uses the text 中/英; `KeyGlyph.Ime` is retained but unused). Compact
+(the toggle uses the localized 中/英 or CN/EN text; `KeyGlyph.Ime` is retained but unused). Compact
 keys use a smaller icon factor. Icon keys keep a localized label; it is the
 accessible name and the text fallback when a frontend cannot draw the glyph.
 

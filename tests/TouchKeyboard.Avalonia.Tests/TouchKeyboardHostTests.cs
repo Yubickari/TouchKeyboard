@@ -1127,8 +1127,206 @@ public sealed class TouchKeyboardHostTests
         Assert.Equal(1.0, options.Style.Scale);
         Assert.Equal(1.0, options.Style.FontScale);
         Assert.Equal(1.0, options.Style.IconScale);
+        Assert.Null(options.Style.FontFamily);
+        Assert.Equal(KeyboardLanguage.Auto, options.KeyLanguage);
         Assert.True(options.EnablePanelDrag);
         Assert.Throws<ArgumentNullException>(() => options.UseIme(null!));
+    }
+
+    [Fact]
+    public void Platform_font_defaults_cover_all_desktop_platforms()
+    {
+        Assert.Equal("Segoe UI", TouchKeyboardFonts.Windows.Name);
+        Assert.Equal("Helvetica Neue", TouchKeyboardFonts.MacOS.Name);
+        Assert.Equal("Noto Sans", TouchKeyboardFonts.Linux.Name);
+        Assert.False(string.IsNullOrWhiteSpace(TouchKeyboardFonts.Default.Name));
+
+        var expected = OperatingSystem.IsWindows()
+            ? TouchKeyboardFonts.Windows
+            : OperatingSystem.IsMacOS()
+                ? TouchKeyboardFonts.MacOS
+                : OperatingSystem.IsLinux()
+                    ? TouchKeyboardFonts.Linux
+                    : FontFamily.Default;
+        Assert.Same(expected, TouchKeyboardFonts.Default);
+        Assert.Same(TouchKeyboardFonts.Default, new TouchKeyboardTheme().FontFamily);
+    }
+
+    [AvaloniaFact]
+    public void Style_font_family_reaches_keys_editor_header_and_candidates()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        var family = new FontFamily("Courier New, Menlo, monospace");
+        using var fixture = CreateFixture(
+            textBox,
+            options =>
+            {
+                options.Localizer = TouchKeyboardLocalizer.EnUs;
+                options.Style.FontFamily = family;
+                options.UseIme(new HostFakeImeEngine());
+            });
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(family, fixture.Host.ResolvedTheme.FontFamily);
+
+        var key = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .First();
+        Assert.All(
+            key.GetVisualDescendants().OfType<TextBlock>(),
+            text => Assert.Same(family, text.FontFamily));
+
+        var editor = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKeyboardEditor>()
+            .Single();
+        Assert.Same(family, editor.EditorFontFamily);
+
+        var header = fixture.Host.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .First(text => text.Text == "Edit");
+        Assert.Same(family, header.FontFamily);
+
+        Type(fixture.Window, fixture.Host.Session!, "nihao");
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Dispatcher.UIThread.RunJobs();
+
+        var candidate = fixture.Host.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .First(text => text.Text == "你好");
+        Assert.Same(family, candidate.FontFamily);
+    }
+
+    [AvaloniaFact]
+    public void Theme_font_family_applies_and_style_override_wins()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        var themeFamily = new FontFamily("Georgia");
+        var styleFamily = new FontFamily("Courier New");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.Theme = new TouchKeyboardTheme { FontFamily = themeFamily });
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Same(themeFamily, fixture.Host.ResolvedTheme.FontFamily);
+
+        fixture.Host.Configure(options => options.Style.FontFamily = styleFamily);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(styleFamily, fixture.Host.ResolvedTheme.FontFamily);
+        var editor = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKeyboardEditor>()
+            .Single();
+        Assert.Same(styleFamily, editor.EditorFontFamily);
+    }
+
+    [AvaloniaFact]
+    public void English_language_option_overrides_a_chinese_culture()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options =>
+            {
+                options.KeyLanguage = KeyboardLanguage.English;
+                options.Culture = "zh-CN";
+                options.UseIme(new HostFakeImeEngine());
+            });
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+
+        var confirm = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Style == KeyStyle.Primary);
+        Assert.Contains(
+            confirm.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "Confirm");
+
+        var imeKey = FindImeKey(fixture.Host);
+        Assert.NotNull(imeKey);
+        Assert.Contains(
+            imeKey!.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "CN");
+    }
+
+    [AvaloniaFact]
+    public void Language_auto_follows_culture_and_a_custom_localizer_wins()
+    {
+        var autoBox = new TextBox();
+        TouchKeyboardInput.SetProfile(autoBox, "text");
+        using (var auto = CreateFixture(
+                   autoBox,
+                   options =>
+                   {
+                       options.KeyLanguage = KeyboardLanguage.Auto;
+                       options.Culture = "zh-CN";
+                   }))
+        {
+            Click(auto.Window, autoBox);
+            Dispatcher.UIThread.RunJobs();
+
+            var confirm = auto.Host.GetVisualDescendants()
+                .OfType<TouchKey>()
+                .Single(key => key.Definition.Style == KeyStyle.Primary);
+            Assert.Contains(
+                confirm.GetVisualDescendants().OfType<TextBlock>(),
+                text => text.Text == "确定");
+        }
+
+        var customBox = new TextBox();
+        TouchKeyboardInput.SetProfile(customBox, "text");
+        using (var custom = CreateFixture(
+                   customBox,
+                   options =>
+                   {
+                       options.KeyLanguage = KeyboardLanguage.English;
+                       options.Culture = "en-US";
+                       options.Localizer = TouchKeyboardLocalizer.ZhCn;
+                   }))
+        {
+            Click(custom.Window, customBox);
+            Dispatcher.UIThread.RunJobs();
+
+            var confirm = custom.Host.GetVisualDescendants()
+                .OfType<TouchKey>()
+                .Single(key => key.Definition.Style == KeyStyle.Primary);
+            Assert.Contains(
+                confirm.GetVisualDescendants().OfType<TextBlock>(),
+                text => text.Text == "确定");
+        }
+    }
+
+    [AvaloniaFact]
+    public void Reconfiguring_key_language_while_open_updates_chrome_and_keys()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(textBox, options => options.Culture = "zh-CN");
+
+        Click(fixture.Window, textBox);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains(
+            fixture.Host.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "编辑");
+
+        fixture.Host.Configure(options => options.KeyLanguage = KeyboardLanguage.English);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Contains(
+            fixture.Host.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "Edit");
+        var confirm = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Style == KeyStyle.Primary);
+        Assert.Contains(
+            confirm.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "Confirm");
     }
 
     [AvaloniaFact]

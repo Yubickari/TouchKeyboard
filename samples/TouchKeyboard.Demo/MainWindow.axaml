@@ -40,6 +40,33 @@
           </ComboBox>
         </Grid>
 
+        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
+          <TextBlock Text="按键语言" VerticalAlignment="Center" />
+          <ComboBox x:Name="LanguageSelector"
+                    Grid.Column="1"
+                    Width="150"
+                    SelectedIndex="0"
+                    SelectionChanged="OnLanguageOrFontChanged">
+            <ComboBoxItem Content="自动（跟随 Culture）" Tag="Auto" />
+            <ComboBoxItem Content="中文" Tag="Chinese" />
+            <ComboBoxItem Content="English" Tag="English" />
+          </ComboBox>
+          <TextBlock Grid.Column="2"
+                     Margin="20,0,0,0"
+                     Text="键盘字体"
+                     VerticalAlignment="Center" />
+          <ComboBox x:Name="FontSelector"
+                    Grid.Column="3"
+                    Width="220"
+                    SelectedIndex="0"
+                    SelectionChanged="OnLanguageOrFontChanged">
+            <ComboBoxItem Content="平台默认（推荐）" Tag="Default" />
+            <ComboBoxItem Content="CJK 优先" Tag="Cjk" />
+            <ComboBoxItem Content="等宽" Tag="Mono" />
+            <ComboBoxItem Content="衬线" Tag="Serif" />
+          </ComboBox>
+        </Grid>
+
         <Expander x:Name="AppearancePanel"
                   Header="外观 / 尺寸 / 拖动测试"
                   IsExpanded="True"
@@ -176,12 +203,12 @@
 
             <TextBlock x:Name="TestInstructionsText"
                        TextWrapping="Wrap"
-                       Text="人工测试：1) 点“中文名称”，输入 nihao 或 gege，观察候选是否完整、候选选中色，并按住候选键检查整个按键变色；候选行不滚动，用 ‹ / › 切页；2) 切换 PhoneHybrid，输入中文后点“符号”和“123”，确认面板高度不跳；点“数量”查看数字专用紧凑高度；3) 缩小整体缩放后长按标题行拖动，点“重置面板位置”复位；4) 切换主题和颜色，检查确定键与候选选中是否可读。" />
+                       Text="人工测试：1) 点“中文名称”，输入 nihao 或 gege，观察候选是否完整、候选选中色，并按住候选键检查整个按键变色；候选行不滚动，用 ‹ / › 切页；2) 切换 PhoneHybrid，输入中文后点“符号”和“123”，确认面板高度不跳；点“数量”查看数字专用紧凑高度；3) 缩小整体缩放后长按标题行拖动，点“重置面板位置”复位；4) 切换主题和颜色，检查确定键与候选选中是否可读；5) 切换按键语言为 English，确认所有功能键为英文（含 CN/EN），再切换字体选项观察键帽、标题、编辑面和候选文字。" />
           </StackPanel>
         </Expander>
 
         <TextBlock TextWrapping="Wrap"
-                   Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard. Text fields use the optional managed pinyin IME: tap 中/英 to switch, tap a candidate or press Space to commit." />
+                   Text="Tap a field to open the keyboard. Closing the panel discards edits; Confirm (or Enter) writes back. The password field only shows printable ASCII; the disabled field never opens the keyboard. Text fields use the optional managed pinyin IME: tap CN/EN (中/英) to switch, tap a candidate or press Space to commit. Switch the key language to English for an all-English surface, and switch the font option to compare the platform default with an override." />
 
         <TextBox tk:TouchKeyboardInput.Profile="text"
                  tk:TouchKeyboardInput.Label="名称"

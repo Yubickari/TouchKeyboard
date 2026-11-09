@@ -1,4 +1,4 @@
-# 外观、尺寸与面板拖动
+# 外观、字体、尺寸与面板拖动
 
 默认外观使用内置明暗主题。大多数宿主只需要 `TouchKeyboardOptions.Style`
 里的少量旋钮；需要精确控制每一个画刷和度量时，仍可直接提供
@@ -45,9 +45,38 @@ KeyboardHost.Configure(options =>
 `KeyboardHost` 是 XAML 中 `x:Name` 生成的 code-behind 字段，控件类型是
 `TouchKeyboardHost`。
 
+## 字体
+
+默认字体由 `TouchKeyboardTheme.FontFamily` 决定，初始化值是平台相关的
+`TouchKeyboardFonts.Default`：
+
+| 平台 | 默认回退链 |
+|---|---|
+| Windows | `Segoe UI, Microsoft YaHei UI, Microsoft YaHei` |
+| macOS | `Helvetica Neue, PingFang SC, Hiragino Sans GB` |
+| Linux | `Noto Sans, Noto Sans CJK SC, WenQuanYi Micro Hei, DejaVu Sans` |
+
+宿主只需要换一个字体时，改 `Style.FontFamily`，不会替换主题的其他画刷和尺寸：
+
+```csharp
+using Avalonia.Media;
+
+KeyboardHost.Configure(options =>
+{
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
+
+字体统一作用于键帽、标题/单位/错误行、自绘编辑面、候选编号/候选文字、候选提示和
+切页字形。自定义 `IEditorSurface` 自己决定字体，宿主需要在该控件上另行设置。
+NuGet 包不携带字体文件；精简 Linux 镜像仍需安装 CJK 字体，否则中文会显示方框。
+`TouchKeyboardFonts.Windows`、`.MacOS`、`.Linux` 可用于显式复用某一平台的默认值；
+`TouchKeyboardFonts.Default` 按当前操作系统选择。
+
 | 配置项 | 默认 | 作用 |
 |---|---|---|
 | `Style.Scale` | `1.0` | 整体倍率，夹到 `0.6–1.6`；作用于键高、字号、图标、间距、内边距、圆角、面板最大宽度和标题栏/编辑面高度。 |
+| `Style.FontFamily` | `null` | 覆盖解析后主题的字体族；`null` 保留平台默认。 |
 | `Style.FontScale` | `1.0` | 在整体倍率之上再乘字号；夹到 `0.6–1.6`。 |
 | `Style.IconScale` | `1.0` | 在整体倍率之上再乘图标；夹到 `0.6–1.6`。 |
 | `Style.AccentColor` | `null` | 确定键、候选选中、光标、组合文字/下划线的强调色。 |
@@ -69,7 +98,7 @@ KeyboardHost.Configure(options =>
 | `NumericPanelMaxWidth` | `720` | 数字键盘区域最大宽度；乘以 `Style.Scale`。 |
 
 默认 `Style` 不创建新主题，`ResolvedTheme` 仍引用 `TouchKeyboardTheme.Light` /
-`.Dark`；只有设置了倍率或颜色时才派生新主题。
+`.Dark`；只有设置了倍率、字体或颜色时才派生新主题。
 
 ## 完整主题控制
 
@@ -117,6 +146,8 @@ options.Theme = new TouchKeyboardTheme
 |---|---|---|
 | `TouchKeyboardOptions.Style` | Avalonia | 少量尺寸/颜色旋钮，叠加在主题上。 |
 | `TouchKeyboardOptions.Theme` | Avalonia | 完整主题；`null` 跟随窗口明暗。 |
+| `TouchKeyboardStyle.FontFamily` | Avalonia | 字体族覆盖；`TouchKeyboardFonts` 提供平台默认值。 |
+| `TouchKeyboardOptions.KeyLanguage` | Avalonia | 内置键面/标题/校验文案语言（`Auto`/`Chinese`/`English`）。 |
 | `TouchKeyboardOptions.KeyHeight` / `MaxPanelWidth` / `NumericPanelMaxWidth` | Avalonia | 基础尺寸；再乘 `Style.Scale`。 |
 | `TouchKeyboardOptions.EnablePanelDrag` | Avalonia | 标题行长按拖动开关。 |
 | `TouchKeyboardHost.ResetPanelPosition()` | Avalonia | 复位面板位置。 |

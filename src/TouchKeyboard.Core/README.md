@@ -1,5 +1,7 @@
 # TouchKeyboard.Core
 
+**English** · [简体中文](https://github.com/Yubickari/TouchKeyboard/blob/main/src/TouchKeyboard.Core/README.zh.md)
+
 Pure .NET Standard 2.0 core for [TouchKeyboard](https://github.com/Yubickari/TouchKeyboard),
 a touch-first embedded software keyboard for small industrial touch screens.
 

@@ -84,7 +84,7 @@ public sealed class TouchKeyboardLocalizer : ITouchKeyboardLocalizer
         ["key.step.up"] = "Increase digit",
         ["key.step.down"] = "Decrease digit",
         ["key.sign"] = "±",
-        ["key.ime.active"] = "中",
+        ["key.ime.active"] = "CN",
         ["key.ime.inactive"] = "EN",
         ["key.ime.active.name"] = "Chinese input, switch to English",
         ["key.ime.inactive.name"] = "English input, switch to Chinese",

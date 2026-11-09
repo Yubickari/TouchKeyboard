@@ -22,8 +22,12 @@ Avalonia 12 是首个前端，WPF 前端在计划中。
   时高度稳定的键盘区。
 - **触屏交互。** 无悬停态；支持指针捕获、整键按压反馈，以及退格和方向键的长按
   重复。
-- **主题与尺寸。** 自动跟随明暗主题，内置两套预设，`Style` 提供整体/字号/图标
-  缩放和语义色，标题行可长按拖动。
+- **主题、字体与尺寸。** 自动跟随明暗主题，内置两套预设，`Style` 提供整体/字号/
+  图标缩放、语义色和字体族，标题行可长按拖动；三大平台有各自的默认字体回退链，
+  宿主也可以直接替换 `FontFamily`。
+- **中英文按键文案。** `KeyboardLanguage.English` 为全英文项目提供整套英文键面
+  （Confirm、Clear、Symbols、CN/EN）；`Auto` 跟随宿主 Culture。两种语言的键位
+  几何完全一致。
 - **可选中文输入。** 托管拼音引擎、候选栏、组合态内联绘制和独立语言包；基础包
   保持语言中立。
 - **可复用核心。** 档位、布局、会话、校验和 IME 组合态不依赖 UI，可在无显示
@@ -44,7 +48,8 @@ WPF 前端在计划中，尚未发布。
 
 - Avalonia 12.0.5 或更高版本（已用 12.0.5 和 12.1.5 验证）与 .NET 8 或 .NET 10。
 - 仅使用 `TouchKeyboard.Core` 时，任何 `netstandard2.0` 项目都可引用。
-- 中文输入需要 CJK 字体。
+- 默认字体是平台相关的回退链，但不内置字体文件；中文输入仍需要系统 CJK 字体。
+  精简 Linux 镜像建议安装 Noto Sans CJK SC（或其他中文字体）。
 
 ## 快速开始
 
@@ -113,7 +118,37 @@ public partial class MainWindow : Window
 }
 ```
 
-全部选项、适配器、本地化和排错见 [Avalonia 接入](docs/avalonia.md)。
+全部选项、适配器、本地化和排错见 [Avalonia 接入](docs/avalonia.zh.md)。
+
+## 语言与字体
+
+中英文只影响具名按键、标题行文案和校验消息，字母键位几何完全相同。
+
+```csharp
+using Avalonia.Media;
+using TouchKeyboard.Avalonia;
+
+KeyboardHost.Configure(options =>
+{
+    // Auto 跟随 Culture（未设置时跟随当前 UI culture）；也可以固定一种。
+    options.KeyLanguage = KeyboardLanguage.English;
+
+    // 使用平台默认回退链，或换成任意 Avalonia FontFamily。
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
+
+| 配置 | 默认 | 作用 |
+|---|---|---|
+| `KeyLanguage` | `Auto` | 内置键面、标题行和校验消息语言。`Chinese` = zh-CN，`English` = en-US，`Auto` 先看 `Culture`，再看当前 UI culture。自定义 `Localizer` 仍然优先。 |
+| `Style.FontFamily` | `null` | 覆盖键帽、标题/单位/错误行、编辑面和候选文字的字体；`null` 保留解析后的主题字体。 |
+| `TouchKeyboardTheme.FontFamily` | `TouchKeyboardFonts.Default` | 完整主题字体；`Style.FontFamily` 是更轻量的覆盖方式。 |
+
+平台默认值来自 `TouchKeyboardFonts.Windows`（`Segoe UI, Microsoft YaHei UI,
+Microsoft YaHei`）、`TouchKeyboardFonts.MacOS`（`Helvetica Neue, PingFang SC,
+Hiragino Sans GB`）和 `TouchKeyboardFonts.Linux`（`Noto Sans, Noto Sans CJK SC,
+WenQuanYi Micro Hei, DejaVu Sans`）。英文键面显示 Confirm/Clear/Symbols 和
+CN/EN，中文键面显示 确定/清空/符号 和 中/英。
 
 ## 输入档位
 
@@ -131,14 +166,14 @@ public partial class MainWindow : Window
 | `ip-address` | 数字键盘 | 四段 1–3 位、`0–255`。 |
 
 内置档位中只有 `text` 默认允许可选 IME；自定义档位可用 `AllowsIme` 显式开启。
-档位契约、校验码和数字槽位映射见 [输入档位](docs/profiles.md)。
+档位契约、校验码和数字槽位映射见 [输入档位](docs/profiles.zh.md)。
 
 ## 布局
 
 `AnsiStyle` 是默认全键盘：5 行、每行 15 单位，Tab/Caps 作为不可交互的占位，
 不含 F 键、NumLock 小键盘块、Ctrl/Alt/Win 组合或系统功能键。没有 IME 键时，
-空格扩展覆盖 IME 槽位；有引擎且档位允许 IME 时，槽位放 1.5 单位中/英键，空格
-回到基础宽度。
+空格扩展覆盖 IME 槽位；有引擎且档位允许 IME 时，槽位放 1.5 单位 IME 键
+（中/英，英文键面 CN/EN），空格回到基础宽度。
 
 `PhoneHybrid` 是 4 行手机式字母键盘，带符号/数字入口，符号页归全键盘所有。
 数字模式使用 5×4 `Numpad`；档位专用数字键盘省略无效键，并把空出的格子合并给
@@ -148,7 +183,7 @@ public partial class MainWindow : Window
 
 ![中文拼音组合态](docs/images/keyboard-ime-composition.png)
 
-每一行、Numpad 槽位表、符号页和主题度量见 [布局参考](docs/layouts.md)。
+每一行、Numpad 槽位表、符号页和主题度量见 [布局参考](docs/layouts.zh.md)。
 
 ## 可选中文输入
 
@@ -204,31 +239,32 @@ KeyboardHost.Configure(options =>
 });
 ```
 
-`Style` 在解析后的主题上叠加缩放和语义色；需要控制全部画刷和度量时使用
+`Style` 在解析后的主题上叠加缩放、字体和语义色；需要控制全部画刷和度量时使用
 `options.Theme`。长按标题行可在窗口内拖动面板，
 `TouchKeyboardHost.ResetPanelPosition()` 恢复默认位置。详见
-[外观与尺寸](docs/customization.md)。
+[外观、字体与尺寸](docs/customization.md)。
 
 ## 文档
 
-- [Avalonia 接入](docs/avalonia.md)：安装、选项、适配器、主题、本地化与排错。
-- [输入档位](docs/profiles.md)：内置档位、校验规则与数字槽位。
-- [布局参考](docs/layouts.md)：AnsiStyle/PhoneHybrid、符号页、Numpad 网格。
+- [Avalonia 接入](docs/avalonia.zh.md)：安装、选项、适配器、语言、字体、主题与排错。
+- [输入档位](docs/profiles.zh.md)：内置档位、校验规则与数字槽位。
+- [布局参考](docs/layouts.zh.md)：AnsiStyle/PhoneHybrid、符号页、Numpad 网格。
 - [中文输入](docs/ime.md)：可选拼音包、候选栏、数据与许可。
-- [外观与尺寸](docs/customization.md)：缩放、语义色、主题与面板拖动。
+- [外观、字体与尺寸](docs/customization.md)：缩放、字体、语义色、主题与面板拖动。
 - [公共 API](docs/public-api.md)：API 清单、兼容策略与扩展点。
 - [架构](docs/architecture.md)：项目、核心模型、数据流与前端职责。
-- [演示程序](samples/TouchKeyboard.Demo/README.md)：可运行的 Avalonia 示例。
-- [变更记录](CHANGELOG.md)。
+- [演示程序](samples/TouchKeyboard.Demo/README.zh.md)：可运行的 Avalonia 示例。
+- [变更记录](CHANGELOG.zh.md)。
 
-面向贡献者：[CONTRIBUTING.md](CONTRIBUTING.md)、[发布流程](docs/release.md)、
+面向贡献者：[CONTRIBUTING.md](CONTRIBUTING.md)、[AGENTS.md](AGENTS.md)（文档语言规则）、[发布流程](docs/release.md)、
 [架构决策记录](docs/adr/)、[真机验收清单](docs/release/device-checklist.md) 与
 [路线图](docs/roadmap.md)。
 
 ## 兼容性与限制
 
 - **平台：** 通过 Avalonia 桌面端支持 Windows、Linux、macOS，触摸和鼠标均可；
-  不支持 Avalonia 11。
+  不支持 Avalonia 11。Windows、Linux、macOS 三平台基础验收已于 2026 年 11 月
+  完成；平台相关细节请通过 GitHub issue 模板提交，并对照真机清单跟踪。
 - **单行编辑面：** 没有选择、剪贴板、撤销/重做或多行布局；编辑总是整体确认或
   放弃。
 - **无桌面按键块：** 不含 F1–F12、NumLock 小键盘块、Ctrl/Alt/Win/Menu 组合或
@@ -238,8 +274,9 @@ KeyboardHost.Configure(options =>
 - **不桥接系统 IME，也不做按键注入。** 键盘只编辑自己的会话缓冲，通过适配器
   提交。
 - **WPF 尚未实现。** 核心不依赖 UI，第二个前端可以复用。
-- **验证：** 单元测试、拼音测试和 Avalonia Headless 测试在 CI 中运行；触摸行为、
-  DPI、CJK 字体回退、OSK 抑制和小屏布局仍应在目标面板上验证后再部署。
+- **验证：** 单元测试、拼音测试和 Avalonia Headless 测试在 CI 中运行；Windows、
+  Linux、macOS 三平台基础验收已完成。平台相关细节、边缘 DPI/OSK 行为和清单中的
+  剩余项请通过 GitHub issue 提交，在部署前跟踪处理。
 
 ## 许可证
 

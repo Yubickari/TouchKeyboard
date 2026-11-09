@@ -39,6 +39,8 @@ supports.
 | D17 | IME package layering | The base `TouchKeyboard.Avalonia` package carries generic IME UI and never references a language pack. Language data ships as optional `TouchKeyboard.Ime.*` packages; the common and extended pinyin packs reuse the same managed engine. Core keeps the composition contract and state machine, with no UI or platform dependency. |
 | D18 | IME activation and gate | Activation is explicit and one-line: `options.UseIme(new PinyinImeEngine())`; no reflection, assembly scanning or DI requirement. No engine means no IME key or candidate row, and the no-IME layout uses expanded Space. `InputProfile.AllowsIme` defaults to `false` and is `true` only for `text`; a custom profile may opt in. |
 | D19 | No-IME Space expansion | When no IME key is present, the full keyboards remove the commandless IME spacer and let Space fill it: AnsiStyle 7.0 units, PhoneHybrid 3.5. When an IME key is present, Space returns to 5.5/2.5 and the slot holds `ime.toggle`. Toggling 中/英 keeps the IME key, so the width does not change. Row totals stay 15/10. |
+| D20 | Font defaults and override | `TouchKeyboardTheme.FontFamily` defaults to the platform-aware `TouchKeyboardFonts.Default` (Windows: Segoe UI/Microsoft YaHei UI; macOS: Helvetica Neue/PingFang SC; Linux: Noto Sans/Noto Sans CJK SC). `TouchKeyboardStyle.FontFamily` overrides it for key caps, header, editor and candidates without replacing the rest of the theme. Font files are not bundled; CJK faces remain a host/platform prerequisite. |
+| D21 | Built-in key language | `KeyboardLanguage` (`Auto`/`Chinese`/`English`) switches named key legends, chrome and validation messages without changing letter geometry. `Auto` follows `Culture` then `CurrentUICulture`; a custom `ITouchKeyboardLocalizer` wins. The English IME toggle reads CN/EN instead of 中/英. |
 
 ## Consequences
 
@@ -78,5 +80,11 @@ supports.
 - No-IME full keyboards do not ship an inert IME spacer: Space expands over that
   slot, and the slot becomes `ime.toggle` only when an engine and an
   IME-capable profile are present.
+- Font families are resolved by Avalonia at render time and are never bundled with
+  the packages. The platform defaults try native UI and CJK faces, but a minimal
+  Linux image still needs a CJK font; `Style.FontFamily` is the escape hatch.
+- `KeyboardLanguage` is a text-only setting. It never changes row widths, key
+  counts or the IME slot, so layout assertions and screenshots remain stable
+  across languages.
 - MIT's warranty disclaimer applies; documentation must not promise candidate
   quality, coverage, performance or stability beyond best-effort targets.

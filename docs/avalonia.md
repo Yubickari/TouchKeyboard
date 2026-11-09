@@ -1,5 +1,7 @@
 # Avalonia integration
 
+**English** · [简体中文](avalonia.zh.md)
+
 `TouchKeyboard.Avalonia` renders the keyboard as an in-window overlay. It targets
 Avalonia 12.0.5 or newer on `net8.0` and `net10.0`; CI tests both 12.0.5 and 12.1.5.
 The core package is UI-free, so the host application keeps full control over its
@@ -92,12 +94,14 @@ public MainWindow()
 | `MaxPanelWidth` | `1280` | Panel width cap in logical pixels; multiplied by `Style.Scale`. |
 | `NumericPanelMaxWidth` | `720` | Width cap for the numeric keypad area; multiplied by `Style.Scale`. |
 | `KeyHeight` | `0` | Base key height; `0` selects 56/64/72 from the window height. Multiplied by `Style.Scale`, minimum 44 px. |
-| `Style` | `Scale=1` | Compact sizing/palette facade; see [customization.md](customization.md). |
+| `Style` | `Scale=1` | Compact sizing/palette/font facade; see [customization.md](customization.md). |
+| `Style.FontFamily` | `null` | Font override for keys, chrome, editor and candidates; wins over the theme family. |
 | `EnablePanelDrag` | `true` | Long-press the title row to drag the panel inside the window. |
 | `HandlePhysicalKeyboard` | `true` | While open: Escape closes, Enter confirms, Backspace/arrows/up/down edit, text inserts. |
 | `SuppressSystemKeyboard` | `true` | Reserved; the default host suppresses the platform OSK by moving focus to the custom-drawn host instead of using a text input. |
-| `Culture` | `null` | Culture name for the built-in localizer; `null` follows the current UI culture. |
-| `Localizer` | `null` | Custom `ITouchKeyboardLocalizer`; wins over `Culture`. |
+| `KeyLanguage` | `Auto` | Built-in language for key legends, chrome and validation messages. `Auto` follows `Culture` then the current UI culture; `Chinese` = zh-CN; `English` = en-US. |
+| `Culture` | `null` | Culture name used when `KeyLanguage` is `Auto`; `null` follows the current UI culture. |
+| `Localizer` | `null` | Custom `ITouchKeyboardLocalizer`; wins over `KeyLanguage` and `Culture`. |
 | `EditorSurfaceFactory` | `null` | Factory for a custom `IEditorSurface`; defaults to the custom-drawn `TouchKeyboardEditor`. |
 | `Ime` | engine `null` | Optional managed IME configuration; see [ime.md](ime.md). |
 
@@ -115,7 +119,8 @@ using TouchKeyboard.Ime.Pinyin;
 KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
 
-`text` fields then get a 中/英 key and a candidate row (44 px on AnsiStyle; on
+`text` fields then get an IME key (中/英, or CN/EN in the English surface)
+and a candidate row (44 px on AnsiStyle; on
 PhoneHybrid it is the first of five rows and uses the key height). Numeric, date,
 password and ASCII profiles stay IME-free. With no engine there is no IME key or
 candidate row and Space fills the former IME slot (AnsiStyle 7.0 units,
@@ -156,11 +161,47 @@ Press feedback is an overlay (`PressedOverlay`) plus a small scale
 compensate for font metrics.
 
 For a small set of knobs use `options.Style` (`Scale`, `FontScale`, `IconScale`,
-`AccentColor`, `ConfirmColor`, `ConfirmTextColor`, `SelectedCandidateColor`,
-`SelectedCandidateTextColor`, `PanelColor`, `KeyColor`, `TextColor`). It is applied
-on top of the resolved theme and leaves the defaults untouched. The full
-`TouchKeyboardOptions.Theme` remains available for every brush and metric. See
-[customization.md](customization.md).
+`FontFamily`, `AccentColor`, `ConfirmColor`, `ConfirmTextColor`,
+`SelectedCandidateColor`, `SelectedCandidateTextColor`, `PanelColor`, `KeyColor`,
+`TextColor`). It is applied on top of the resolved theme and leaves the defaults
+untouched. The full `TouchKeyboardOptions.Theme` remains available for every
+brush and metric. See [customization.md](customization.md).
+
+### Language and fonts
+
+`TouchKeyboardTheme.FontFamily` defaults to `TouchKeyboardFonts.Default`, a
+platform-aware chain. `options.Style.FontFamily` overrides it without replacing
+the rest of the theme:
+
+```csharp
+using Avalonia.Media;
+
+KeyboardHost.Configure(options =>
+{
+    // All-English key legends and chrome for an English-only host.
+    options.KeyLanguage = KeyboardLanguage.English;
+
+    // Optional: branding, a known CJK face, or a monospace key cap.
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
+
+| Platform | Default chain |
+|---|---|
+| Windows | `Segoe UI, Microsoft YaHei UI, Microsoft YaHei` |
+| macOS | `Helvetica Neue, PingFang SC, Hiragino Sans GB` |
+| Linux | `Noto Sans, Noto Sans CJK SC, WenQuanYi Micro Hei, DejaVu Sans` |
+
+The family applies to key caps, the title/unit/error row, the custom editor,
+candidate numbers/text, candidate hints and paging glyphs. A custom
+`IEditorSurface` owns its own font. The packages do not ship font files; a CJK
+face must be installed on the machine for Chinese text.
+
+`KeyboardLanguage` changes named key labels, chrome and validation messages, not the letter geometry.
+The English surface uses `Confirm`, `Clear`, `Symbols`, `Space`, `Enter` and
+`CN`/`EN`; the Chinese surface uses 确定, 清空, 符号, 空格, 回车 and 中/英.
+`KeyLanguage = Auto` follows `Culture` (and then `CurrentUICulture`). A custom
+`Localizer` wins for custom languages; see [Localization](#localization).
 
 ### Panel dragging
 
@@ -191,6 +232,13 @@ Built-in cultures are `zh-CN` and `en-US`. Core validation never returns sentenc
 it returns `InputValidationError` codes that the localizer turns into text. To add a
 language, implement the interface and map the codes listed in
 [profiles.md](profiles.md#validation-errors).
+
+`Options.KeyLanguage` selects the built-in localizer without a culture string:
+`English` and `Chinese` win over `Culture`, while a custom `Localizer` wins over
+both. `Auto` keeps the culture-based behavior. For example, an all-English host on
+a Chinese Windows installation sets `options.KeyLanguage = KeyboardLanguage.English;`
+and gets English key legends and validation messages. The IME key then reads
+`CN`/`EN` instead of 中/英.
 
 The IME adds keys such as `key.ime.active`/`key.ime.inactive`,
 `key.ime.active.name`/`key.ime.inactive.name`, `ime.candidates`, `ime.previous`,
@@ -349,6 +397,8 @@ rendered frames and asserts session/state behaviour. See
 | Dark mode ignored | The window's actual theme variant must be dark, and `Options.Theme` must stay `null`. |
 | Physical input leaks into the field | Keep `HandlePhysicalKeyboard` enabled so the host handles keys while open. |
 | Typed spaces look invisible | Expected in a text buffer; the caret still advances. |
-| No 中/英 key or candidate bar | Check `UseIme(...)`, the `text` profile and that a language package is installed. |
-| Candidates show boxes | Install a CJK font or set a font fallback chain; see [ime.md](ime.md#故障排查). |
+| No CN/EN (中/英) key or candidate bar | Check `UseIme(...)`, the `text` profile and that a language package is installed. |
+| Chinese shows boxes | Install a CJK font or override `options.Style.FontFamily` with a font that covers Chinese; the platform default already tries Windows/macOS/Linux CJK faces. See [ime.md](ime.md#故障排查). |
+| Key labels are in the wrong language | Set `options.KeyLanguage` (`Auto`/`Chinese`/`English`); a custom `Localizer` overrides it. |
+| Only some text ignores the font | A custom `IEditorSurface` owns its own font; set the font on that control. |
 | Candidate bar makes the panel too tall | Lower `KeyHeight`; PhoneHybrid uses the candidate row as its first row and the numeric-only keypad is compact. |

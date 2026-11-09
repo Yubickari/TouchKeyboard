@@ -189,8 +189,8 @@ code list lives in [profiles.md](profiles.md#validation-errors).
 | `KeyboardLayoutView` | Renders a `KeyboardLayout` as rows or as a cell grid. Rows share one unit grid (gaps are half-margins inside unit columns). |
 | `TouchKey` | Border-based key: no focus, pointer capture, strong press overlay + scale, long-press repeat, vector glyphs, accessible name/peer. |
 | `TouchKeyboardEditor` | Default custom-drawn single-line editor surface: text, caret, horizontal scroll, password mask and inline IME composition with an underline. Measures trailing whitespace so the caret follows spaces and composition. |
-| `TouchKeyboardTheme` | Brushes and metrics for panel, editor, keys, press feedback and label offset; `Light` and `Dark` presets. |
-| `TouchKeyboardLocalizer` | Resolves key labels and formats core validation errors (zh-CN / en-US). |
+| `TouchKeyboardTheme` | Brushes, font family and metrics for panel, editor, keys, press feedback and label offset; `Light` and `Dark` presets default to the platform-aware `TouchKeyboardFonts.Default`. |
+| `TouchKeyboardLocalizer` | Resolves key labels and formats core validation errors (zh-CN / en-US); `KeyboardLanguage` selects the built-in language, while a custom localizer wins. |
 | Adapters | Read target text/metadata and write committed text back (`TextBox`, `NumericUpDown`, `CalendarDatePicker`, custom). |
 
 The host follows the window's actual theme variant by default; `TouchKeyboardOptions.Theme`
@@ -204,7 +204,8 @@ pins a preset. See [avalonia.md](avalonia.md) for integration details.
 | New numeric scenario | Build `NumericKeypadOptions`/`NumpadSlots` and call `KeyboardLayouts.Numpad(id, slots)`. |
 | Host-specific control | Implement `IEditorAdapter` (or `IEditorAdapterFactory`) and register it. |
 | Own editor widget | Implement `IEditorSurface` and inject it through `TouchKeyboardOptions.EditorSurfaceFactory`. |
-| Size/palette | Use `TouchKeyboardOptions.Style` for scale/font/icon/semantic colours, or `Theme` for every brush and metric. See [customization.md](customization.md) and [public-api.md](public-api.md). |
+| Size/palette/font | Use `TouchKeyboardOptions.Style` for scale/font/icon/semantic colours and `FontFamily`, or `Theme` for every brush, font and metric. `TouchKeyboardFonts` exposes the Windows/macOS/Linux defaults. See [customization.md](customization.md) and [public-api.md](public-api.md). |
+| UI language | Set `TouchKeyboardOptions.KeyLanguage` (`Auto`/`Chinese`/`English`); `Culture` and a custom `ITouchKeyboardLocalizer` remain the lower/higher overrides. |
 | Movable panel | `TouchKeyboardOptions.EnablePanelDrag` (default true) and `TouchKeyboardHost.ResetPanelPosition()`. |
 | New language / IME | Implement `IImeEngine` in a separate `netstandard2.0` package and activate it with `TouchKeyboardOptions.UseIme(engine)`. |
 | New UI stack | Build a frontend on the core; keep pointer, focus, fonts and brushes out of the core. |
@@ -214,7 +215,9 @@ pins a preset. See [avalonia.md](avalonia.md) for integration details.
 
 - Core unit tests cover profiles, layouts (row widths, grid spans), session
   behavior, IME composition/commit/cancel/pagination, the no-engine baseline and
-  the architecture rule.
+  the architecture rule. Avalonia tests cover fonts/language precedence and the
+  rendered host; basic real-device acceptance on Windows, Linux and macOS
+  complements CI headless runs, with platform details tracked as GitHub issues.
 - Pinyin tests cover query, segmentation, abbreviations, polyphones, pagination,
   determinism, a 129-entry golden set, extended lexicon, corrupted-data fail-fast,
   NOTICE and latency.

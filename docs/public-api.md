@@ -43,9 +43,11 @@ var session = new KeyboardSession(new KeyboardSessionOptions
 |---|---|
 | `TouchKeyboardHost` | 浮层宿主；`Configure(...)`、`Open(...)`、`Close()`、`ResetPanelPosition()`。 |
 | `TouchKeyboardController` | 窗口级指针控制器；通常由 `AutoAttach` 自动创建。 |
-| `TouchKeyboardOptions` | 外观、尺寸、IME、本地化和编辑面配置。 |
-| `TouchKeyboardStyle` | 紧凑尺寸/语义色门面：`Scale`、`FontScale`、`IconScale`、`AccentColor`、`ConfirmColor`、`ConfirmTextColor`、`SelectedCandidateColor`、`SelectedCandidateTextColor`、`PanelColor`、`KeyColor`、`TextColor`。 |
-| `TouchKeyboardTheme` | 完整画刷/字体/圆角/间距/候选栏度量；`Light`/`Dark` 预设和自定义实例。 |
+| `TouchKeyboardOptions` | 外观、尺寸、字体、语言、IME、本地化和编辑面配置。`KeyLanguage` 选择 `KeyboardLanguage`。 |
+| `KeyboardLanguage` | 内置键面语言：`Auto`（跟随 `Culture`/当前 UI culture）、`Chinese`、`English`。只切换具名按键/标题/校验文案，不改变字母几何。 |
+| `TouchKeyboardFonts` | 平台默认字体回退链：`Windows`、`MacOS`、`Linux` 和当前平台 `Default`。 |
+| `TouchKeyboardStyle` | 紧凑尺寸/语义色/字体门面：`Scale`、`FontScale`、`IconScale`、`FontFamily`、`AccentColor`、`ConfirmColor`、`ConfirmTextColor`、`SelectedCandidateColor`、`SelectedCandidateTextColor`、`PanelColor`、`KeyColor`、`TextColor`。 |
+| `TouchKeyboardTheme` | 完整画刷/字体/圆角/间距/候选栏度量；`Light`/`Dark` 预设和自定义实例。`FontFamily` 默认为 `TouchKeyboardFonts.Default`。 |
 | `TouchKeyboardImeOptions` | 可选 IME 的引擎、默认中/英、记忆、候选页大小、组合上限和标点映射。 |
 | `IEditorAdapter` / `IEditorAdapterFactory` / `TouchKeyboardAdapterRegistry` | 目标控件适配器及自定义注册。 |
 | `IEditorSurface` | 替换默认自绘编辑面；不新增成员。 |
@@ -88,8 +90,19 @@ KeyboardHost.Configure(options =>
 
 ### 2. 完整主题
 
-`options.Theme = new TouchKeyboardTheme { ... }` 控制每个画刷和度量；`null` 跟随
-窗口明暗。`Style` 会叠加在解析后的主题上。
+`options.Theme = new TouchKeyboardTheme { ... }` 控制每个画刷、字体和度量；`null`
+跟随窗口明暗。`Style` 会叠加在解析后的主题上。只换字体时优先使用
+`options.Style.FontFamily`，例如：
+
+```csharp
+using Avalonia.Media;
+
+KeyboardHost.Configure(options =>
+{
+    options.KeyLanguage = KeyboardLanguage.English;
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
 
 ### 3. 尺寸
 

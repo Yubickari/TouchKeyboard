@@ -1,5 +1,7 @@
 # TouchKeyboard.Ime.Pinyin
 
+**English** · [简体中文](https://github.com/Yubickari/TouchKeyboard/blob/main/src/TouchKeyboard.Ime.Pinyin/README.zh.md)
+
 Optional managed pinyin input for [TouchKeyboard](https://github.com/Yubickari/TouchKeyboard).
 
 This package adds `PinyinImeEngine` and a compact common lexicon (about 20,000
@@ -28,8 +30,8 @@ KeyboardHost.Configure(options =>
 `KeyboardHost` is the `x:Name` generated for the `TouchKeyboardHost` in the
 host's XAML.
 
-That is the whole integration. `text` fields show a 中/英 key and a fixed
-candidate bar. Numeric, date, password and ASCII-token profiles stay IME-free.
+That is the whole integration. `text` fields show an IME key (中/英 in
+Chinese, CN/EN in English) and a fixed candidate bar. Numeric, date, password and ASCII-token profiles stay IME-free.
 With no engine configured, the keyboard has no IME key or candidate row and
 Space fills the former IME slot (AnsiStyle 7.0 units, PhoneHybrid 3.5).
 
@@ -56,3 +58,5 @@ performance or stability guarantee is made; maintenance is best-effort.
 
 For configuration options and troubleshooting see
 [Chinese input](https://github.com/Yubickari/TouchKeyboard/blob/main/docs/ime.md).
+An all-English host does not need this package; it can also keep the package and
+set `options.KeyLanguage = KeyboardLanguage.English` for English key legends.

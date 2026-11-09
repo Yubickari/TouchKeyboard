@@ -418,6 +418,9 @@ public sealed class TouchKeyboardHost : UserControl
 
         if (_session is not null)
         {
+            _labelText.Text = string.IsNullOrWhiteSpace(_session.Label)
+                ? _localizer.Get("title.edit")
+                : _session.Label;
             UpdateFromState(_session.State);
         }
 
@@ -669,6 +672,7 @@ public sealed class TouchKeyboardHost : UserControl
             editor.TextBrush = _theme.Text;
             editor.MutedBrush = _theme.MutedText;
             editor.CaretBrush = _theme.Caret;
+            editor.EditorFontFamily = _theme.FontFamily;
             editor.EditorFontSize = _theme.EditorFontSize;
             editor.CompositionTextBrush = _theme.CompositionText;
             editor.CompositionUnderlineBrush = _theme.CompositionUnderline;
@@ -816,10 +820,13 @@ public sealed class TouchKeyboardHost : UserControl
         _panel.CornerRadius = new CornerRadius(theme.PanelCornerRadius);
         _panel.Padding = new Thickness(theme.PanelPadding);
 
+        _labelText.FontFamily = theme.FontFamily;
         _labelText.Foreground = theme.Text;
         _labelText.FontSize = theme.TitleFontSize;
+        _unitText.FontFamily = theme.FontFamily;
         _unitText.Foreground = theme.MutedText;
         _unitText.FontSize = theme.UnitFontSize;
+        _errorText.FontFamily = theme.FontFamily;
         _errorText.Foreground = theme.ErrorText;
 
         _editorBorder.Background = theme.EditorBackground;
@@ -842,6 +849,7 @@ public sealed class TouchKeyboardHost : UserControl
         _closeButton.Background = theme.DangerKeyBackground;
         _closeButton.PressedOverlay = theme.PressedOverlay;
         _closeButton.PressedScale = theme.PressedScale;
+        _closeGlyph.FontFamily = theme.FontFamily;
         _closeGlyph.Foreground = theme.DangerKeyForeground;
         _closeGlyph.FontSize = Math.Max(18, 26 * scale);
         _closeGlyph.Text = _localizer.Get("close");
@@ -864,9 +872,11 @@ public sealed class TouchKeyboardHost : UserControl
 
         if (_editorSurface is TouchKeyboardEditor editor)
         {
+            editor.PlaceholderText = _localizer.Get("editor.placeholder");
             editor.TextBrush = theme.Text;
             editor.MutedBrush = theme.MutedText;
             editor.CaretBrush = theme.Caret;
+            editor.EditorFontFamily = theme.FontFamily;
             editor.EditorFontSize = theme.EditorFontSize;
             editor.CompositionTextBrush = theme.CompositionText;
             editor.CompositionUnderlineBrush = theme.CompositionUnderline;
@@ -1056,10 +1066,21 @@ public sealed class TouchKeyboardHost : UserControl
     }
 
     private ITouchKeyboardLocalizer ResolveLocalizer()
-        => Options.Localizer
-           ?? (string.IsNullOrWhiteSpace(Options.Culture)
-               ? TouchKeyboardLocalizer.Default
-               : TouchKeyboardLocalizer.Create(Options.Culture));
+    {
+        if (Options.Localizer is { } customLocalizer)
+        {
+            return customLocalizer;
+        }
+
+        return Options.KeyLanguage switch
+        {
+            KeyboardLanguage.Chinese => TouchKeyboardLocalizer.ZhCn,
+            KeyboardLanguage.English => TouchKeyboardLocalizer.EnUs,
+            _ => string.IsNullOrWhiteSpace(Options.Culture)
+                ? TouchKeyboardLocalizer.Default
+                : TouchKeyboardLocalizer.Create(Options.Culture)
+        };
+    }
 
     private void ApplyCandidateTheme(TouchKeyboardTheme theme)
     {
@@ -1080,11 +1101,13 @@ public sealed class TouchKeyboardHost : UserControl
 
         foreach (var number in _candidateNumbers)
         {
+            number.FontFamily = theme.FontFamily;
             number.Foreground = theme.CandidateMutedText;
         }
 
         foreach (var text in _candidateTexts)
         {
+            text.FontFamily = theme.FontFamily;
             text.FontSize = theme.CandidateFontSize;
             text.Foreground = theme.CandidateText;
         }
@@ -1101,6 +1124,10 @@ public sealed class TouchKeyboardHost : UserControl
         _candidateNext.PressedOverlay = theme.PressedOverlay;
         _candidatePrevious.PressedScale = theme.PressedScale;
         _candidateNext.PressedScale = theme.PressedScale;
+        _candidatePreviousGlyph.FontFamily = theme.FontFamily;
+        _candidateNextGlyph.FontFamily = theme.FontFamily;
+        _candidatePage.FontFamily = theme.FontFamily;
+        _candidateHint.FontFamily = theme.FontFamily;
         _candidatePreviousGlyph.Foreground = theme.CandidateText;
         _candidateNextGlyph.Foreground = theme.CandidateText;
         _candidatePage.Foreground = theme.CandidateMutedText;

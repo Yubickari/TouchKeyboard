@@ -28,6 +28,20 @@ if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
   fi
 fi
 
+echo "preflight: documentation language"
+bash build/docs-check.sh
+
+for changelog in CHANGELOG.md CHANGELOG.zh.md; do
+  if ! grep -Fq "## [$version]" "$changelog"; then
+    echo "preflight: $changelog has no section for $version" >&2
+    exit 1
+  fi
+done
+
+bash build/release-notes.sh
+grep -Fq "## [$version]" .tmp/release-notes.md
+rm -f .tmp/release-notes.md
+
 echo "preflight: tests"
 dotnet test tests/TouchKeyboard.Core.Tests/TouchKeyboard.Core.Tests.csproj -c Release
 dotnet test tests/TouchKeyboard.Ime.Pinyin.Tests/TouchKeyboard.Ime.Pinyin.Tests.csproj -c Release

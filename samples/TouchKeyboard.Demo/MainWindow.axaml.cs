@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using TouchKeyboard.Avalonia;
 using TouchKeyboard.Core;
 using TouchKeyboard.Ime.Pinyin;
 
@@ -49,6 +50,14 @@ public partial class MainWindow : Window
     }
 
     private void OnColorChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_updatingAppearance)
+        {
+            ApplyAppearance();
+        }
+    }
+
+    private void OnLanguageOrFontChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (!_updatingAppearance)
         {
@@ -142,6 +151,16 @@ public partial class MainWindow : Window
             {
                 ThemeSelector.SelectedIndex = 0;
             }
+
+            if (LanguageSelector is not null)
+            {
+                LanguageSelector.SelectedIndex = 0;
+            }
+
+            if (FontSelector is not null)
+            {
+                FontSelector.SelectedIndex = 0;
+            }
         }
         finally
         {
@@ -189,12 +208,19 @@ public partial class MainWindow : Window
             ? parsedLayout
             : FullKeyboardLayoutKind.AnsiStyle;
 
+        var language = LanguageSelector?.SelectedItem is ComboBoxItem { Tag: string languageTag }
+                       && Enum.TryParse<KeyboardLanguage>(languageTag, out var parsedLanguage)
+            ? parsedLanguage
+            : KeyboardLanguage.Auto;
+
         KeyboardHost.Configure(options =>
         {
             options.FullKeyboardLayout = layout;
+            options.KeyLanguage = language;
             options.Style.Scale = ScaleSlider?.Value ?? 1.0;
             options.Style.FontScale = FontScaleSlider?.Value ?? 1.0;
             options.Style.IconScale = IconScaleSlider?.Value ?? 1.0;
+            options.Style.FontFamily = FontFamilyFor(SelectedTag(FontSelector));
             options.Style.AccentColor = AccentColorFor(SelectedTag(AccentSelector));
             options.Style.ConfirmColor = ConfirmColorFor(SelectedTag(ConfirmSelector));
             options.Style.SelectedCandidateColor = CandidateColorFor(SelectedTag(CandidateSelector));
@@ -263,6 +289,14 @@ public partial class MainWindow : Window
     {
         "White" => Colors.White,
         "Gray" => Color.Parse("#FFF1F5F9"),
+        _ => null
+    };
+
+    private static FontFamily? FontFamilyFor(string? tag) => tag switch
+    {
+        "Cjk" => new FontFamily("Microsoft YaHei UI, PingFang SC, Noto Sans CJK SC, Noto Sans"),
+        "Mono" => new FontFamily("Consolas, Menlo, DejaVu Sans Mono, Noto Sans Mono"),
+        "Serif" => new FontFamily("Georgia, Times New Roman, Songti SC, Noto Serif CJK SC"),
         _ => null
     };
 }

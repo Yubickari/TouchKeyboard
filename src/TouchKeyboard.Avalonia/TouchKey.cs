@@ -268,6 +268,8 @@ public sealed class TouchKey : Border
         _pressOverlay.CornerRadius = new CornerRadius(_theme.KeyCornerRadius);
         _pressOverlay.Background = _theme.PressedOverlay;
 
+        _primary.FontFamily = _theme.FontFamily;
+        _secondary.FontFamily = _theme.FontFamily;
         _primary.FontSize = IsActionStyle ? _theme.ActionFontSize : _theme.KeyFontSize;
         _secondary.FontSize = _theme.ShiftedFontSize;
 

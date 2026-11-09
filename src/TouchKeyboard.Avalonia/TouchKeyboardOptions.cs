@@ -54,10 +54,19 @@ public sealed class TouchKeyboardOptions
     /// </summary>
     public bool SuppressSystemKeyboard { get; set; } = true;
 
+    /// <summary>
+    /// Key language of the built-in chrome and legends. <see cref="KeyboardLanguage.Auto"/>
+    /// follows <see cref="Culture"/>, then the current UI culture. Set
+    /// <see cref="KeyboardLanguage.English"/> for an all-English host and
+    /// <see cref="KeyboardLanguage.Chinese"/> for a Chinese host, independently of
+    /// the operating-system UI language.
+    /// </summary>
+    public KeyboardLanguage KeyLanguage { get; set; } = KeyboardLanguage.Auto;
+
     /// <summary>Culture name used by the built-in localizer; null follows the current UI culture.</summary>
     public string? Culture { get; set; }
 
-    /// <summary>Optional localizer override.</summary>
+    /// <summary>Optional localizer override; wins over <see cref="KeyLanguage"/> and <see cref="Culture"/>.</summary>
     public ITouchKeyboardLocalizer? Localizer { get; set; }
 
     /// <summary>Optional editor surface factory; the default is the custom-drawn <see cref="TouchKeyboardEditor"/>.</summary>

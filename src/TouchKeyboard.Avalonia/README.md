@@ -1,5 +1,7 @@
 # TouchKeyboard.Avalonia
 
+**English** · [简体中文](https://github.com/Yubickari/TouchKeyboard/blob/main/src/TouchKeyboard.Avalonia/README.zh.md)
+
 Touch-first overlay keyboard for [Avalonia 12.0.5+](https://avaloniaui.net/), built
 for small industrial touch screens. This package is the Avalonia frontend for
 [TouchKeyboard](https://github.com/Yubickari/TouchKeyboard); the input model
@@ -76,11 +78,31 @@ type is `TouchKeyboardHost`. `AutoAttach` is on by default.
 - `IEditorAdapter` adapters for `TextBox`, `NumericUpDown` and
   `CalendarDatePicker`; custom adapters can be registered.
 - Automatic light/dark theme following, `TouchKeyboardTheme` overrides and a
-  compact `TouchKeyboardOptions.Style` facade for scale and semantic colours.
+  compact `TouchKeyboardOptions.Style` facade for scale, semantics and fonts.
+- Platform-aware default font stacks (`TouchKeyboardFonts`) and
+  `Style.FontFamily` for a host font override.
+- `KeyboardLanguage` for Chinese or English key legends and chrome without
+  changing geometry.
 - Touch keys with pointer capture, press feedback and long-press repeat.
 - `zh-CN` and `en-US` localizers; `ITouchKeyboardLocalizer` for other cultures.
 - Physical keyboard handling and focus restore.
 - Long-press title-row panel dragging (`EnablePanelDrag`, default `true`).
+
+## Language and fonts
+
+```csharp
+KeyboardHost.Configure(options =>
+{
+    options.KeyLanguage = KeyboardLanguage.English; // Confirm, Clear, Symbols, CN/EN
+    options.Style.FontFamily = new FontFamily("Noto Sans CJK SC");
+});
+```
+
+`Auto` (default) follows `Culture`, then the current UI culture. The platform
+font chains are `Segoe UI, Microsoft YaHei UI, Microsoft YaHei` on Windows,
+`Helvetica Neue, PingFang SC, Hiragino Sans GB` on macOS and `Noto Sans, Noto Sans
+CJK SC, WenQuanYi Micro Hei, DejaVu Sans` on Linux. Font files are
+not bundled; a CJK face must be installed for Chinese text.
 
 ## Optional Chinese input
 
@@ -94,7 +116,7 @@ using TouchKeyboard.Ime.Pinyin;
 KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
 
-`text` fields get a 中/英 key, a fixed candidate row and inline composition.
+`text` fields get an IME key (中/英 in Chinese, CN/EN in English), a fixed candidate row and inline composition.
 Numeric, date, password and ASCII profiles stay IME-free. Without an engine
 there is no IME key or candidate row, and Space keeps the expanded no-IME width.
 

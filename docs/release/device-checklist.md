@@ -3,6 +3,10 @@
 本清单用于发布前在目标设备上验收触屏行为。建议每台设备复制一份记录；发现的
 问题请用 GitHub issue 模板（Bug report）提交，并附上本清单中的设备信息和截图。
 
+> **当前进度（2026-11-09）：** Windows、Linux、macOS 三平台基础验收已完成。
+> 平台相关细节、Wayland/X11 差异、边缘 DPI 档位等问题请按 Bug report 模板提交
+> GitHub issue 跟踪；发布前仍可按本清单复验回归项。
+
 ## 0. 设备与环境
 
 | 项 | 记录 |
@@ -12,7 +16,7 @@
 | 操作系统与版本 | 例：Windows 11 23H2 / Ubuntu 24.04 X11 / Ubuntu 24.04 Wayland / macOS 14 |
 | DPI 缩放 | 100% / 125% / 150% / 200% |
 | .NET SDK | `dotnet --version` |
-| TouchKeyboard 版本 / commit | 例：0.2.0 / abc1234 |
+| TouchKeyboard 版本 / commit | 例：0.2.1 / abc1234 |
 | 安装的可选包 | 无 / `TouchKeyboard.Ime.Pinyin` / `.Extended` |
 | Avalonia 版本 | 12.0.5 / 12.1.5 |
 | 输入方式 | 电容触摸 / 电阻触摸 / 鼠标 / 触控板 |
@@ -132,6 +136,9 @@
 | 8.8 | 拖动 | 长按标题行约 420 ms 后可拖动；不超出窗口；关闭键长按不触发拖动；`ResetPanelPosition()` 复位 | |
 | 8.9 | 小尺寸拖动 | 缩小 `Style.Scale`/`MaxPanelWidth` 后出现移动空间；窗口缩放后位置自动夹回 | |
 | 8.10 | Demo 测试面板 | 外观面板可折叠；暗色主题下背景、标题、说明和控件可读，无浅色硬编码残留 | |
+| 8.11 | 平台默认字体 | Windows 使用 Segoe UI/微软雅黑链、macOS 使用 Helvetica Neue/PingFang、Linux 使用 Noto Sans/Noto Sans CJK；中文标题、键帽、编辑面和候选无方框 | |
+| 8.12 | 字体覆盖 | `Style.FontFamily` 同时改变键帽、标题/单位/错误行、编辑面和候选文字；切回平台默认正常 | |
+| 8.13 | 英文键面 | `Language = English` 后为 Confirm/Clear/Symbols/Space/Enter 和 CN/EN；切回 Chinese 恢复中文；两种语言键位宽度和面板高度一致 | |
 
 ## 9. 问题记录
 
@@ -144,6 +151,7 @@
 
 - 第 1–8 节全部通过，或剩余问题均有 issue 编号并记录影响面。
 - 至少覆盖：Windows 11 触摸一台、Linux 一台、macOS 一台，以及 1024×600 与
-  1280×800 两种分辨率。
+  1280×800 两种分辨率。三平台基础验收均已完成；细节问题应有对应 issue 编号，
+  并按影响面决定是否阻塞发布。
 - 已知限制（托管拼音范围、单行编辑、关闭即放弃、不承诺质量/稳定性）在
   README、`docs/ime.md` 与 `docs/profiles.md` 中可查。

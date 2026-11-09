@@ -1,5 +1,7 @@
 # TouchKeyboard.Ime.Pinyin.Extended
 
+**English** · [简体中文](https://github.com/Yubickari/TouchKeyboard/blob/main/src/TouchKeyboard.Ime.Pinyin.Extended/README.zh.md)
+
 Optional extended pinyin lexicon for [TouchKeyboard](https://github.com/Yubickari/TouchKeyboard).
 
 This package reuses `TouchKeyboard.Ime.Pinyin` and adds a larger lexicon of about
@@ -44,3 +46,5 @@ performance or stability guarantee is made; maintenance is best-effort.
 
 For configuration options and troubleshooting see
 [Chinese input](https://github.com/Yubickari/TouchKeyboard/blob/main/docs/ime.md).
+An all-English host does not need this package; it can also keep the package and
+set `options.KeyLanguage = KeyboardLanguage.English` for English key legends.

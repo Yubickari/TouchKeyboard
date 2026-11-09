@@ -36,6 +36,13 @@ public sealed class TouchKeyboardStyle
     public double IconScale { get; set; } = 1.0;
 
     /// <summary>
+    /// Font family for key labels, header chrome, the editor and candidates;
+    /// <c>null</c> keeps the theme family. The theme default is the platform-aware
+    /// <see cref="TouchKeyboardFonts.Default"/>.
+    /// </summary>
+    public FontFamily? FontFamily { get; set; }
+
+    /// <summary>
     /// Accent used for the confirm key, the selected candidate, the caret and the
     /// composition underline. <c>null</c> keeps the theme colours.
     /// </summary>
@@ -72,6 +79,7 @@ public sealed class TouchKeyboardStyle
         => Math.Abs(Scale - 1.0) < 0.0001
            && Math.Abs(FontScale - 1.0) < 0.0001
            && Math.Abs(IconScale - 1.0) < 0.0001
+           && FontFamily is null
            && AccentColor is null
            && ConfirmColor is null
            && ConfirmTextColor is null

@@ -1,8 +1,8 @@
 version: 1
 meta:
   project: TouchKeyboard
-  updated: 2026-11-08
-exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**", ".nuget/**", "artifacts/**", ".tmp/**" ]
+  updated: 2026-11-09
+exclude: [ "**/node_modules/**", "**/dist/**", "**/bin/**", "**/obj/**", .git/**, "**/.git/**", "**/target/**", "**/vendor/**", "**/__pycache__/**", "**/.venv/**", .nuget/**, artifacts/**, .tmp/** ]
 concepts:
   - id: touchkeyboard.product
     terms: [ 软键盘, 触摸键盘, 虚拟键盘, 内置键盘 ]
@@ -193,21 +193,21 @@ concepts:
     canonical:
       symbol: TouchKeyboardOptions
       type: class
-    note: Host configuration for theme, key height, layout defaults, physical input, localizer, editor surface injection and the optional IME engine.
+    note: Host configuration for theme, font family, key height, layout defaults, built-in keyboard language, physical input, localizer, editor surface injection and the optional IME engine.
   - id: keyboard.theme
     terms: [ 键盘主题, 配色主题, 主题配置 ]
     kind: entity
     canonical:
       symbol: TouchKeyboardTheme
       type: class
-    note: Brushes and metrics for the panel, editor, key roles, press feedback, label offset and IME candidate/composition surfaces; light and dark presets ship in the Avalonia frontend.
+    note: Brushes, font family and metrics for the panel, editor, key roles, press feedback, label offset and IME candidate/composition surfaces; light and dark presets ship in the Avalonia frontend.
   - id: keyboard.localizer
     terms: [ 键盘本地化, 文案解析, 本地化器 ]
     kind: reference
     canonical:
       symbol: ITouchKeyboardLocalizer
       type: interface
-    note: Resolves named key labels (including IME keys), formats core validation errors and names IME candidates; built-in zh-CN and en-US implementations ship with the Avalonia frontend.
+    note: Resolves named key labels (including IME keys), formats core validation errors and names IME candidates; built-in zh-CN and en-US implementations are selected by KeyboardLanguage or a culture name.
   - id: keyboard.ansi_style
     terms: [ ANSI 风格全键盘, 严格 ANSI, ANSI 布局 ]
     kind: entity
@@ -348,3 +348,17 @@ concepts:
       symbol: PinyinImeEngine
       type: class
     note: The managed pinyin engine shipped in the optional TouchKeyboard.Ime.Pinyin pack with the common lexicon; it has no native or platform dependency.
+  - id: keyboard.font_defaults
+    terms: [ 软键盘字体, 默认字体, 平台字体, 字体族, 字体回退链, keyboard font ]
+    kind: entity
+    canonical:
+      symbol: TouchKeyboardFonts
+      type: class
+    note: Platform-aware default FontFamily chains for Windows, macOS and Linux, plus the theme/option override that applies one font family to key labels, header chrome, editor and candidates.
+  - id: keyboard.language
+    terms: [ 键盘语言, 按键语言, 中英文按键布局, 全英文界面, 键面语言 ]
+    kind: enum
+    canonical:
+      symbol: KeyboardLanguage
+      type: enum
+    note: "Built-in keyboard UI language for key legends, chrome and validation messages: Auto follows Culture then CurrentUICulture, Chinese selects zh-CN and English selects en-US."

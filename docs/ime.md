@@ -65,6 +65,8 @@ KeyboardHost.Configure(options => options.UseIme(new ExtendedPinyinImeEngine()))
 | `Ime.MaxCompositionLength` | `32` | 原始拼音最大长度，Core 会夹到 8–64。 |
 | `Ime.FullWidthPunctuation` | `true` | 中文模式下是否调用引擎的全角标点映射。 |
 
+IME 键的文案跟随 `TouchKeyboardOptions.KeyLanguage`：中文键面显示 `中/英`，英文键面显示 `CN/EN`。全英文宿主可以不安装拼音包、不调用 `UseIme`，也可以保留引擎但把 `KeyLanguage` 设为 `English`；键位几何和 Space 宽度不受语言选项影响。
+
 `DefaultEnabled=false` 只改变初始状态，不改变布局宽度：有引擎且档位允许时，
 IME 键始终存在，中/英切换不改变 Space 宽度。
 
@@ -73,7 +75,7 @@ IME 键始终存在，中/英切换不改变 Space 宽度。
 | 档位 / 状态 | IME 键 | 候选栏 | Space |
 |---|---|---|---|
 | 无引擎（任何档位） | 无 | 无 | AnsiStyle 7.0 / PhoneHybrid 3.5 |
-| 有引擎 + `text` | 有（中/英，英文模式也保留） | 有；AnsiStyle 44 px，PhoneHybrid 首行 = 键高 | AnsiStyle 5.5 / PhoneHybrid 2.5 |
+| 有引擎 + `text` | 有（中文键面 中/英，英文键面 CN/EN；英文输入模式也保留） | 有；AnsiStyle 44 px，PhoneHybrid 首行 = 键高 | AnsiStyle 5.5 / PhoneHybrid 2.5 |
 | 有引擎 + 数字/日期/IP/密码/ASCII | 无 | 无 | 不适用（数字键盘）/ 原布局 |
 | 有引擎 + `text` 临时切到数字键盘 | 无（数字键盘） | 保留空行，避免面板跳高 | 数字键盘没有 Space |
 
@@ -175,8 +177,8 @@ IME 键始终存在，中/英切换不改变 Space 宽度。
 
 | 现象 | 检查 |
 |---|---|
-| 没有中/英键或候选栏 | 是否调用了 `UseIme(...)`；字段档位是否为 `text`；是否安装了对应语言包。 |
-| 中文显示方框 | 安装 CJK 字体或设置 `FontFamily` 回退链；Windows 用 Microsoft YaHei UI，macOS 用 PingFang SC，Linux 用 Noto Sans CJK SC。 |
+| 没有 CN/EN（中/英）键或候选栏 | 是否调用了 `UseIme(...)`；字段档位是否为 `text`；是否安装了对应语言包；`KeyLanguage` 是否设置了英文键面。 |
+| 中文显示方框 | 默认已使用平台 CJK 回退链；若系统缺少这些字体，安装 CJK 字体或通过 `options.Style.FontFamily` 指定可用字体。Windows 可用 Microsoft YaHei UI，macOS 用 PingFang SC，Linux 用 Noto Sans CJK SC。 |
 | 候选栏让面板太高 | 降低 `KeyHeight`；PhoneHybrid 首行候选栏会随键高缩短，数字专用档位已收紧为 4 行。 |
 | 中英切换后键盘变宽/变窄 | 不应发生；有引擎且档位允许时 IME 键常驻。检查是否在切换字段。 |
 | 拼音提交后长度错误 | 字段 `MaxLength` 太小；退回较短候选或删减缓冲。 |

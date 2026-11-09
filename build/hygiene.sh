@@ -13,9 +13,9 @@ for path in src samples tests tools docs .github; do
     scan_paths+=("$path")
   fi
 done
-for path in README.md README.zh.md CHANGELOG.md CONTRIBUTING.md SECURITY.md \
-            CODE_OF_CONDUCT.md LICENSE Directory.Build.props \
-            Directory.Packages.props NuGet.Config; do
+for path in README.md README.zh.md CHANGELOG.md CHANGELOG.zh.md AGENTS.md \
+            CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE \
+            Directory.Build.props Directory.Packages.props NuGet.Config; do
   if [[ -f "$path" ]]; then
     scan_paths+=("$path")
   fi

@@ -57,7 +57,8 @@ be handled with a small licensed lexicon and optional text packs.
    equals the key height and the main page matches the five-row symbol page; the
    symbol page hides it because it has no IME slot. Numeric-only profiles use a
    compact four-row keyboard area. Composition, page changes and 中/英 toggles never
-   change the panel height within a mode. It is not an overlay.
+   change the panel height within a mode. It is not an overlay. The IME key
+   legend follows `KeyboardLanguage` (中/英 or CN/EN), but the slot width does not.
 8. **Chinese scope.** The initial release covers pinyin only: full pinyin, word/sentence
    segmentation and common initial-letter abbreviations. No Wubi, handwriting, fuzzy
    pinyin, cloud input, user learning or Traditional/Simplified conversion.
@@ -75,7 +76,7 @@ be handled with a small licensed lexicon and optional text packs.
 11. **No-IME layout baseline.** The no-IME layout removes the commandless IME spacer
     and lets Space fill the slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When an IME
     key is present, Space returns to 5.5/2.5 and the slot holds `ime.toggle`;
-    toggling 中/英 keeps the key and does not change the width.
+    toggling the IME mode (中/英 or CN/EN) keeps the key and does not change the width.
 
 ## Consequences
 
@@ -91,7 +92,9 @@ be handled with a small licensed lexicon and optional text packs.
 - The composition state is shared by every frontend; a future WPF frontend only has
   to render `KeyboardState.Ime`.
 - Dictionary licensing is recorded in a short `NOTICE`; data quality, CJK fonts and
-  1024×600 layout are validated on target devices.
+  1024×600 layout are validated on target devices. The Avalonia host selects a
+  platform-aware font stack and exposes `Style.FontFamily`; the packages do not
+  bundle font files.
 - The optional pinyin and extended packages are version-aligned with Core and
   published with their own README, icon, symbols and `NOTICE`.
 - ADR 0003 is superseded by this optional feature.

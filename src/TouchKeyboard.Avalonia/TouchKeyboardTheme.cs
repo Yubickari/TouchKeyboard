@@ -39,6 +39,12 @@ public sealed class TouchKeyboardTheme
         PressedOverlay = Brush("#33FFFFFF")
     };
 
+    /// <summary>
+    /// Font family used by key labels, header chrome, the editor and candidates.
+    /// Defaults to the platform-aware <see cref="TouchKeyboardFonts.Default"/>.
+    /// </summary>
+    public FontFamily FontFamily { get; init; } = TouchKeyboardFonts.Default;
+
     /// <summary>Scrim behind the panel.</summary>
     public IBrush Scrim { get; init; } = Brush("#66000000");
 
@@ -191,6 +197,7 @@ public sealed class TouchKeyboardTheme
 
         return new TouchKeyboardTheme
         {
+            FontFamily = style.FontFamily ?? FontFamily,
             Scrim = Scrim,
             PanelBackground = style.PanelColor is { } panel ? new SolidColorBrush(panel) : PanelBackground,
             KeyBackground = style.KeyColor is { } key ? new SolidColorBrush(key) : KeyBackground,
