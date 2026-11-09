@@ -607,7 +607,7 @@ public sealed class ImeSessionTests
     }
 
     [Fact]
-    public void The_symbol_page_has_no_ime_key_and_restores_it_on_return()
+    public void Symbol_page_with_ime_replaces_clear_with_the_toggle_and_restores_it_on_return()
     {
         var session = NewSession(layout: FullKeyboardLayoutKind.PhoneHybrid);
         Type(session, "nihao");
@@ -616,17 +616,57 @@ public sealed class ImeSessionTests
 
         Assert.Equal("你好", session.State.Text);
         Assert.Equal(FullKeyboardPage.Symbols, session.State.Page);
-        Assert.DoesNotContain(
-            session.State.Layout.Rows.SelectMany(row => row.Keys),
-            key => key.Command.Kind == KeyCommandKind.ToggleIme);
+        var symbolKeys = session.State.Layout.Rows.SelectMany(row => row.Keys).ToList();
+        Assert.Contains(symbolKeys, key => key.Command.Kind == KeyCommandKind.ToggleIme);
+        Assert.DoesNotContain(symbolKeys, key => key.Command.Kind == KeyCommandKind.Clear);
+        Assert.Equal(8, session.State.Layout.Rows[4].Keys.Count);
+        Assert.Equal(1.0, ImeKey(session).WidthUnits);
         Assert.Equal(1.0, session.State.Layout.Rows[4].Keys.Single(key => key.Id == "key.space").WidthUnits);
 
         session.Execute(KeyCommand.SwitchToMainPage);
         Assert.Equal(FullKeyboardPage.Main, session.State.Page);
-        Assert.Contains(
-            session.State.Layout.Rows.SelectMany(row => row.Keys),
-            key => key.Command.Kind == KeyCommandKind.ToggleIme);
+        var mainKeys = session.State.Layout.Rows.SelectMany(row => row.Keys).ToList();
+        Assert.Contains(mainKeys, key => key.Command.Kind == KeyCommandKind.ToggleIme);
+        Assert.Contains(mainKeys, key => key.Command.Kind == KeyCommandKind.Clear);
         Assert.Equal(2.5, session.State.Layout.Rows[3].Keys.Single(key => key.Id == "key.space").WidthUnits);
+    }
+
+    [Fact]
+    public void Symbol_page_labels_follow_the_ime_mode_and_full_width_option()
+    {
+        var session = NewSession(layout: FullKeyboardLayoutKind.PhoneHybrid);
+        session.Execute(KeyCommand.SwitchToSymbolPage);
+
+        var period = session.State.Layout.Rows
+            .SelectMany(row => row.Keys)
+            .Single(key => key.Id == "key.char.002e");
+        Assert.Equal("。", period.Label.Text);
+        Assert.Equal(KeyCommand.Insert("."), period.Command);
+
+        session.Execute(KeyCommand.ToggleIme);
+        period = session.State.Layout.Rows
+            .SelectMany(row => row.Keys)
+            .Single(key => key.Id == "key.char.002e");
+        Assert.Equal(".", period.Label.Text);
+        Assert.Equal("key.ime.inactive", ImeKey(session).Label.ResourceKey);
+
+        var ascii = NewSession(layout: FullKeyboardLayoutKind.PhoneHybrid, fullWidthPunctuation: false);
+        ascii.Execute(KeyCommand.SwitchToSymbolPage);
+        period = ascii.State.Layout.Rows
+            .SelectMany(row => row.Keys)
+            .Single(key => key.Id == "key.char.002e");
+        Assert.Equal(".", period.Label.Text);
+    }
+
+    [Fact]
+    public void No_engine_symbol_page_keeps_clear()
+    {
+        var session = NoEngineSession(InputProfiles.Text, FullKeyboardLayoutKind.PhoneHybrid);
+        session.Execute(KeyCommand.SwitchToSymbolPage);
+
+        var keys = session.State.Layout.Rows.SelectMany(row => row.Keys).ToList();
+        Assert.Contains(keys, key => key.Command.Kind == KeyCommandKind.Clear);
+        Assert.DoesNotContain(keys, key => key.Command.Kind == KeyCommandKind.ToggleIme);
     }
 
     [Fact]

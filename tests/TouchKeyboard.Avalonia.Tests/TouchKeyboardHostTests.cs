@@ -364,6 +364,83 @@ public sealed class TouchKeyboardHostTests
     }
 
     [AvaloniaFact]
+    public void Symbol_page_supports_the_added_ansi_symbols_clear_and_numeric_entry()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options => options.FullKeyboardLayout = FullKeyboardLayoutKind.PhoneHybrid);
+
+        Click(fixture.Window, textBox);
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToSymbolPage);
+
+        foreach (var symbol in new[] { "`", "\"", "<", ">", ",", ".", "?", "/" })
+        {
+            ClickKey(fixture.Window, fixture.Host,
+                key => key.Command == KeyCommand.Insert(symbol));
+        }
+
+        Assert.Equal("`\"<>,.?/", fixture.Host.Session!.State.Text);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.Clear);
+        Assert.Equal(string.Empty, fixture.Host.Session!.State.Text);
+
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToNumericKeypad);
+        Assert.Equal(KeyboardMode.NumericKeypad, fixture.Host.Session!.State.Mode);
+    }
+
+    [AvaloniaFact]
+    public void Symbol_page_with_ime_uses_the_ime_key_and_maps_punctuation_labels()
+    {
+        var textBox = new TextBox();
+        TouchKeyboardInput.SetProfile(textBox, "text");
+        using var fixture = CreateFixture(
+            textBox,
+            options =>
+            {
+                options.FullKeyboardLayout = FullKeyboardLayoutKind.PhoneHybrid;
+                options.UseIme(new HostFakeImeEngine());
+            });
+
+        Click(fixture.Window, textBox);
+        ClickKey(fixture.Window, fixture.Host,
+            key => key.Command.Kind == KeyCommandKind.SwitchToSymbolPage);
+        Dispatcher.UIThread.RunJobs();
+
+        var imeKey = FindImeKey(fixture.Host);
+        Assert.NotNull(imeKey);
+        Assert.DoesNotContain(
+            fixture.Host.Session!.State.Layout.Rows.SelectMany(row => row.Keys),
+            key => key.Command.Kind == KeyCommandKind.Clear);
+
+        var period = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Id == "key.char.002e");
+        Assert.Contains(
+            period.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == "。");
+
+        Click(fixture.Window, period);
+        Assert.Equal("。", fixture.Host.Session!.State.Text);
+
+        Click(fixture.Window, imeKey!);
+        Dispatcher.UIThread.RunJobs();
+        period = fixture.Host.GetVisualDescendants()
+            .OfType<TouchKey>()
+            .Single(key => key.Definition.Id == "key.char.002e");
+        Assert.Contains(
+            period.GetVisualDescendants().OfType<TextBlock>(),
+            text => text.Text == ".");
+
+        Click(fixture.Window, period);
+        Assert.Equal("。.", fixture.Host.Session!.State.Text);
+    }
+
+    [AvaloniaFact]
     public void Numpad_renders_grid_spans_for_zero_and_confirm()
     {
         var numeric = new NumericUpDown
@@ -526,10 +603,7 @@ public sealed class TouchKeyboardHostTests
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Assert.NotNull(fixture.Window.CaptureRenderedFrame());
 
-        // The symbol page no longer carries a numeric switch; return to the main
-        // page first, then open the Numpad.
-        ClickKey(fixture.Window, fixture.Host,
-            key => key.Command.Kind == KeyCommandKind.SwitchToMainPage);
+        // The symbol page carries its own numeric switch.
         ClickKey(fixture.Window, fixture.Host,
             key => key.Command.Kind == KeyCommandKind.SwitchToNumericKeypad);
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
@@ -706,14 +780,21 @@ public sealed class TouchKeyboardHostTests
 
         public bool TryMapPunctuation(char input, out string mapped)
         {
-            if (input == ',')
+            switch (input)
             {
-                mapped = "，";
-                return true;
+                case ',':
+                    mapped = "，";
+                    return true;
+                case '.':
+                    mapped = "。";
+                    return true;
+                case '?':
+                    mapped = "？";
+                    return true;
+                default:
+                    mapped = string.Empty;
+                    return false;
             }
-
-            mapped = string.Empty;
-            return false;
         }
     }
 

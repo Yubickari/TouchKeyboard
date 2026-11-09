@@ -248,48 +248,50 @@ public sealed class KeyboardLayoutTests
     }
 
     [Fact]
-    public void Symbol_page_has_six_columns_and_the_common_symbols()
+    public void Symbol_page_is_a_four_by_eight_ansi_grid_plus_a_function_row()
     {
         var layout = KeyboardLayouts.Full(FullKeyboardLayoutKind.PhoneHybrid, FullKeyboardPage.Symbols);
 
         Assert.Equal("full-symbol-page", layout.Id);
         Assert.Equal(5, layout.Rows.Count);
-        Assert.All(layout.Rows, row => Assert.Equal(6d, row.TotalUnits));
+        Assert.All(layout.Rows, row => Assert.Equal(8d, row.TotalUnits));
+        Assert.All(layout.Rows.Take(4), row => Assert.Equal(8, row.Keys.Count));
+        Assert.Equal(8, layout.Rows[4].Keys.Count);
 
         var inserts = Flatten(layout)
             .Where(key => key.Command.Kind == KeyCommandKind.InsertText)
             .Select(key => key.Command.Text!)
+            .Where(text => text != " ")
             .ToList();
 
-        foreach (var symbol in "~!@#$%^&*()_-+={}[]|\\;:'")
-        {
-            Assert.Contains(symbol.ToString(), inserts);
-        }
-
-        Assert.Equal(24, inserts.Count(text => text != " "));
+        const string expected = "`~!@#$%^&*()-_=+[]{}\\|;:'\"<>,./?";
+        Assert.Equal(expected.ToCharArray().Select(c => c.ToString()), inserts);
+        Assert.Equal(32, inserts.Count);
+        Assert.Equal(new[] { "`", "~" }, inserts.Take(2));
+        Assert.Equal(new[] { "'", "\"", "<", ">", ",", ".", "/", "?" }, inserts.TakeLast(8));
     }
 
     [Fact]
-    public void Symbol_page_function_row_flanks_space_and_keeps_backspace_before_confirm()
+    public void Symbol_page_function_row_adds_numeric_and_clear_around_the_existing_keys()
     {
         var keys = KeyboardLayouts.Full(FullKeyboardLayoutKind.PhoneHybrid, FullKeyboardPage.Symbols).Rows[4].Keys;
 
-        Assert.Equal(6, keys.Count);
+        Assert.Equal(8, keys.Count);
         Assert.All(keys, key => Assert.Equal(1.0, key.WidthUnits));
         Assert.Equal(KeyCommandKind.SwitchToMainPage, keys[0].Command.Kind);
         Assert.Equal("key.letters", keys[0].Label.ResourceKey);
-        Assert.Equal(KeyGlyph.ArrowLeft, keys[1].Glyph);
-        Assert.Equal(KeyCommand.Insert(" "), keys[2].Command);
-        Assert.Equal(KeyGlyph.Space, keys[2].Glyph);
-        Assert.Equal(KeyGlyph.ArrowRight, keys[3].Glyph);
-        Assert.Equal(KeyGlyph.Backspace, keys[4].Glyph);
-        Assert.True(keys[4].Repeatable);
-        Assert.Equal(KeyCommandKind.Submit, keys[5].Command.Kind);
-        Assert.Equal(KeyStyle.Primary, keys[5].Style);
-
-        // The numeric switch and the clear key moved off the symbol page.
-        Assert.DoesNotContain(keys, key => key.Command.Kind == KeyCommandKind.SwitchToNumericKeypad);
-        Assert.DoesNotContain(keys, key => key.Command.Kind == KeyCommandKind.Clear);
+        Assert.Equal(KeyCommandKind.SwitchToNumericKeypad, keys[1].Command.Kind);
+        Assert.Equal("key.numbers", keys[1].Label.ResourceKey);
+        Assert.Equal(KeyGlyph.ArrowLeft, keys[2].Glyph);
+        Assert.Equal(KeyCommand.Insert(" "), keys[3].Command);
+        Assert.Equal(KeyGlyph.Space, keys[3].Glyph);
+        Assert.Equal(KeyGlyph.ArrowRight, keys[4].Glyph);
+        Assert.Equal(KeyCommandKind.Clear, keys[5].Command.Kind);
+        Assert.Equal(KeyGlyph.Clear, keys[5].Glyph);
+        Assert.Equal(KeyGlyph.Backspace, keys[6].Glyph);
+        Assert.True(keys[6].Repeatable);
+        Assert.Equal(KeyCommandKind.Submit, keys[7].Command.Kind);
+        Assert.Equal(KeyStyle.Primary, keys[7].Style);
     }
 
     [Fact]

@@ -117,6 +117,13 @@ separator fills the bottom slot. Empty slots change the geometry instead of
 producing disabled keys — `0` widens over an empty decimal slot and Confirm
 stretches over an empty right-row-2 slot. See [layouts.md](layouts.md).
 
+The PhoneHybrid symbol page is a 4×8 symbol grid carrying all 32 US ANSI
+symbols, plus an 8-key function row (`ABC 123 ← Space → Clear ⌫ Confirm`). It
+keeps the five-row page height, so switching from the main page does not resize
+the panel. With an IME engine and an IME-capable profile, the Clear slot becomes
+the IME toggle and engine-mapped symbol caps follow the active language while the
+command still inserts the ASCII source. See [layouts.md](layouts.md#symbol-page).
+
 The full keyboards have no inert IME spacer: when no IME key is present, Space
 fills the former IME slot (AnsiStyle 7.0 units, PhoneHybrid 3.5). When an engine
 and an IME-capable profile are present, the slot holds `ime.toggle` and Space

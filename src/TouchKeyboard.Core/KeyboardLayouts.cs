@@ -12,7 +12,7 @@ public static class KeyboardLayouts
 {
     private static readonly KeyboardLayout FullPhoneHybrid = BuildFullPhoneHybrid(imeKey: null);
     private static readonly KeyboardLayout FullAnsiStyle = BuildFullAnsiStyle(imeKey: null);
-    private static readonly KeyboardLayout SymbolPage = BuildSymbolPage();
+    private static readonly KeyboardLayout SymbolPage = BuildSymbolPage(imeKey: null, symbolLabel: null);
     private static readonly KeyboardLayout GeneralNumpad = BuildNumpad("numeric-general-numpad", NumpadSlots.General);
     private static readonly KeyboardLayout GeneralSequence = BuildGeneralSequence();
 
@@ -41,6 +41,19 @@ public static class KeyboardLayouts
         FullKeyboardLayoutKind layout,
         FullKeyboardPage page,
         KeyDefinition? imeKey)
+        => Full(layout, page, imeKey, symbolLabel: null);
+
+    /// <summary>
+    /// Builds the full keyboard with optional per-symbol labels. The label
+    /// function is used only by the PhoneHybrid symbol page, so a session can
+    /// display the mapped punctuation of the active language while the key
+    /// command still inserts the ASCII source character.
+    /// </summary>
+    internal static KeyboardLayout Full(
+        FullKeyboardLayoutKind layout,
+        FullKeyboardPage page,
+        KeyDefinition? imeKey,
+        Func<char, string?>? symbolLabel)
     {
         if (imeKey is not null)
         {
@@ -64,7 +77,9 @@ public static class KeyboardLayouts
         {
             case FullKeyboardLayoutKind.PhoneHybrid:
                 return page == FullKeyboardPage.Symbols
-                    ? SymbolPage
+                    ? imeKey is null && symbolLabel is null
+                        ? SymbolPage
+                        : BuildSymbolPage(imeKey, symbolLabel)
                     : BuildFullPhoneHybrid(imeKey);
             case FullKeyboardLayoutKind.AnsiStyle:
                 return imeKey is null ? FullAnsiStyle : BuildFullAnsiStyle(imeKey);
@@ -287,25 +302,56 @@ public static class KeyboardLayouts
         return Row(keys.ToArray());
     }
 
-    private static KeyboardLayout BuildSymbolPage()
+    private static KeyboardLayout BuildSymbolPage(
+        KeyDefinition? imeKey,
+        Func<char, string?>? symbolLabel)
     {
-        // Tilde moved to the end; the rest of the symbols shift forward one position.
+        // Four rows of eight keys carry the full US ANSI symbol set. The bottom
+        // function row stays separate so the symbol grid is exactly 4x8. With an
+        // IME engine, the Clear slot becomes the IME toggle; without one it stays
+        // a real Clear key. A language label can change a cap without changing
+        // the ASCII character the key inserts.
+        var functionKeys = new List<KeyDefinition>
+        {
+            NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToMainPage, style: KeyStyle.Action),
+            NamedKey("key.numbers", Labels.Numbers, KeyCommand.SwitchToNumericKeypad, style: KeyStyle.Action),
+            GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
+            NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), style: KeyStyle.Action, glyph: KeyGlyph.Space),
+            GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true)
+        };
+
+        if (imeKey is null)
+        {
+            functionKeys.Add(GlyphKey("key.clear", Labels.Clear, KeyCommand.Clear, KeyGlyph.Clear, style: KeyStyle.Action));
+        }
+        else
+        {
+            functionKeys.Add(imeKey);
+        }
+
+        functionKeys.Add(GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, style: KeyStyle.Action, repeatable: true));
+        functionKeys.Add(NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, style: KeyStyle.Primary));
+
         var rows = new List<KeyboardRow>
         {
-            Row(CharKey('!'), CharKey('@'), CharKey('#'), CharKey('$'), CharKey('%'), CharKey('^')),
-            Row(CharKey('&'), CharKey('*'), CharKey('('), CharKey(')'), CharKey('_'), CharKey('-')),
-            Row(CharKey('+'), CharKey('='), CharKey('['), CharKey(']'), CharKey('{'), CharKey('}')),
-            Row(CharKey('\\'), CharKey('|'), CharKey(';'), CharKey(':'), CharKey('\''), CharKey('~')),
-            Row(
-                NamedKey("key.letters", Labels.Letters, KeyCommand.SwitchToMainPage, style: KeyStyle.Action),
-                GlyphKey("key.caret.left", Labels.CaretLeft, KeyCommand.MoveCaretLeft, KeyGlyph.ArrowLeft, style: KeyStyle.Action, repeatable: true),
-                NamedKey("key.space", Labels.Space, KeyCommand.Insert(" "), style: KeyStyle.Action, glyph: KeyGlyph.Space),
-                GlyphKey("key.caret.right", Labels.CaretRight, KeyCommand.MoveCaretRight, KeyGlyph.ArrowRight, style: KeyStyle.Action, repeatable: true),
-                GlyphKey("key.backspace", Labels.Backspace, KeyCommand.Backspace, KeyGlyph.Backspace, style: KeyStyle.Action, repeatable: true),
-                NamedKey("key.confirm", Labels.Confirm, KeyCommand.Submit, style: KeyStyle.Primary))
+            Row(SymbolKey('`', symbolLabel), SymbolKey('~', symbolLabel), SymbolKey('!', symbolLabel), SymbolKey('@', symbolLabel), SymbolKey('#', symbolLabel), SymbolKey('$', symbolLabel), SymbolKey('%', symbolLabel), SymbolKey('^', symbolLabel)),
+            Row(SymbolKey('&', symbolLabel), SymbolKey('*', symbolLabel), SymbolKey('(', symbolLabel), SymbolKey(')', symbolLabel), SymbolKey('-', symbolLabel), SymbolKey('_', symbolLabel), SymbolKey('=', symbolLabel), SymbolKey('+', symbolLabel)),
+            Row(SymbolKey('[', symbolLabel), SymbolKey(']', symbolLabel), SymbolKey('{', symbolLabel), SymbolKey('}', symbolLabel), SymbolKey('\\', symbolLabel), SymbolKey('|', symbolLabel), SymbolKey(';', symbolLabel), SymbolKey(':', symbolLabel)),
+            Row(SymbolKey('\'', symbolLabel), SymbolKey('"', symbolLabel), SymbolKey('<', symbolLabel), SymbolKey('>', symbolLabel), SymbolKey(',', symbolLabel), SymbolKey('.', symbolLabel), SymbolKey('/', symbolLabel), SymbolKey('?', symbolLabel)),
+            Row(functionKeys.ToArray())
         };
 
         return new KeyboardLayout("full-symbol-page", KeyboardMode.FullKeyboard, rows);
+    }
+
+    private static KeyDefinition SymbolKey(char c, Func<char, string?>? symbolLabel)
+    {
+        var source = c.ToString();
+        var label = symbolLabel?.Invoke(c);
+        return new KeyDefinition(
+            CharKeyId(c),
+            KeyLabel.Literal(label is { Length: > 0 } ? label : source),
+            KeyCommand.Insert(source));
     }
 
     private static KeyboardLayout BuildNumpad(string id, NumpadSlots slots)

@@ -101,22 +101,37 @@ page height.*
 
 ### Symbol page
 
-The symbol page is a full-keyboard page (`FullKeyboardPage.Symbols`), six columns
-by five rows of one-unit keys. It carries 24 common symbols plus a function row;
-`ABC` returns to the main page. The numeric keypad is reached from the main page,
-not from here.
+The symbol page is a full-keyboard page (`FullKeyboardPage.Symbols`): a 4×8 grid
+of one-unit symbol keys plus a separate 8-key function row. It carries the full
+32-symbol US ANSI set, so the PhoneHybrid symbol entry no longer needs a second
+symbol layer. `ABC` returns to the main page, `123` switches to the numeric
+keypad, and Clear sits immediately left of Backspace. Every one of the 40 cells
+is one unit wide; the four symbol rows and the function row share the same grid.
 
 ```text
-! @ # $ %
-& * ( ) _ -
-+ = [ ] { }
-\ | ; : ' ~
-ABC ← Space → ⌫ Confirm
+` ~ ! @ # $ % ^
+& * ( ) - _ = +
+[ ] { } \ | ; :
+' " < > , . / ?
+ABC 123 ← Space → Clear ⌫ Confirm
 ```
 
-Tilde moved to the end of the symbol run and the other symbols shift forward one
-position. The function row no longer carries Clear or a numeric switch: the caret
-keys flank the space bar and Backspace sits immediately left of Confirm.
+Backtick and tilde are the first two symbols; the eight ANSI symbols that were
+missing from the old page — apostrophe, double quote, less-than, greater-than,
+comma, period, slash and question mark — are the last eight keys in that order.
+
+With an IME engine and an IME-capable profile, the Clear slot becomes the IME
+toggle (`中/英` or `CN/EN`) instead of a Clear key; the toggle keeps the 1-unit
+slot, so the row total stays 8. Without an engine, the slot remains Clear. This
+is why the IME screenshot below shows a toggle where the plain symbol page shows
+Clear.
+
+In Chinese mode, symbol caps that the engine maps show the mapped punctuation
+(for example `.`→`。`, `,`→`，`, `?`→`？`, `!`→`！`, and the bracket/brace
+pairs); the key command still inserts the ASCII source and the session performs
+the mapping, so field validation and commit normalization are unchanged. In
+English mode, or when `FullWidthPunctuation = false`, the caps stay ASCII. The
+mapping is owned by the engine, not hard-coded in the layout.
 
 ![Symbol page](images/keyboard-symbols.png)
 

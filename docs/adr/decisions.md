@@ -41,6 +41,8 @@ supports.
 | D19 | No-IME Space expansion | When no IME key is present, the full keyboards remove the commandless IME spacer and let Space fill it: AnsiStyle 7.0 units, PhoneHybrid 3.5. When an IME key is present, Space returns to 5.5/2.5 and the slot holds `ime.toggle`. Toggling 中/英 keeps the IME key, so the width does not change. Row totals stay 15/10. |
 | D20 | Font defaults and override | `TouchKeyboardTheme.FontFamily` defaults to the platform-aware `TouchKeyboardFonts.Default` (Windows: Segoe UI/Microsoft YaHei UI; macOS: Helvetica Neue/PingFang SC; Linux: Noto Sans/Noto Sans CJK SC). `TouchKeyboardStyle.FontFamily` overrides it for key caps, header, editor and candidates without replacing the rest of the theme. Font files are not bundled; CJK faces remain a host/platform prerequisite. |
 | D21 | Built-in key language | `KeyboardLanguage` (`Auto`/`Chinese`/`English`) switches named key legends, chrome and validation messages without changing letter geometry. `Auto` follows `Culture` then `CurrentUICulture`; a custom `ITouchKeyboardLocalizer` wins. The English IME toggle reads CN/EN instead of 中/英. |
+| D22 | PhoneHybrid symbol page | A 4×8 symbol grid carries the complete 32-symbol US ANSI set, followed by a separate 8-key function row: `ABC 123 ← Space → Clear ⌫ Confirm`. Backtick and tilde are the first two symbols; apostrophe, double quote, `<`, `>`, comma, period, `/` and `?` are the last eight. Row total is 8 units. |
+| D23 | IME on the symbol page | With an IME engine and an IME-capable profile, the symbol page's Clear slot becomes the IME toggle (`中/英` or `CN/EN`); no engine keeps Clear. Chinese mode maps the labels of engine-mapped symbols (for example `.`→`。`) while the command still inserts the ASCII source; English mode and `FullWidthPunctuation = false` keep ASCII labels. |
 
 ## Consequences
 
@@ -86,5 +88,11 @@ supports.
 - `KeyboardLanguage` is a text-only setting. It never changes row widths, key
   counts or the IME slot, so layout assertions and screenshots remain stable
   across languages.
+- The PhoneHybrid symbol page is a 4×8 symbol grid plus an 8-key function row.
+  It exposes all 32 ANSI symbols and adds the numeric and Clear keys without
+  changing the page height (still five key rows).
+- The symbol page's Clear slot is context-sensitive: IME-capable sessions show
+  the IME toggle there, while no-engine sessions keep Clear. Symbol labels can
+  follow the active language without changing the ASCII command or geometry.
 - MIT's warranty disclaimer applies; documentation must not promise candidate
   quality, coverage, performance or stability beyond best-effort targets.

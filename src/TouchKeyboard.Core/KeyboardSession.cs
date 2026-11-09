@@ -781,12 +781,33 @@ public sealed class KeyboardSession
     {
         if (_mode == KeyboardMode.FullKeyboard)
         {
-            return KeyboardLayouts.Full(_fullKeyboardLayout, _page, BuildImeKey());
+            return KeyboardLayouts.Full(
+                _fullKeyboardLayout,
+                _page,
+                BuildImeKey(),
+                BuildSymbolLabel());
         }
 
         return Profile.AllowsFullKeyboard
             ? KeyboardLayouts.GeneralNumeric(_numericKeypadLayout)
             : KeyboardLayouts.ProfileNumeric(Profile);
+    }
+
+    /// <summary>
+    /// The symbol page shows the active language's punctuation where the engine
+    /// provides a mapping; the command still inserts the ASCII source so the
+    /// session's punctuation routing stays the single source of truth.
+    /// </summary>
+    private Func<char, string?>? BuildSymbolLabel()
+    {
+        if (_page != FullKeyboardPage.Symbols || _ime is null || !_imeFullWidthPunctuation)
+        {
+            return null;
+        }
+
+        return c => _ime.TryMapPunctuation(c, out var mapped) && !string.IsNullOrEmpty(mapped)
+            ? mapped
+            : null;
     }
 
     /// <summary>

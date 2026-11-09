@@ -121,8 +121,11 @@ KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 
 `text` fields then get an IME key (中/英, or CN/EN in the English surface)
 and a candidate row (44 px on AnsiStyle; on
-PhoneHybrid it is the first of five rows and uses the key height). Numeric, date,
-password and ASCII profiles stay IME-free. With no engine there is no IME key or
+PhoneHybrid it is the first of five rows and uses the key height). On the
+PhoneHybrid symbol page the Clear slot becomes this IME toggle, and mapped symbol
+caps follow the active language (for example `.`→`。` in Chinese mode; commands
+still insert the ASCII source). Numeric, date, password and ASCII profiles stay
+IME-free. With no engine there is no IME key or
 candidate row and Space fills the former IME slot (AnsiStyle 7.0 units,
 PhoneHybrid 3.5); with an engine and an IME-capable profile Space returns to
 5.5/2.5 and the key stays present in English mode, so toggling does not change the

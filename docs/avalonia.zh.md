@@ -116,8 +116,9 @@ KeyboardHost.Configure(options => options.UseIme(new PinyinImeEngine()));
 ```
 
 之后 `text` 字段会多出 IME 键（中文键面为 中/英，英文键面为 `CN`/`EN`）和候选栏
-（AnsiStyle 为 44 px；PhoneHybrid 下它是五行的第一行，高度等于键高）。数字、日期、
-密码和 ASCII 档位都不启用 IME。没有引擎时既没有 IME 键也没有候选栏，空格占据
+（AnsiStyle 为 44 px；PhoneHybrid 下它是五行的第一行，高度等于键高）。PhoneHybrid
+符号页的清空槽位会变成这个 IME 切换键，有映射的符号键帽跟随当前语言（例如中文模式
+`.`→`。`；命令仍插入 ASCII 源字符）。数字、日期、密码和 ASCII 档位都不启用 IME。没有引擎时既没有 IME 键也没有候选栏，空格占据
 原 IME 键位（AnsiStyle 7.0 单位，PhoneHybrid 3.5）；配置了引擎且档位允许 IME 时，
 空格宽度回到 5.5/2.5，英文模式下该键仍然存在，因此来回切换不会改变宽度。候选栏
 从不滚动：它只显示能完整放下的候选文字（最多九个），并据此调整 Core 的每页候选数；

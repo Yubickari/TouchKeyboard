@@ -8,6 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
+PhoneHybrid symbol-page completion.
+
+### Added
+
+- The PhoneHybrid symbol page now carries the complete 32-symbol US ANSI set,
+  including the previously missing backtick, double quote, `<`, `>`, comma,
+  period, question mark and slash.
+- A `123` numeric entry key right of `ABC` and a Clear key immediately left of
+  Backspace on the symbol-page function row.
+- When an IME engine and an IME-capable profile are active, the symbol-page Clear
+  slot becomes the IME toggle (`中/英` or `CN/EN`); without an engine the slot
+  remains Clear.
+- In Chinese IME mode, mapped symbol caps follow the language (for example
+  `.`→`。`, `,`→`，`, `?`→`？`, `!`→`！`, and bracket/brace pairs). Commands still
+  insert the ASCII source and the session maps it; English mode and
+  `FullWidthPunctuation = false` keep ASCII caps.
+
+### Changed
+
+- Rebuilt the symbol page as a 4×8 symbol grid plus a separate 8-key function
+  row: `ABC 123 ← Space → Clear ⌫ Confirm`. All 40 cells are one unit wide.
+- Backtick and tilde are the first two symbols; apostrophe, double quote, `<`,
+  `>`, comma, period, `/` and `?` are the last eight, in that order.
+- The symbol-page row total grows from 6 to 8 units so the symbol grid and the
+  function row share one aligned width.
+
+### Notes
+
+- No public type or method was removed. The layout id `full-symbol-page`, the
+  `FullKeyboardPage.Symbols` state and the existing key commands are unchanged.
+
 ## [0.2.1] - 2026-11-09
 
 Maintenance and language/font release.
@@ -124,6 +157,7 @@ First public release.
   [docs/ime.md](docs/ime.md) for scope and data sources.
 - WPF is planned but not included in this release.
 
-[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.3.0
 [0.2.1]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.1
 [0.2.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.0

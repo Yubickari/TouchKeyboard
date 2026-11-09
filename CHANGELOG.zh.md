@@ -11,6 +11,34 @@ GitHub Release 说明由本文件的对应版本段落生成；英文完整历�
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
+补全 PhoneHybrid 符号页。
+
+### 新增
+
+- PhoneHybrid 符号页现在收录完整的 32 个 US ANSI 符号，包括此前缺少的反引号、
+  双引号、`<`、`>`、逗号、句号、问号和斜杠。
+- 符号页功能行新增 `ABC` 右侧的 `123` 数字入口，以及退格左侧的清空键。
+- 接入 IME 引擎且档位允许 IME 时，符号页清空槽位变成中/英切换键（`中/英` 或
+  `CN/EN`）；没有引擎时仍是清空键。
+- 中文 IME 模式下，有映射的符号键帽跟随语言显示全角标点（例如 `.`→`。`、
+  `,`→`，`、`?`→`？`、`!`→`！`，以及方括号/花括号对）。命令仍插入 ASCII 源
+  字符并由会话映射；英文模式或 `FullWidthPunctuation = false` 时键帽保持 ASCII。
+
+### 变更
+
+- 符号页改为 4×8 符号网格加一行独立的 8 键功能行：
+  `ABC 123 ← Space → 清空 ⌫ 确定`；全部 40 个格子均为 1 单位宽。
+- 反引号和波浪号是前两个符号；单引号、双引号、`<`、`>`、逗号、句号、`/` 和
+  `?` 按这个顺序排在最后 8 个位置。
+- 符号页行宽从 6 单位增加到 8 单位，符号网格和功能行共用同一条对齐宽度。
+
+### 说明
+
+- 没有删除任何公共类型或方法；布局 id `full-symbol-page`、
+  `FullKeyboardPage.Symbols` 状态和现有关键命令保持不变。
+
 ## [0.2.1] - 2026-11-09
 
 维护版本，同时补齐中英文键面与平台字体。
@@ -103,6 +131,7 @@ GitHub Release 说明由本文件的对应版本段落生成；英文完整历�
   [docs/ime.md](docs/ime.md)。
 - WPF 已规划但未包含在本版本中。
 
-[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Yubickari/TouchKeyboard/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.3.0
 [0.2.1]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.1
 [0.2.0]: https://github.com/Yubickari/TouchKeyboard/releases/tag/v0.2.0

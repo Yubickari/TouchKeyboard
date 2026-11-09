@@ -8,7 +8,7 @@ NuGet **Trusted Publishing** (OIDC), so no long-lived API key is stored anywhere
 ## Version source
 
 `Directory.Build.props` holds the single `<Version>` used by all four packages. A
-release tag must be `v<Version>`, for example `v0.2.1`. `build/preflight.sh`
+release tag must be `v<Version>`, for example `v0.3.0`. `build/preflight.sh`
 fails when the tag and version disagree, and (on a tag build) when the working tree
 is dirty.
 
@@ -75,8 +75,8 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
 4. Commit, then create and push the tag:
 
    ```bash
-   git tag v0.2.1
-   git push origin v0.2.1
+   git tag v0.3.0
+   git push origin v0.3.0
    ```
 
 5. Watch the **Release** workflow. It runs the package smoke (three consumer
@@ -89,7 +89,7 @@ load the dictionaries and commit a composition. The AOT step needs `clang` and
    ```bash
    dotnet new console -o /tmp/osk-smoke
    cd /tmp/osk-smoke
-   dotnet add package TouchKeyboard.Avalonia --version 0.2.1
+   dotnet add package TouchKeyboard.Avalonia --version 0.3.0
    dotnet build
    ```
 

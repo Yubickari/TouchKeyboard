@@ -190,7 +190,10 @@ expands over the IME slot. With an engine and an IME-capable profile, the slot
 holds an IME key (中/英, or CN/EN in English) and Space returns to its base width.
 
 `PhoneHybrid` is a four-row phone-style letters keyboard with a symbol/numeric
-entry and a full-keyboard-owned symbol page. The numeric mode uses the 5×4
+entry and a full-keyboard-owned symbol page. The symbol page is a 4×8 grid with
+the full 32-symbol ANSI set plus a function row (`ABC 123 ← Space → Clear ⌫
+Confirm`). With an IME engine, the Clear slot becomes the IME toggle and
+mapped symbol caps follow the active language; the numeric mode uses the 5×4
 `Numpad`; profile-restricted keypads omit invalid keys and merge the freed cells
 into `0` or Confirm.
 
